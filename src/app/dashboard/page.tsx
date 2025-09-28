@@ -42,6 +42,27 @@ export default function Dashboard() {
   const [emailTestResult, setEmailTestResult] = useState<any>(null);
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
 
+  // Google Sheets Workflow state
+  const [showSheetsWorkflow, setShowSheetsWorkflow] = useState(false);
+  const [sheetsWorkflowType, setSheetsWorkflowType] = useState<'drafting' | 'auditing' | 'analytics'>('drafting');
+  const [workflowSpreadsheetId, setWorkflowSpreadsheetId] = useState(process.env.NEXT_PUBLIC_DEFAULT_CA_SPREADSHEET_ID || '');
+  const [workflowAnalytics, setWorkflowAnalytics] = useState<any>(null);
+  const [workflowTasks, setWorkflowTasks] = useState<any[]>([]);
+  const [loadingWorkflow, setLoadingWorkflow] = useState(false);
+  const [draftingForm, setDraftingForm] = useState({
+    clientName: '',
+    documentType: 'Tax Return',
+    priority: 'Medium',
+    content: '',
+    dueDate: new Date().toISOString().split('T')[0]
+  });
+  const [auditingForm, setAuditingForm] = useState({
+    clientName: '',
+    auditType: 'Statutory Audit',
+    riskLevel: 'Medium',
+    findings: ''
+  });
+
   useEffect(() => {
     if (isLoaded) {
       fetchDashboardData();
@@ -356,6 +377,163 @@ export default function Dashboard() {
     }
   };
 
+  // Google Sheets Workflow Functions
+  const createCAWorksheet = async () => {
+    try {
+      setLoadingWorkflow(true);
+      
+      const response = await fetch('/api/ca-workflow/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'createWorksheet',
+          caFirmName: 'Your CA Firm'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setWorkflowSpreadsheetId(result.spreadsheetId);
+        alert(`CA Workflow spreadsheet created! Opening: ${result.spreadsheetUrl}`);
+        window.open(result.spreadsheetUrl, '_blank');
+      } else {
+        alert(result.error || 'Failed to create worksheet');
+      }
+    } catch (err) {
+      console.error('Worksheet creation error:', err);
+      alert(`Failed to create worksheet: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setLoadingWorkflow(false);
+    }
+  };
+
+  const addDraftingTask = async () => {
+    if (!workflowSpreadsheetId) {
+      alert('Please create or set a spreadsheet ID first');
+      return;
+    }
+
+    try {
+      setLoadingWorkflow(true);
+      
+      const response = await fetch('/api/ca-workflow/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addDraftingTask',
+          spreadsheetId: workflowSpreadsheetId,
+          ...draftingForm
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Drafting task added successfully! Assigned to: ${result.assignedCA}`);
+        // Reset form
+        setDraftingForm({
+          clientName: '',
+          documentType: 'Tax Return',
+          priority: 'Medium',
+          content: '',
+          dueDate: new Date().toISOString().split('T')[0]
+        });
+        // Refresh tasks
+        loadWorkflowTasks();
+      } else {
+        alert(result.error || 'Failed to add drafting task');
+      }
+    } catch (err) {
+      console.error('Add drafting task error:', err);
+      alert(`Failed to add drafting task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setLoadingWorkflow(false);
+    }
+  };
+
+  const addAuditingTask = async () => {
+    if (!workflowSpreadsheetId) {
+      alert('Please create or set a spreadsheet ID first');
+      return;
+    }
+
+    try {
+      setLoadingWorkflow(true);
+      
+      const response = await fetch('/api/ca-workflow/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addAuditingTask',
+          spreadsheetId: workflowSpreadsheetId,
+          ...auditingForm
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Auditing task added successfully! Assigned to: ${result.auditor}`);
+        // Reset form
+        setAuditingForm({
+          clientName: '',
+          auditType: 'Statutory Audit',
+          riskLevel: 'Medium',
+          findings: ''
+        });
+        // Refresh tasks
+        loadWorkflowTasks();
+      } else {
+        alert(result.error || 'Failed to add auditing task');
+      }
+    } catch (err) {
+      console.error('Add auditing task error:', err);
+      alert(`Failed to add auditing task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setLoadingWorkflow(false);
+    }
+  };
+
+  const loadWorkflowAnalytics = async () => {
+    if (!workflowSpreadsheetId) return;
+
+    try {
+      const response = await fetch(`/api/ca-workflow/sheets?spreadsheetId=${workflowSpreadsheetId}&action=analytics`);
+      const result = await response.json();
+
+      if (result.success) {
+        setWorkflowAnalytics(result.analytics);
+      }
+    } catch (err) {
+      console.error('Load analytics error:', err);
+    }
+  };
+
+  const loadWorkflowTasks = async () => {
+    if (!workflowSpreadsheetId) return;
+
+    try {
+      const sheetType = sheetsWorkflowType === 'drafting' ? 'drafting' : 'auditing';
+      const response = await fetch(`/api/ca-workflow/sheets?spreadsheetId=${workflowSpreadsheetId}&action=${sheetType}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setWorkflowTasks(result.tasks);
+      }
+    } catch (err) {
+      console.error('Load tasks error:', err);
+    }
+  };
+
+  // Load workflow data when spreadsheet ID changes
+  useEffect(() => {
+    if (workflowSpreadsheetId && showSheetsWorkflow) {
+      loadWorkflowAnalytics();
+      loadWorkflowTasks();
+    }
+  }, [workflowSpreadsheetId, showSheetsWorkflow, sheetsWorkflowType]);
+
   // Auto-refresh function for real-time updates
   const startAutoRefresh = () => {
     const interval = setInterval(() => {
@@ -400,84 +578,130 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white flex">
+      {/* Left Edge Trigger Zone with Visual Indicator */}
+      <div 
+        className="fixed inset-y-0 left-0 z-40 w-8 h-full group cursor-pointer"
+        onClick={() => setSidebarOpen(true)}
+      >
+        {/* Subtle indicator line */}
+        <div className={`absolute top-1/2 left-0 w-1 h-16 rounded-r-full transform -translate-y-1/2 transition-all duration-300 ${
+          !sidebarOpen 
+            ? 'bg-blue-400/40 opacity-60 group-hover:opacity-100' 
+            : 'bg-white/20 opacity-0 group-hover:opacity-100'
+        }`} />
+        
+        {/* Hover hint text */}
+        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white/60 text-xs font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
+          Click for workflows
+        </div>
+        
+        {/* Manual close indicator */}
+        {!sidebarOpen && (
+          <div className="absolute top-4 left-2 w-1 h-1 bg-blue-400 rounded-full animate-pulse" />
+        )}
+      </div>
+
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black/30 backdrop-blur-md border-r border-white/10 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-80 bg-black/20 backdrop-blur-lg border-r border-white/20 transform transition-all duration-300 ease-out ${sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-white/10">
+          <div className="p-6 border-b border-white/10">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">🚀 Workflows</h2>
+              <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-walsheim)' }}>
+                Workflows
+              </h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                title="Close sidebar"
               >
-                ✕
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
           
           {/* Sidebar Content */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto p-6" style={{ fontFamily: 'var(--font-walsheim)' }}>
+            <div className="space-y-8">
               {/* Google Sheets Integration */}
-              <div className="bg-white/10 rounded-lg p-4">
-                <h3 className="font-bold mb-2">📊 Google Sheets</h3>
-                <div className="space-y-2">
-                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
-                    📝 Draft Content Review
+              <div className="space-y-4">
+                <h3 className="font-bold text-white text-lg border-b border-white/20 pb-2">📊 Google Sheets</h3>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => {
+                      setShowSheetsWorkflow(!showSheetsWorkflow);
+                      setSheetsWorkflowType('drafting');
+                    }}
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-green-600/20 rounded"
+                  >
+                    📝 CA Drafting Workflow
                   </button>
-                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
-                    🔍 Audit Checklist
+                  <button 
+                    onClick={() => {
+                      setShowSheetsWorkflow(!showSheetsWorkflow);
+                      setSheetsWorkflowType('auditing');
+                    }}
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-orange-600/20 rounded"
+                  >
+                    🔍 CA Auditing Workflow
                   </button>
-                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
-                    📈 Analytics Dashboard
+                  <button 
+                    onClick={() => {
+                      setShowSheetsWorkflow(!showSheetsWorkflow);
+                      setSheetsWorkflowType('analytics');
+                    }}
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-purple-600/20 rounded"
+                  >
+                    📈 Workflow Analytics
                   </button>
                 </div>
               </div>
               
               {/* Email Automation */}
-              <div className="bg-white/10 rounded-lg p-4">
-                <h3 className="font-bold mb-2">📧 Email Automation</h3>
-                <div className="space-y-2">
+              <div className="space-y-4">
+                <h3 className="font-bold text-white text-lg border-b border-white/20 pb-2"> Email Automation</h3>
+                <div className="space-y-1">
                   <button 
                     onClick={() => setShowEmailTesting(!showEmailTesting)}
-                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm bg-blue-600/20"
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-blue-600/20 rounded"
                   >
-                    🧪 Test Email System
+                     Test Email System
                   </button>
-                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
-                    👥 Stakeholder Notifications
+                  <button className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2">
+                     Stakeholder Notifications
                   </button>
-                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
-                    📊 Executive Summaries
+                  <button className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2">
+                     Executive Summaries
                   </button>
-                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
-                    🔔 Alert Management
+                  <button className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2">
+                     Alert Management
                   </button>
                 </div>
               </div>
               
               {/* Workflow Pipeline */}
-              <div className="bg-white/10 rounded-lg p-4">
-                <h3 className="font-bold mb-2">⚡ Workflows</h3>
-                <div className="space-y-2">
+              <div className="space-y-4">
+                <h3 className="font-bold text-white text-lg border-b border-white/20 pb-2"> Workflows</h3>
+                <div className="space-y-1">
                   <button 
                     onClick={() => setSelectedWorkflow('zapier-pipeline')}
-                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm"
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2"
                   >
-                    🔄 News → Content → Email
+                     News → Content → Email
                   </button>
                   <button 
                     onClick={() => setSelectedWorkflow('audit-workflow')}
-                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm"
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2"
                   >
-                    📋 Compliance Workflow
+                     Compliance Workflow
                   </button>
                   <button 
                     onClick={() => setSelectedWorkflow('reporting-workflow')}
-                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm"
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2"
                   >
-                    📈 Reporting Pipeline
+                     Reporting Pipeline
                   </button>
                 </div>
               </div>
@@ -486,16 +710,16 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Sidebar Overlay */}
+      {/* Background Blur Glass Effect when sidebar is open */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 transition-all duration-300"
           onClick={() => setSidebarOpen(false)}
         />
       )}
       
       {/* Main Content */}
-      <div className="flex-1">
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-4' : ''}`}>
         {/* Header */}
         <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -504,7 +728,8 @@ export default function Dashboard() {
               {/* Hamburger Menu Button */}
               <button 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-105"
+                title="Open workflows sidebar"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -1355,6 +1580,309 @@ export default function Dashboard() {
                     <span>Send Test Email</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Google Sheets Workflow Modal */}
+      {showSheetsWorkflow && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/20">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">
+                  {sheetsWorkflowType === 'drafting' && '📝 CA Drafting Workflow'}
+                  {sheetsWorkflowType === 'auditing' && '🔍 CA Auditing Workflow'}
+                  {sheetsWorkflowType === 'analytics' && '📈 Workflow Analytics'}
+                </h2>
+                <button
+                  onClick={() => setShowSheetsWorkflow(false)}
+                  className="text-gray-400 hover:text-white text-2xl font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-gray-300 mt-2">
+                Automated CA workflow management via Google Sheets - like n8n but built in-house
+              </p>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              {/* Spreadsheet ID Configuration */}
+              <div className="mb-6 p-4 bg-blue-600/20 rounded-lg border border-blue-400/30">
+                <h4 className="font-bold text-blue-400 mb-2">📊 Spreadsheet Configuration</h4>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={workflowSpreadsheetId}
+                    onChange={(e) => setWorkflowSpreadsheetId(e.target.value)}
+                    className="flex-1 p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400 text-sm"
+                    placeholder="Enter Google Sheets ID or create new..."
+                  />
+                  <button
+                    onClick={createCAWorksheet}
+                    disabled={loadingWorkflow}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 rounded transition-colors text-sm"
+                  >
+                    {loadingWorkflow ? '⏳' : '➕ Create New'}
+                  </button>
+                  {workflowSpreadsheetId && (
+                    <button
+                      onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${workflowSpreadsheetId}/edit`, '_blank')}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors text-sm"
+                    >
+                      📊 Open Sheet
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Workflow Type Content */}
+              {sheetsWorkflowType === 'drafting' && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-white mb-4">📝 Add New Drafting Task</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Client Name</label>
+                      <input
+                        type="text"
+                        value={draftingForm.clientName}
+                        onChange={(e) => setDraftingForm({...draftingForm, clientName: e.target.value})}
+                        className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
+                        placeholder="Enter client name..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Document Type</label>
+                      <select
+                        value={draftingForm.documentType}
+                        onChange={(e) => setDraftingForm({...draftingForm, documentType: e.target.value as any})}
+                        className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white"
+                      >
+                        <option value="Tax Return">Tax Return</option>
+                        <option value="Audit Report">Audit Report</option>
+                        <option value="Financial Statement">Financial Statement</option>
+                        <option value="Compliance Report">Compliance Report</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
+                      <select
+                        value={draftingForm.priority}
+                        onChange={(e) => setDraftingForm({...draftingForm, priority: e.target.value as any})}
+                        className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white"
+                      >
+                        <option value="High">🔴 High Priority</option>
+                        <option value="Medium">🟡 Medium Priority</option>
+                        <option value="Low">🟢 Low Priority</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Due Date</label>
+                      <input
+                        type="date"
+                        value={draftingForm.dueDate}
+                        onChange={(e) => setDraftingForm({...draftingForm, dueDate: e.target.value})}
+                        className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Content/Requirements</label>
+                    <textarea
+                      value={draftingForm.content}
+                      onChange={(e) => setDraftingForm({...draftingForm, content: e.target.value})}
+                      className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 resize-none"
+                      rows={4}
+                      placeholder="Enter detailed requirements, notes, or draft content..."
+                    />
+                  </div>
+
+                  <button
+                    onClick={addDraftingTask}
+                    disabled={loadingWorkflow || !workflowSpreadsheetId || !draftingForm.clientName}
+                    className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed rounded-lg transition-colors font-semibold"
+                  >
+                    {loadingWorkflow ? '⏳ Adding Task...' : '➕ Add Drafting Task to Sheets'}
+                  </button>
+                </div>
+              )}
+
+              {sheetsWorkflowType === 'auditing' && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-white mb-4">🔍 Add New Auditing Task</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Client Name</label>
+                      <input
+                        type="text"
+                        value={auditingForm.clientName}
+                        onChange={(e) => setAuditingForm({...auditingForm, clientName: e.target.value})}
+                        className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
+                        placeholder="Enter client name..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Audit Type</label>
+                      <select
+                        value={auditingForm.auditType}
+                        onChange={(e) => setAuditingForm({...auditingForm, auditType: e.target.value as any})}
+                        className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white"
+                      >
+                        <option value="Statutory Audit">Statutory Audit</option>
+                        <option value="Internal Audit">Internal Audit</option>
+                        <option value="Tax Audit">Tax Audit</option>
+                        <option value="GST Audit">GST Audit</option>
+                        <option value="Compliance Audit">Compliance Audit</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Risk Level</label>
+                      <select
+                        value={auditingForm.riskLevel}
+                        onChange={(e) => setAuditingForm({...auditingForm, riskLevel: e.target.value as any})}
+                        className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white"
+                      >
+                        <option value="High">🔴 High Risk</option>
+                        <option value="Medium">🟡 Medium Risk</option>
+                        <option value="Low">🟢 Low Risk</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Initial Findings/Scope</label>
+                    <textarea
+                      value={auditingForm.findings}
+                      onChange={(e) => setAuditingForm({...auditingForm, findings: e.target.value})}
+                      className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 resize-none"
+                      rows={4}
+                      placeholder="Enter audit scope, initial findings, or key areas to focus..."
+                    />
+                  </div>
+
+                  <button
+                    onClick={addAuditingTask}
+                    disabled={loadingWorkflow || !workflowSpreadsheetId || !auditingForm.clientName}
+                    className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-500 disabled:cursor-not-allowed rounded-lg transition-colors font-semibold"
+                  >
+                    {loadingWorkflow ? '⏳ Adding Task...' : '➕ Add Auditing Task to Sheets'}
+                  </button>
+                </div>
+              )}
+
+              {sheetsWorkflowType === 'analytics' && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-white mb-4">📈 Workflow Analytics Dashboard</h3>
+                  
+                  {workflowAnalytics ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="bg-green-600/20 rounded-lg p-4 border border-green-400/30">
+                        <h4 className="font-bold text-green-400 mb-2">📝 Drafting Metrics</h4>
+                        <div className="space-y-2 text-sm">
+                          <p>Total Drafts: <span className="font-bold">{workflowAnalytics.totalDrafts}</span></p>
+                          <p>Pending Review: <span className="font-bold">{workflowAnalytics.pendingReview}</span></p>
+                          <p>Completed Today: <span className="font-bold">{workflowAnalytics.completedToday}</span></p>
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-600/20 rounded-lg p-4 border border-orange-400/30">
+                        <h4 className="font-bold text-orange-400 mb-2">🔍 Auditing Metrics</h4>
+                        <div className="space-y-2 text-sm">
+                          <p>Total Audits: <span className="font-bold">{workflowAnalytics.totalAudits}</span></p>
+                          <p>In Progress: <span className="font-bold">{workflowAnalytics.auditsInProgress}</span></p>
+                          <p>Completed This Month: <span className="font-bold">{workflowAnalytics.completedThisMonth}</span></p>
+                        </div>
+                      </div>
+
+                      <div className="bg-purple-600/20 rounded-lg p-4 border border-purple-400/30">
+                        <h4 className="font-bold text-purple-400 mb-2">⚡ Performance</h4>
+                        <div className="space-y-2 text-sm">
+                          <p>High Priority: <span className="font-bold">{workflowAnalytics.highPriorityItems}</span></p>
+                          <p>Overdue Items: <span className="font-bold text-red-400">{workflowAnalytics.overdueItems}</span></p>
+                          <p>Avg Completion: <span className="font-bold">{workflowAnalytics.avgCompletionTime} days</span></p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-400 mb-4">Set up your spreadsheet to view analytics</p>
+                      <button
+                        onClick={loadWorkflowAnalytics}
+                        disabled={!workflowSpreadsheetId}
+                        className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-500 rounded-lg transition-colors"
+                      >
+                        📊 Load Analytics
+                      </button>
+                    </div>
+                  )}
+
+                  {workflowSpreadsheetId && (
+                    <div className="mt-6 p-4 bg-white/5 rounded-lg">
+                      <h4 className="font-bold text-white mb-2">🔄 Real-time Workflow Integration</h4>
+                      <p className="text-gray-300 text-sm mb-3">
+                        Your CA workflow is automatically synced with Google Sheets for real-time collaboration, 
+                        task assignment, and progress tracking.
+                      </p>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${workflowSpreadsheetId}/edit#gid=2`, '_blank')}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors text-sm"
+                        >
+                          📊 View Analytics Sheet
+                        </button>
+                        <button
+                          onClick={loadWorkflowAnalytics}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded transition-colors text-sm"
+                        >
+                          🔄 Refresh Data
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-white/20 flex justify-between">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setSheetsWorkflowType('drafting')}
+                  className={`px-4 py-2 rounded transition-colors ${sheetsWorkflowType === 'drafting' ? 'bg-green-600' : 'bg-gray-600 hover:bg-gray-700'}`}
+                >
+                  📝 Drafting
+                </button>
+                <button
+                  onClick={() => setSheetsWorkflowType('auditing')}
+                  className={`px-4 py-2 rounded transition-colors ${sheetsWorkflowType === 'auditing' ? 'bg-orange-600' : 'bg-gray-600 hover:bg-gray-700'}`}
+                >
+                  🔍 Auditing
+                </button>
+                <button
+                  onClick={() => setSheetsWorkflowType('analytics')}
+                  className={`px-4 py-2 rounded transition-colors ${sheetsWorkflowType === 'analytics' ? 'bg-purple-600' : 'bg-gray-600 hover:bg-gray-700'}`}
+                >
+                  📈 Analytics
+                </button>
+              </div>
+              <button
+                onClick={() => setShowSheetsWorkflow(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>

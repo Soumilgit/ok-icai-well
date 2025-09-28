@@ -26,6 +26,21 @@ export default function Dashboard() {
   // Automation notifications
   const [automationNotifications, setAutomationNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
+  
+  // Email testing state
+  const [showEmailTesting, setShowEmailTesting] = useState(false);
+  const [emailTestForm, setEmailTestForm] = useState({
+    recipientEmail: '',
+    recipientName: '',
+    emailType: 'tax-update',
+    testContent: ''
+  });
+  const [emailTestResult, setEmailTestResult] = useState<any>(null);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
 
   useEffect(() => {
     if (isLoaded) {
@@ -313,6 +328,34 @@ export default function Dashboard() {
     }
   };
 
+  // Email testing function
+  const sendTestEmail = async () => {
+    try {
+      setSendingTestEmail(true);
+      setEmailTestResult(null);
+
+      const response = await fetch('/api/email/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailTestForm)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setEmailTestResult(result);
+        alert('Test email sent successfully! Check the preview below.');
+      } else {
+        alert(result.error || 'Failed to send test email');
+      }
+    } catch (err) {
+      console.error('Email test error:', err);
+      alert(`Failed to send test email: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSendingTestEmail(false);
+    }
+  };
+
   // Auto-refresh function for real-time updates
   const startAutoRefresh = () => {
     const interval = setInterval(() => {
@@ -356,12 +399,117 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white">
-      {/* Header */}
-      <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 relative">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white flex">
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black/30 backdrop-blur-md border-r border-white/10 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">🚀 Workflows</h2>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          
+          {/* Sidebar Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-4">
+              {/* Google Sheets Integration */}
+              <div className="bg-white/10 rounded-lg p-4">
+                <h3 className="font-bold mb-2">📊 Google Sheets</h3>
+                <div className="space-y-2">
+                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
+                    📝 Draft Content Review
+                  </button>
+                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
+                    🔍 Audit Checklist
+                  </button>
+                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
+                    📈 Analytics Dashboard
+                  </button>
+                </div>
+              </div>
+              
+              {/* Email Automation */}
+              <div className="bg-white/10 rounded-lg p-4">
+                <h3 className="font-bold mb-2">📧 Email Automation</h3>
+                <div className="space-y-2">
+                  <button 
+                    onClick={() => setShowEmailTesting(!showEmailTesting)}
+                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm bg-blue-600/20"
+                  >
+                    🧪 Test Email System
+                  </button>
+                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
+                    👥 Stakeholder Notifications
+                  </button>
+                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
+                    📊 Executive Summaries
+                  </button>
+                  <button className="w-full text-left p-2 hover:bg-white/10 rounded text-sm">
+                    🔔 Alert Management
+                  </button>
+                </div>
+              </div>
+              
+              {/* Workflow Pipeline */}
+              <div className="bg-white/10 rounded-lg p-4">
+                <h3 className="font-bold mb-2">⚡ Workflows</h3>
+                <div className="space-y-2">
+                  <button 
+                    onClick={() => setSelectedWorkflow('zapier-pipeline')}
+                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm"
+                  >
+                    🔄 News → Content → Email
+                  </button>
+                  <button 
+                    onClick={() => setSelectedWorkflow('audit-workflow')}
+                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm"
+                  >
+                    📋 Compliance Workflow
+                  </button>
+                  <button 
+                    onClick={() => setSelectedWorkflow('reporting-workflow')}
+                    className="w-full text-left p-2 hover:bg-white/10 rounded text-sm"
+                  >
+                    📈 Reporting Pipeline
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Main Content */}
+      <div className="flex-1">
+        {/* Header */}
+        <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
+              {/* Hamburger Menu Button */}
+              <button 
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
               <h1 className="text-2xl font-bold">CA Law Portal</h1>
               <span className="bg-green-500 text-xs px-2 py-1 rounded-full">Live</span>
             </div>
@@ -1082,19 +1230,151 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="bg-black/20 backdrop-blur-sm border-t border-white/10 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <p className="text-gray-300">
-              © 2025 CA Law Portal - Powered by AI for Chartered Accountants
-            </p>
-            <p className="text-sm text-gray-400">
-              Last updated: {dashboardData?.lastUpdated || new Date().toLocaleString()}
-            </p>
+      {/* Email Testing Modal */}
+      {showEmailTesting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/20">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">🧪 Email Testing System</h2>
+                <button
+                  onClick={() => setShowEmailTesting(false)}
+                  className="text-gray-400 hover:text-white text-2xl font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-gray-300 mt-2">Test email notifications to CAs and CEOs</p>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              <div className="space-y-4">
+                {/* Recipient Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Recipient Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={emailTestForm.recipientEmail}
+                    onChange={(e) => setEmailTestForm({...emailTestForm, recipientEmail: e.target.value})}
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    placeholder="ca@example.com"
+                    required
+                  />
+                </div>
+
+                {/* Recipient Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Recipient Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={emailTestForm.recipientName}
+                    onChange={(e) => setEmailTestForm({...emailTestForm, recipientName: e.target.value})}
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    placeholder="CA John Doe"
+                    required
+                  />
+                </div>
+
+                {/* Email Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Email Type
+                  </label>
+                  <select
+                    value={emailTestForm.emailType}
+                    onChange={(e) => setEmailTestForm({...emailTestForm, emailType: e.target.value})}
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="tax-update">🏛️ Tax Law Update</option>
+                    <option value="compliance-alert">⚠️ Compliance Alert</option>
+                    <option value="news-digest">📰 News Digest</option>
+                  </select>
+                </div>
+
+                {/* Test Content */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Test Content (Optional)
+                  </label>
+                  <textarea
+                    value={emailTestForm.testContent}
+                    onChange={(e) => setEmailTestForm({...emailTestForm, testContent: e.target.value})}
+                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
+                    rows={4}
+                    placeholder="Enter custom test content or leave empty for default template..."
+                  />
+                </div>
+
+                {/* Test Result */}
+                {emailTestResult && (
+                  <div className="bg-green-600/20 border border-green-400/30 rounded-lg p-4">
+                    <h4 className="font-bold text-green-400 mb-2">✅ Test Email Sent Successfully!</h4>
+                    <div className="text-sm text-gray-300 space-y-1">
+                      <p><strong>To:</strong> {emailTestResult.emailPreview.to}</p>
+                      <p><strong>Subject:</strong> {emailTestResult.emailPreview.subject}</p>
+                      <p><strong>Service:</strong> {emailTestResult.deliveryInfo.service}</p>
+                      <p><strong>Message ID:</strong> {emailTestResult.deliveryInfo.messageId}</p>
+                      <p><strong>Estimated Delivery:</strong> {emailTestResult.deliveryInfo.estimatedDelivery}</p>
+                    </div>
+                    <div className="mt-3 p-3 bg-black/20 rounded border max-h-32 overflow-y-auto">
+                      <div className="text-xs text-gray-400" 
+                           dangerouslySetInnerHTML={{__html: emailTestResult.emailPreview.html}} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-white/20 flex justify-end space-x-2">
+              <button
+                onClick={() => setShowEmailTesting(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={sendTestEmail}
+                disabled={sendingTestEmail || !emailTestForm.recipientEmail || !emailTestForm.recipientName}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed rounded transition-colors flex items-center space-x-2"
+              >
+                {sendingTestEmail ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📧</span>
+                    <span>Send Test Email</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </footer>
+      )}
+
+      {/* Footer */}
+        <footer className="bg-black/20 backdrop-blur-sm border-t border-white/10 mt-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex justify-between items-center">
+              <p className="text-gray-300">
+                © 2025 CA Law Portal - Powered by AI for Chartered Accountants
+              </p>
+              <p className="text-sm text-gray-400">
+                Last updated: {dashboardData?.lastUpdated || new Date().toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

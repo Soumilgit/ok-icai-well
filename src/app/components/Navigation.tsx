@@ -18,6 +18,12 @@ export default function Navigation() {
             <Link href="/" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
               Features
             </Link>
+            <Link href="/workflow" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+              Workflow Builder
+            </Link>
+            <Link href="/dashboard" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+              Dashboard
+            </Link>
             <Link href="/about" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
               How It Works
             </Link>
@@ -26,12 +32,6 @@ export default function Navigation() {
             </Link>
             <Link href="/contact" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
               Success Stories
-            </Link>
-            <Link href="/" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-              Resources
-            </Link>
-            <Link href="/" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-              About
             </Link>
           </div>
 

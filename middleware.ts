@@ -19,12 +19,31 @@ const isProtectedRoute = createRouteMatcher([
   '/api/notifications(.*)'
 ]);
 
+// Admin-only routes (company members only)
+const isAdminRoute = createRouteMatcher([
+  '/workflow-builder(.*)',
+  '/api/workflow(.*)',
+  '/api/socket(.*)',
+  '/admin(.*)'
+]);
+
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
   
   // Redirect to sign-in if trying to access protected routes while unauthenticated
-  if (isProtectedRoute(req) && !userId) {
+  if ((isProtectedRoute(req) || isAdminRoute(req)) && !userId) {
     return NextResponse.redirect(new URL('/sign-in', req.url));
+  }
+
+  // Check for domain-based access to workflow builder (aminutemantechnologies.com only)
+  if (isAdminRoute(req) && userId) {
+    const userEmail = (sessionClaims?.email as string) || '';
+    const aminuteDomainRegex = /^[a-zA-Z0-9._%+-]+@aminutemantechnologies\.com$/i;
+    
+    // Only allow users with @aminutemantechnologies.com email domain
+    if (!aminuteDomainRegex.test(userEmail)) {
+      return NextResponse.redirect(new URL('/dashboard?error=domain_access_denied', req.url));
+    }
   }
 
   // Redirect authenticated users from public auth pages to dashboard

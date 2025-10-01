@@ -1,0 +1,6 @@
+# Pages Directory
+
+This directory is kept empty to prevent Next.js scanning errors.
+We are using App Router located in `/src/app/` for all routes.
+
+Do not add any files to this directory to avoid routing conflicts.

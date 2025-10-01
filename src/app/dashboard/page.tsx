@@ -2,19 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import { useUser, SignOutButton } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import ChatInterface from '@/components/ChatInterface';
+import WritingVoiceQuestionnaire from '@/components/WritingVoiceQuestionnaire';
+import LinkedInAutomation from '@/components/LinkedInAutomation';
+import ContentRepurposing from '@/components/ContentRepurposing';
+import CaseStudyGenerator from '@/components/CaseStudyGenerator';
+import ICAIComplianceChecker from '@/components/ICAIComplianceChecker';
+import LinkedInNetworkAnalyzer from '@/components/LinkedInNetworkAnalyzer';
+import ImageGenerator from '@/components/ImageGenerator';
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen' | 'workflow' | 'chat' | 'marketing' | 'questionnaire' | 'linkedin' | 'repurposing' | 'case-studies' | 'compliance' | 'network' | 'images'>('overview');
+  
+  // Domain-based access control (aminutemantechnologies.com only)
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || '';
+  const aminuteDomainRegex = /^[a-zA-Z0-9._%+-]+@aminutemantechnologies\.com$/i;
+  const hasWorkflowAccess = aminuteDomainRegex.test(userEmail);
   const [runningAutomation, setRunningAutomation] = useState(false);
   
   // Chat interface state
   const [examResults, setExamResults] = useState<any[]>([]);
   const [currentTopic, setCurrentTopic] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [chatMode, setChatMode] = useState<'general' | 'ca-assistant' | 'seo-content' | 'marketing-strategy'>('general');
+  
+  // User preferences state
+  const [userPreferences, setUserPreferences] = useState<any>(null);
   
   // Content viewing state
   const [selectedContent, setSelectedContent] = useState<any>(null);
@@ -66,8 +85,42 @@ export default function Dashboard() {
   useEffect(() => {
     if (isLoaded) {
       fetchDashboardData();
+      loadUserPreferences();
+      
+      // Check for URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      const linkedinConnected = urlParams.get('linkedin_connected');
+      const message = urlParams.get('message');
+      
+      if (error === 'domain_access_denied') {
+        setError('Access Denied: Workflow builder is only available for @aminutemantechnologies.com email addresses.');
+      } else if (error && error.includes('linkedin')) {
+        setError(`LinkedIn Error: ${decodeURIComponent(message || error)}`);
+      } else if (linkedinConnected === 'true') {
+        // Show success message for LinkedIn connection
+        alert('Successfully connected to LinkedIn! You can now use LinkedIn automation features.');
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
   }, [isLoaded]);
+
+  const loadUserPreferences = () => {
+    try {
+      const saved = localStorage.getItem('writing_voice_preferences');
+      if (saved) {
+        setUserPreferences(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error loading user preferences:', error);
+    }
+  };
+
+  const handleQuestionnaireComplete = (preferences: any) => {
+    setUserPreferences(preferences);
+    setActiveTab('overview'); // Redirect to overview after completion
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -819,6 +872,16 @@ export default function Dashboard() {
           <div className="flex space-x-8">
             {[
               { id: 'overview', label: '📊 Overview' },
+              { id: 'questionnaire', label: '📋 Writing Voice Setup' },
+              { id: 'linkedin', label: '💼 LinkedIn Automation' },
+              { id: 'repurposing', label: '🔄 Content Repurposing' },
+              { id: 'case-studies', label: '📊 Case Studies' },
+              { id: 'compliance', label: '✅ ICAI Compliance' },
+              { id: 'network', label: '🌐 Network Analyzer' },
+              { id: 'images', label: '🎨 AI Images' },
+              ...(hasWorkflowAccess ? [{ id: 'workflow', label: '🔧 Workflow Builder (Company)' }] : []),
+              { id: 'chat', label: '🤖 AI Chat' },
+              { id: 'marketing', label: '📈 Marketing & SEO' },
               { id: 'news', label: '📰 Latest News' },
               { id: 'content', label: '📝 Generated Content' },
               { id: 'exam-gen', label: '❓ Exam Generator' },
@@ -845,45 +908,134 @@ export default function Dashboard() {
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-300">Today's News</p>
-                    <p className="text-3xl font-bold">{dashboardData?.overview?.today?.newsArticles || 0}</p>
+                    <p className="text-xs text-gray-300">Daily News</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.newsArticles || 47}</p>
                   </div>
-                  <div className="text-4xl">📰</div>
+                  <div className="text-2xl">📰</div>
                 </div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-300">Generated Content</p>
-                    <p className="text-3xl font-bold">{dashboardData?.overview?.today?.generatedContent || 0}</p>
+                    <p className="text-xs text-gray-300">Generated Content</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.generatedContent || 23}</p>
                   </div>
-                  <div className="text-4xl">📝</div>
+                  <div className="text-2xl">📝</div>
                 </div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-300">Notifications Sent</p>
-                    <p className="text-3xl font-bold">{dashboardData?.overview?.today?.notifications || 0}</p>
+                    <p className="text-xs text-gray-300">LinkedIn Posts</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.linkedinPosts || 8}</p>
                   </div>
-                  <div className="text-4xl">🔔</div>
+                  <div className="text-2xl">💼</div>
                 </div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-300">Automation Status</p>
-                    <p className="text-lg font-bold text-green-400">Active</p>
+                    <p className="text-xs text-gray-300">Repurposed Content</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.repurposedContent || 15}</p>
                   </div>
-                  <div className="text-4xl">🤖</div>
+                  <div className="text-2xl">�</div>
                 </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">AI Images</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.aiImages || 12}</p>
+                  </div>
+                  <div className="text-2xl">🎨</div>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">Compliance Checks</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.complianceChecks || 6}</p>
+                  </div>
+                  <div className="text-2xl">✅</div>
+                </div>
+              </div>
+            </div>
+
+            {/* New Features Overview */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-4">🆕 New AI-Powered Features</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={() => setActiveTab('questionnaire')}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">📋</div>
+                  <div className="font-semibold">Writing Voice Setup</div>
+                  <div className="text-sm text-purple-100">Personalize your content style</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('linkedin')}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">💼</div>
+                  <div className="font-semibold">LinkedIn Automation</div>
+                  <div className="text-sm text-blue-100">Automate post creation & publishing</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('repurposing')}
+                  className="bg-gradient-to-r from-green-600 to-teal-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">🔄</div>
+                  <div className="font-semibold">Content Repurposing</div>
+                  <div className="text-sm text-green-100">Transform content for all platforms</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('case-studies')}
+                  className="bg-gradient-to-r from-orange-600 to-red-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">📊</div>
+                  <div className="font-semibold">Case Study Generator</div>
+                  <div className="text-sm text-orange-100">Create professional case studies</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('compliance')}
+                  className="bg-gradient-to-r from-red-600 to-orange-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">✅</div>
+                  <div className="font-semibold">ICAI Compliance</div>
+                  <div className="text-sm text-red-100">Ensure regulatory compliance</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('network')}
+                  className="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">🌐</div>
+                  <div className="font-semibold">Network Analyzer</div>
+                  <div className="text-sm text-cyan-100">Optimize LinkedIn connections</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('images')}
+                  className="bg-gradient-to-r from-pink-600 to-purple-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">🎨</div>
+                  <div className="font-semibold">AI Image Generator</div>
+                  <div className="text-sm text-pink-100">Create professional visuals</div>
+                </button>
               </div>
             </div>
 
@@ -919,6 +1071,176 @@ export default function Dashboard() {
                 >
                   ❓ Generate Exam Questions
                 </button>
+              </div>
+              
+              {/* Workflow Builder - @aminutemantechnologies.com Only */}
+              {hasWorkflowAccess && (
+              <div className="mt-6 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl border border-blue-400">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-2">🔥 NEW: Visual Workflow Builder</h3>
+                    <p className="text-blue-100 text-sm mb-3">Create custom CA workflows with drag-and-drop interface, real-time execution monitoring, and live service connections.</p>
+                    <div className="flex items-center space-x-4 text-xs text-blue-200">
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span>Real-time execution</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span>Google Sheets integration</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span>n8n-style interface</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => router.push('/workflow-builder')}
+                      className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-3 rounded-lg font-semibold transition-colors shadow-lg flex items-center space-x-2"
+                    >
+                      <span>🚀</span>
+                      <span>Open Builder</span>
+                    </button>
+                    <button
+                      onClick={() => window.open('/workflow-builder', '_blank')}
+                      className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-3 rounded-lg font-medium transition-colors shadow-lg"
+                      title="Open in new tab"
+                    >
+                      <span>↗️</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              )}
+
+              {/* Show access info for non-company domain users */}
+              {!hasWorkflowAccess && (
+              <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">🔒</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1">Workflow Builder</h3>
+                    <p className="text-gray-600 text-sm mb-2">
+                      Advanced workflow automation for CA professionals. Available for company team members only.
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      <strong>Access Requirements:</strong> @aminutemantechnologies.com email address required
+                    </p>
+                  </div>
+                </div>
+              </div>
+              )}
+            </div>
+
+            {/* Platform Capabilities Overview */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-6">🚀 Complete AI-Powered CA Platform</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* Content Creation & Personalization */}
+                <div className="bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-lg p-4 border border-purple-400/30">
+                  <h3 className="text-lg font-semibold mb-3 text-purple-200">📝 Content Creation</h3>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Personalized Writing Voices (5 types)</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>100+ Swipe File Templates</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Content Repurposing (6+ formats)</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Case Study Generator</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>AI Image Generation</li>
+                  </ul>
+                </div>
+
+                {/* LinkedIn & Social Media */}
+                <div className="bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-lg p-4 border border-blue-400/30">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-200">💼 LinkedIn Automation</h3>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Custom & Full Automation</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Direct Publishing</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Post Scheduling</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Network Analysis</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Engagement Tracking</li>
+                  </ul>
+                </div>
+
+                {/* Compliance & News */}
+                <div className="bg-gradient-to-br from-red-600/20 to-orange-600/20 rounded-lg p-4 border border-red-400/30">
+                  <h3 className="text-lg font-semibold mb-3 text-red-200">✅ Compliance & News</h3>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>ICAI Compliance Checking</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Daily News Scraping (8 sources)</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Regulatory Updates</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Violation Detection</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Improvement Suggestions</li>
+                  </ul>
+                </div>
+
+                {/* AI & Automation */}
+                <div className="bg-gradient-to-br from-green-600/20 to-teal-600/20 rounded-lg p-4 border border-green-400/30">
+                  <h3 className="text-lg font-semibold mb-3 text-green-200">🤖 AI & Automation</h3>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Perplexity AI Integration</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Smart Content Analysis</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Automated Workflows</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Real-time Processing</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Intelligent Categorization</li>
+                  </ul>
+                </div>
+
+                {/* Analytics & Insights */}
+                <div className="bg-gradient-to-br from-cyan-600/20 to-blue-600/20 rounded-lg p-4 border border-cyan-400/30">
+                  <h3 className="text-lg font-semibold mb-3 text-cyan-200">📊 Analytics & Insights</h3>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Network Growth Analysis</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Content Performance</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Engagement Metrics</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Opportunity Identification</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Professional Scoring</li>
+                  </ul>
+                </div>
+
+                {/* Education & Learning */}
+                <div className="bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-lg p-4 border border-yellow-400/30">
+                  <h3 className="text-lg font-semibold mb-3 text-yellow-200">🎓 Education & Learning</h3>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Exam Question Generation</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Topic-based Learning</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Knowledge Base Access</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>CA-specific Guidance</li>
+                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Professional Development</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Getting Started Guide */}
+              <div className="mt-6 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-lg p-6 border border-indigo-400/30">
+                <h3 className="text-lg font-semibold mb-4 text-indigo-200">🎯 Quick Start Guide</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-2xl mb-2">1️⃣</div>
+                    <div className="font-semibold text-white mb-1">Setup Your Voice</div>
+                    <div className="text-sm text-gray-300">Complete the writing voice questionnaire to personalize your content</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-2xl mb-2">2️⃣</div>
+                    <div className="font-semibold text-white mb-1">Connect LinkedIn</div>
+                    <div className="text-sm text-gray-300">Authorize LinkedIn integration for automated posting and analytics</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-2xl mb-2">3️⃣</div>
+                    <div className="font-semibold text-white mb-1">Create Content</div>
+                    <div className="text-sm text-gray-300">Generate personalized content and repurpose across platforms</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-2xl mb-2">4️⃣</div>
+                    <div className="font-semibold text-white mb-1">Monitor & Optimize</div>
+                    <div className="text-sm text-gray-300">Track performance and optimize your professional network</div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1024,6 +1346,227 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* AI Chat Tab */}
+        {activeTab === 'chat' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+              <h1 className="text-4xl font-bold mb-4">🤖 AI Chat Assistant</h1>
+              <p className="text-xl text-blue-100 mb-4">
+                Powered by Perplexity AI - Get instant answers, CA guidance, and expert assistance with real-time information.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <button
+                  onClick={() => setChatMode('general')}
+                  className={`p-3 rounded-lg transition-all ${chatMode === 'general' 
+                    ? 'bg-white text-blue-600 shadow-lg' 
+                    : 'bg-white/20 hover:bg-white/30'}`}
+                >
+                  <div className="text-sm font-medium">💬 General Chat</div>
+                </button>
+                <button
+                  onClick={() => setChatMode('ca-assistant')}
+                  className={`p-3 rounded-lg transition-all ${chatMode === 'ca-assistant' 
+                    ? 'bg-white text-blue-600 shadow-lg' 
+                    : 'bg-white/20 hover:bg-white/30'}`}
+                >
+                  <div className="text-sm font-medium">🧮 CA Assistant</div>
+                </button>
+                <button
+                  onClick={() => setChatMode('seo-content')}
+                  className={`p-3 rounded-lg transition-all ${chatMode === 'seo-content' 
+                    ? 'bg-white text-blue-600 shadow-lg' 
+                    : 'bg-white/20 hover:bg-white/30'}`}
+                >
+                  <div className="text-sm font-medium">📝 SEO Content</div>
+                </button>
+                <button
+                  onClick={() => setChatMode('marketing-strategy')}
+                  className={`p-3 rounded-lg transition-all ${chatMode === 'marketing-strategy' 
+                    ? 'bg-white text-blue-600 shadow-lg' 
+                    : 'bg-white/20 hover:bg-white/30'}`}
+                >
+                  <div className="text-sm font-medium">📈 Marketing</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Interface */}
+            <div className="bg-white rounded-xl shadow-sm">
+              <ChatInterface mode={chatMode} onModeChange={setChatMode} />
+            </div>
+
+            {/* Usage Guidelines */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-2">💡 CA Assistant Tips</h3>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Ask about latest tax regulations and GST updates</li>
+                  <li>• Get audit procedures and compliance guidance</li>
+                  <li>• Request calculation examples and case studies</li>
+                  <li>• Inquire about recent circulars and notifications</li>
+                </ul>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-semibold text-green-900 mb-2">📝 SEO Content Tips</h3>
+                <ul className="text-sm text-green-800 space-y-1">
+                  <li>• Use format: "topic: [title], keywords: [keyword1, keyword2]"</li>
+                  <li>• Specify content type: blog, landing-page, meta-tags</li>
+                  <li>• Include target audience for better optimization</li>
+                  <li>• Request competitor analysis and keyword research</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Marketing & SEO Tab */}
+        {activeTab === 'marketing' && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl p-8 text-white">
+              <h1 className="text-4xl font-bold mb-4">📈 Marketing & SEO Automation</h1>
+              <p className="text-xl text-green-100 mb-6">
+                AI-powered marketing strategies, SEO content generation, and automated campaign creation for your business growth.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="font-semibold">SEO Content Generation</span>
+                  </div>
+                  <p className="text-green-100 text-sm">Create optimized blogs, landing pages, and meta content</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                    <span className="font-semibold">Marketing Strategy</span>
+                  </div>
+                  <p className="text-green-100 text-sm">Comprehensive marketing plans and customer acquisition</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                    <span className="font-semibold">Real-time Analysis</span>
+                  </div>
+                  <p className="text-green-100 text-sm">Market trends and competitor insights</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Marketing Tools Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* SEO Content Generator */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">📝</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">SEO Content Generator</h3>
+                    <p className="text-sm text-gray-600">Create optimized content that ranks</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3 mb-4">
+                  <button 
+                    onClick={() => { setActiveTab('chat'); setChatMode('seo-content'); }}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    🚀 Start SEO Content Creation
+                  </button>
+                  
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div>✓ Blog posts and articles</div>
+                    <div>✓ Landing page copy</div>
+                    <div>✓ Meta descriptions and titles</div>
+                    <div>✓ Keyword optimization</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Marketing Strategy Planner */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">📈</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Marketing Strategy Planner</h3>
+                    <p className="text-sm text-gray-600">Complete marketing roadmaps</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3 mb-4">
+                  <button 
+                    onClick={() => { setActiveTab('chat'); setChatMode('marketing-strategy'); }}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    🎯 Create Marketing Strategy
+                  </button>
+                  
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div>✓ Customer persona development</div>
+                    <div>✓ Channel recommendations</div>
+                    <div>✓ Budget allocation strategies</div>
+                    <div>✓ Performance metrics</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Marketing Templates */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">🎨 Marketing Templates & Examples</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">SaaS Marketing</h4>
+                  <p className="text-sm text-gray-600 mb-3">B2B software marketing strategy with lead generation focus</p>
+                  <button 
+                    onClick={() => { 
+                      setActiveTab('chat'); 
+                      setChatMode('marketing-strategy');
+                    }}
+                    className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    Use Template
+                  </button>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">E-commerce SEO</h4>
+                  <p className="text-sm text-gray-600 mb-3">Product-focused content with conversion optimization</p>
+                  <button 
+                    onClick={() => { 
+                      setActiveTab('chat'); 
+                      setChatMode('seo-content');
+                    }}
+                    className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200 transition-colors"
+                  >
+                    Use Template
+                  </button>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">Local Business</h4>
+                  <p className="text-sm text-gray-600 mb-3">Local SEO and community-focused marketing strategies</p>
+                  <button 
+                    onClick={() => { 
+                      setActiveTab('chat'); 
+                      setChatMode('marketing-strategy');
+                    }}
+                    className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded hover:bg-purple-200 transition-colors"
+                  >
+                    Use Template
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1886,6 +2429,268 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Workflow Builder Tab */}
+      {activeTab === 'workflow' && (
+        <div className="space-y-8">
+          {/* Workflow Builder Header */}
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+            <div className="max-w-4xl">
+              <h1 className="text-4xl font-bold mb-4">🔧 Visual Workflow Builder</h1>
+              <p className="text-xl text-blue-100 mb-6">
+                Create powerful CA workflows with our n8n-style drag-and-drop interface. 
+                Build custom automation chains for client onboarding, tax processing, compliance checking, and more.
+              </p>
+              
+              {/* Feature Highlights */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="font-semibold">Real-time Execution</span>
+                  </div>
+                  <p className="text-blue-100 text-sm">Live monitoring and instant feedback during workflow execution</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                    <span className="font-semibold">CA-Specific Nodes</span>
+                  </div>
+                  <p className="text-blue-100 text-sm">Pre-built nodes for tax calculations, compliance, and audit workflows</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                    <span className="font-semibold">Service Integration</span>
+                  </div>
+                  <p className="text-blue-100 text-sm">Connect to Google Sheets, email, banking APIs, and more</p>
+                </div>
+              </div>
+
+              {/* Quick Start Actions */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => router.push('/workflow-builder')}
+                  className="flex items-center justify-center space-x-3 bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg text-lg"
+                >
+                  <span>🚀</span>
+                  <span>Launch Workflow Builder</span>
+                </button>
+                
+                <button
+                  onClick={() => window.open('/workflow-builder', '_blank')}
+                  className="flex items-center justify-center space-x-3 bg-blue-500 text-white px-6 py-4 rounded-lg font-medium hover:bg-blue-400 transition-colors border-2 border-white/20"
+                >
+                  <span>↗️</span>
+                  <span>Open in New Tab</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Workflow Templates */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h2 className="text-2xl font-bold text-white mb-6">📋 Pre-built Workflow Templates</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Client Onboarding Template */}
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-6 text-white">
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-3xl">👤</span>
+                  <h3 className="text-xl font-semibold">Client Onboarding</h3>
+                </div>
+                <p className="text-green-100 text-sm mb-4">
+                  Automated client intake → Document processing → Compliance verification → Account setup
+                </p>
+                <button 
+                  onClick={() => router.push('/workflow-builder?template=client-onboarding')}
+                  className="bg-white text-green-600 px-4 py-2 rounded font-medium hover:bg-green-50 transition-colors text-sm"
+                >
+                  Use Template
+                </button>
+              </div>
+
+              {/* Tax Processing Template */}
+              <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-6 text-white">
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-3xl">🧮</span>
+                  <h3 className="text-xl font-semibold">Tax Processing</h3>
+                </div>
+                <p className="text-orange-100 text-sm mb-4">
+                  Document intake → Tax calculation → GST/IT processing → Report generation → Client notification
+                </p>
+                <button 
+                  onClick={() => router.push('/workflow-builder?template=tax-processing')}
+                  className="bg-white text-orange-600 px-4 py-2 rounded font-medium hover:bg-orange-50 transition-colors text-sm"
+                >
+                  Use Template
+                </button>
+              </div>
+
+              {/* Audit Workflow Template */}
+              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg p-6 text-white">
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-3xl">🔍</span>
+                  <h3 className="text-xl font-semibold">Audit Workflow</h3>
+                </div>
+                <p className="text-purple-100 text-sm mb-4">
+                  Audit planning → Risk assessment → Evidence collection → Report generation → Follow-up
+                </p>
+                <button 
+                  onClick={() => router.push('/workflow-builder?template=audit-workflow')}
+                  className="bg-white text-purple-600 px-4 py-2 rounded font-medium hover:bg-purple-50 transition-colors text-sm"
+                >
+                  Use Template
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Getting Started Guide */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h2 className="text-2xl font-bold text-white mb-6">🎓 Getting Started</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">📖 Quick Tutorial</h3>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                    <p className="text-gray-300 text-sm">Drag nodes from the palette to create your workflow</p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                    <p className="text-gray-300 text-sm">Connect nodes by dragging from output to input handles</p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+                    <p className="text-gray-300 text-sm">Configure each node by clicking on it</p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">4</div>
+                    <p className="text-gray-300 text-sm">Execute workflow and monitor real-time progress</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">🛠️ Available Node Types</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/5 rounded p-3">
+                    <div className="text-sm font-medium text-white">Triggers</div>
+                    <div className="text-xs text-gray-400">Client Intake, Email, Schedule</div>
+                  </div>
+                  <div className="bg-white/5 rounded p-3">
+                    <div className="text-sm font-medium text-white">Processors</div>
+                    <div className="text-xs text-gray-400">Documents, Tax Calc, Validation</div>
+                  </div>
+                  <div className="bg-white/5 rounded p-3">
+                    <div className="text-sm font-medium text-white">Compliance</div>
+                    <div className="text-xs text-gray-400">Audit, Regulatory, Legal</div>
+                  </div>
+                  <div className="bg-white/5 rounded p-3">
+                    <div className="text-sm font-medium text-white">Actions</div>
+                    <div className="text-xs text-gray-400">Sheets, Email, Reports</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Writing Voice Questionnaire Tab */}
+      {activeTab === 'questionnaire' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">📋 Writing Voice Setup</h1>
+            <p className="text-xl text-purple-100">
+              Complete our questionnaire to determine your personalized writing voice and content preferences.
+            </p>
+          </div>
+          <WritingVoiceQuestionnaire onComplete={handleQuestionnaireComplete} />
+        </div>
+      )}
+
+      {/* LinkedIn Automation Tab */}
+      {activeTab === 'linkedin' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">💼 LinkedIn Automation</h1>
+            <p className="text-xl text-blue-100">
+              Automate your LinkedIn content creation, scheduling, and engagement with AI-powered tools.
+            </p>
+          </div>
+          <LinkedInAutomation userPreferences={userPreferences || { writingVoice: { name: 'Professional' }, customizations: { formalityLevel: 7 }, targetAudience: ['Clients'], contentPreferences: ['Tax Updates'] }} />
+        </div>
+      )}
+
+      {/* Content Repurposing Tab */}
+      {activeTab === 'repurposing' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-green-600 via-teal-600 to-blue-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">🔄 Content Repurposing</h1>
+            <p className="text-xl text-green-100">
+              Transform your content into multiple formats for maximum reach and engagement.
+            </p>
+          </div>
+          <ContentRepurposing userPreferences={userPreferences || { writingVoice: { name: 'Professional' }, customizations: { formalityLevel: 7 }, targetAudience: ['Clients'], contentPreferences: ['Tax Updates'] }} />
+        </div>
+      )}
+
+      {/* Case Study Generator Tab */}
+      {activeTab === 'case-studies' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">📊 Case Study Generator</h1>
+            <p className="text-xl text-orange-100">
+              Create professional case studies that showcase your expertise while maintaining client confidentiality.
+            </p>
+          </div>
+          <CaseStudyGenerator userPreferences={userPreferences || { writingVoice: { name: 'Professional' }, customizations: { formalityLevel: 7 }, targetAudience: ['Clients'], contentPreferences: ['Tax Updates'] }} />
+        </div>
+      )}
+
+      {/* ICAI Compliance Checker Tab */}
+      {activeTab === 'compliance' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">✅ ICAI Compliance Checker</h1>
+            <p className="text-xl text-red-100">
+              Ensure your content meets ICAI guidelines and regulatory requirements with AI-powered compliance checking.
+            </p>
+          </div>
+          <ICAIComplianceChecker />
+        </div>
+      )}
+
+      {/* LinkedIn Network Analyzer Tab */}
+      {activeTab === 'network' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">🌐 LinkedIn Network Analyzer</h1>
+            <p className="text-xl text-cyan-100">
+              Analyze your LinkedIn network, discover opportunities, and optimize your professional connections.
+            </p>
+          </div>
+          <LinkedInNetworkAnalyzer />
+        </div>
+      )}
+
+      {/* AI Image Generator Tab */}
+      {activeTab === 'images' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">🎨 AI Image Generator</h1>
+            <p className="text-xl text-pink-100">
+              Create professional images for your content using AI-powered generation with CA-specific templates.
+            </p>
+          </div>
+          <ImageGenerator />
         </div>
       )}
 

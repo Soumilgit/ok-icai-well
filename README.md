@@ -4,7 +4,7 @@ An **AI-powered automation platform for Chartered Accountants**, combining compl
 
 ## 🚀 Key Features
 
-* **News Collection**: Automated scraping from ANI, Economic Times, ICAI, and LiveMint
+* **News Collection**: Automated scraping from ANI, Economic Times, ICAI
 * **AI Content Generation**: Tax articles, audit checklists, exam-style questions, SEO drafts, compliance guides
 * **Exam Generator**: Auto-creation of ICAI-style practice questions from latest news
 * **Notifications**: Automated updates via email (Nodemailer)
@@ -63,6 +63,3 @@ An **AI-powered automation platform for Chartered Accountants**, combining compl
 
 **Built with ❤️ for the Chartered Accountancy community**
 
----
-
-Do you want me to also make a **one-page ultra-short version (like a startup landing page blurb)** for pitching, or keep it as a README-style summary?

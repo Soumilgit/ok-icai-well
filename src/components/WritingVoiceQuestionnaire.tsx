@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 import { WritingVoiceService, QuestionnaireQuestion, UserPreferences } from '../lib/writing-voice-service';
+import { UserPreferencesCache } from '../lib/user-preferences-cache';
 
 interface QuestionnaireProps {
   onComplete?: (preferences: UserPreferences) => void;
@@ -9,13 +11,73 @@ interface QuestionnaireProps {
 }
 
 export default function WritingVoiceQuestionnaire({ onComplete, onClose }: QuestionnaireProps) {
+  const { user } = useUser();
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || '';
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [responses, setResponses] = useState<{ [questionId: string]: any }>({});
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasExistingProgress, setHasExistingProgress] = useState(false);
   
   const writingVoiceService = new WritingVoiceService();
   const questions = writingVoiceService.getQuestionnaire();
   const totalSteps = questions.length;
+
+  // Load existing progress on component mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!userEmail) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const cachedProgress = await UserPreferencesCache.getUserProgress(userEmail);
+        
+        if (cachedProgress) {
+          setHasExistingProgress(true);
+          
+          // If questionnaire is already completed, show the preferences
+          if (cachedProgress.isCompleted && cachedProgress.writingVoicePreferences) {
+            if (onComplete) {
+              onComplete(cachedProgress.writingVoicePreferences);
+              return;
+            }
+          }
+          
+          // Load partial progress
+          if (cachedProgress.questionnaireResponses) {
+            setResponses(cachedProgress.questionnaireResponses);
+            setCurrentStep(cachedProgress.progressStep || 0);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading progress:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProgress();
+  }, [userEmail, onComplete]);
+
+  // Save progress automatically when responses change
+  useEffect(() => {
+    const saveProgress = async () => {
+      if (!userEmail || isLoading) return;
+      
+      await UserPreferencesCache.saveUserProgress(userEmail, {
+        questionnaireResponses: responses,
+        progressStep: currentStep,
+        isCompleted: false
+      });
+    };
+
+    // Debounce the save to avoid too many database calls
+    const timeoutId = setTimeout(saveProgress, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [responses, currentStep, userEmail, isLoading]);
 
   const handleResponse = (questionId: string, answer: any) => {
     setResponses(prev => ({
@@ -43,7 +105,17 @@ export default function WritingVoiceQuestionnaire({ onComplete, onClose }: Quest
     try {
       const preferences = writingVoiceService.analyzeResponses(responses);
       
-      // Save preferences to localStorage for later use
+      // Save final preferences to RAG cache
+      if (userEmail) {
+        await UserPreferencesCache.saveUserProgress(userEmail, {
+          questionnaireResponses: responses,
+          progressStep: currentStep,
+          writingVoicePreferences: preferences,
+          isCompleted: true
+        });
+      }
+      
+      // Also save to localStorage as backup
       localStorage.setItem('writing_voice_preferences', JSON.stringify(preferences));
       
       // Call onComplete if provided
@@ -61,6 +133,27 @@ export default function WritingVoiceQuestionnaire({ onComplete, onClose }: Quest
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleExit = async () => {
+    // Save current progress before exiting
+    if (userEmail) {
+      await UserPreferencesCache.saveUserProgress(userEmail, {
+        questionnaireResponses: responses,
+        progressStep: currentStep,
+        isCompleted: false
+      });
+    }
+    
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  const handleRestart = () => {
+    setCurrentStep(0);
+    setResponses({});
+    setHasExistingProgress(false);
   };
 
   const isCurrentQuestionAnswered = () => {
@@ -173,6 +266,20 @@ export default function WritingVoiceQuestionnaire({ onComplete, onClose }: Quest
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Your Progress</h3>
+            <p className="text-gray-600">Retrieving your saved questionnaire data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -185,10 +292,12 @@ export default function WritingVoiceQuestionnaire({ onComplete, onClose }: Quest
                 Help us personalize your content creation experience
               </p>
             </div>
+            
             {onClose && (
               <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={handleExit}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100"
+                title="Save progress and exit"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -196,6 +305,26 @@ export default function WritingVoiceQuestionnaire({ onComplete, onClose }: Quest
               </button>
             )}
           </div>
+          
+          {/* Progress notification */}
+          {hasExistingProgress && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-sm text-blue-800">Previous progress restored</span>
+                </div>
+                <button
+                  onClick={handleRestart}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Restart from beginning
+                </button>
+              </div>
+            </div>
+          )}
           
           {/* Progress Bar */}
           <div className="mt-4">

@@ -83,7 +83,7 @@ export default function ICAIComplianceChecker() {
             <select
               value={contentType}
               onChange={(e) => setContentType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
             >
               {contentTypes.map(type => (
                 <option key={type.value} value={type.value}>
@@ -101,7 +101,7 @@ export default function ICAIComplianceChecker() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Paste your content here to check for ICAI compliance..."
-              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
             />
             <div className="text-sm text-gray-500 mt-1">
               {content.length} characters

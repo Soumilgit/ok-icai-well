@@ -687,7 +687,7 @@ export default function Dashboard() {
                       setShowSheetsWorkflow(!showSheetsWorkflow);
                       setSheetsWorkflowType('drafting');
                     }}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-green-600/20 rounded"
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-blue-600/20 rounded"
                   >
                     📝 CA Drafting Workflow
                   </button>
@@ -696,7 +696,7 @@ export default function Dashboard() {
                       setShowSheetsWorkflow(!showSheetsWorkflow);
                       setSheetsWorkflowType('auditing');
                     }}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-orange-600/20 rounded"
+                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-blue-600/20 rounded"
                   >
                     🔍 CA Auditing Workflow
                   </button>
@@ -976,16 +976,16 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button
                   onClick={() => setActiveTab('questionnaire')}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
                   <div className="text-2xl mb-2">📋</div>
                   <div className="font-semibold">Writing Voice Setup</div>
-                  <div className="text-sm text-purple-100">Personalize your content style</div>
+                  <div className="text-sm text-blue-100">Personalize your content style</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('linkedin')}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
                   <div className="text-2xl mb-2">💼</div>
                   <div className="font-semibold">LinkedIn Automation</div>
@@ -994,47 +994,47 @@ export default function Dashboard() {
                 
                 <button
                   onClick={() => setActiveTab('repurposing')}
-                  className="bg-gradient-to-r from-green-600 to-teal-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
                   <div className="text-2xl mb-2">🔄</div>
                   <div className="font-semibold">Content Repurposing</div>
-                  <div className="text-sm text-green-100">Transform content for all platforms</div>
+                  <div className="text-sm text-blue-100">Transform content for all platforms</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('case-studies')}
-                  className="bg-gradient-to-r from-orange-600 to-red-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
                   <div className="text-2xl mb-2">📊</div>
                   <div className="font-semibold">Case Study Generator</div>
-                  <div className="text-sm text-orange-100">Create professional case studies</div>
+                  <div className="text-sm text-blue-100">Create professional case studies</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('compliance')}
-                  className="bg-gradient-to-r from-red-600 to-orange-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
                   <div className="text-2xl mb-2">✅</div>
                   <div className="font-semibold">ICAI Compliance</div>
-                  <div className="text-sm text-red-100">Ensure regulatory compliance</div>
+                  <div className="text-sm text-blue-100">Ensure regulatory compliance</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('network')}
-                  className="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
                   <div className="text-2xl mb-2">🌐</div>
                   <div className="font-semibold">Network Analyzer</div>
-                  <div className="text-sm text-cyan-100">Optimize LinkedIn connections</div>
+                  <div className="text-sm text-blue-100">Optimize LinkedIn connections</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('images')}
-                  className="bg-gradient-to-r from-pink-600 to-purple-600 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
                   <div className="text-2xl mb-2">🎨</div>
                   <div className="font-semibold">AI Image Generator</div>
-                  <div className="text-sm text-pink-100">Create professional visuals</div>
+                  <div className="text-sm text-blue-100">Create professional visuals</div>
                 </button>
               </div>
             </div>
@@ -1053,21 +1053,21 @@ export default function Dashboard() {
                 
                 <button
                   onClick={() => generateContent('tax-article')}
-                  className="bg-green-600 hover:bg-green-700 p-4 rounded-lg transition-colors font-semibold"
+                  className="bg-blue-600 hover:bg-blue-700 p-4 rounded-lg transition-colors font-semibold"
                 >
                   📊 Generate Tax Article
                 </button>
                 
                 <button
                   onClick={() => generateContent('audit-checklist')}
-                  className="bg-purple-600 hover:bg-purple-700 p-4 rounded-lg transition-colors font-semibold"
+                  className="bg-blue-600 hover:bg-blue-700 p-4 rounded-lg transition-colors font-semibold"
                 >
                   ✅ Create Audit Checklist
                 </button>
                 
                 <button
                   onClick={() => generateExamQuestions('General CA Topics')}
-                  className="bg-orange-600 hover:bg-orange-700 p-4 rounded-lg transition-colors font-semibold"
+                  className="bg-blue-600 hover:bg-blue-700 p-4 rounded-lg transition-colors font-semibold"
                 >
                   ❓ Generate Exam Questions
                 </button>
@@ -1353,7 +1353,7 @@ export default function Dashboard() {
         {/* AI Chat Tab */}
         {activeTab === 'chat' && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
               <h1 className="text-4xl font-bold mb-4">🤖 AI Chat Assistant</h1>
               <p className="text-xl text-blue-100 mb-4">
                 Powered by Perplexity AI - Get instant answers, CA guidance, and expert assistance with real-time information.
@@ -2632,9 +2632,9 @@ export default function Dashboard() {
       {/* Content Repurposing Tab */}
       {activeTab === 'repurposing' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-green-600 via-teal-600 to-blue-600 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
             <h1 className="text-4xl font-bold mb-4">🔄 Content Repurposing</h1>
-            <p className="text-xl text-green-100">
+            <p className="text-xl text-blue-100">
               Transform your content into multiple formats for maximum reach and engagement.
             </p>
           </div>
@@ -2645,9 +2645,9 @@ export default function Dashboard() {
       {/* Case Study Generator Tab */}
       {activeTab === 'case-studies' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
             <h1 className="text-4xl font-bold mb-4">📊 Case Study Generator</h1>
-            <p className="text-xl text-orange-100">
+            <p className="text-xl text-blue-100">
               Create professional case studies that showcase your expertise while maintaining client confidentiality.
             </p>
           </div>
@@ -2658,9 +2658,9 @@ export default function Dashboard() {
       {/* ICAI Compliance Checker Tab */}
       {activeTab === 'compliance' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
             <h1 className="text-4xl font-bold mb-4">✅ ICAI Compliance Checker</h1>
-            <p className="text-xl text-red-100">
+            <p className="text-xl text-blue-100">
               Ensure your content meets ICAI guidelines and regulatory requirements with AI-powered compliance checking.
             </p>
           </div>
@@ -2684,9 +2684,9 @@ export default function Dashboard() {
       {/* AI Image Generator Tab */}
       {activeTab === 'images' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
             <h1 className="text-4xl font-bold mb-4">🎨 AI Image Generator</h1>
-            <p className="text-xl text-pink-100">
+            <p className="text-xl text-blue-100">
               Create professional images for your content using AI-powered generation with CA-specific templates.
             </p>
           </div>

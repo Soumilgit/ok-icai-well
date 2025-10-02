@@ -341,7 +341,7 @@ function ClientInformationStep({ data, onChange }: any) {
           value={data.title || ''}
           onChange={(e) => onChange({ ...data, title: e.target.value })}
           placeholder="e.g., How We Helped XYZ Corp Save 30% on Tax Compliance"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
         />
       </div>
 
@@ -353,7 +353,7 @@ function ClientInformationStep({ data, onChange }: any) {
             value={data.name}
             onChange={(e) => onChange({ ...data, name: e.target.value })}
             placeholder="ABC Corporation"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
           />
         </div>
         <div>
@@ -363,7 +363,7 @@ function ClientInformationStep({ data, onChange }: any) {
             value={data.industry}
             onChange={(e) => onChange({ ...data, industry: e.target.value })}
             placeholder="Manufacturing, IT, Healthcare, etc."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
           />
         </div>
       </div>
@@ -374,7 +374,7 @@ function ClientInformationStep({ data, onChange }: any) {
           <select
             value={data.size}
             onChange={(e) => onChange({ ...data, size: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           >
             <option value="">Select size</option>
             <option value="startup">Startup (1-10 employees)</option>
@@ -391,7 +391,7 @@ function ClientInformationStep({ data, onChange }: any) {
             value={data.location}
             onChange={(e) => onChange({ ...data, location: e.target.value })}
             placeholder="Mumbai, Delhi, Bangalore, etc."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
           />
         </div>
       </div>
@@ -423,7 +423,7 @@ function ChallengeDefinitionStep({ data, onChange }: any) {
           value={data.description}
           onChange={(e) => onChange({ ...data, description: e.target.value })}
           placeholder="Describe the main challenge or problem the client was facing..."
-          className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
         />
       </div>
 
@@ -433,7 +433,7 @@ function ChallengeDefinitionStep({ data, onChange }: any) {
           value={data.impact}
           onChange={(e) => onChange({ ...data, impact: e.target.value })}
           placeholder="How was this challenge affecting the client's business? Include financial, operational, or strategic impacts..."
-          className="w-full h-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          className="w-full h-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
         />
       </div>
 
@@ -443,7 +443,7 @@ function ChallengeDefinitionStep({ data, onChange }: any) {
           <select
             value={data.urgency}
             onChange={(e) => onChange({ ...data, urgency: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           >
             <option value="low">Low - Could be addressed over time</option>
             <option value="medium">Medium - Needed timely resolution</option>

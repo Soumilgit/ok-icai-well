@@ -24,6 +24,11 @@ if (!cached) {
 }
 
 export async function connectToDatabase() {
+  // Only run on server side
+  if (typeof window !== 'undefined') {
+    throw new Error('Database connection should only be used on server side');
+  }
+
   if (cached!.conn) {
     return cached!.conn;
   }
@@ -48,18 +53,19 @@ export async function connectToDatabase() {
   return cached!.conn;
 }
 
-// NeonDB connection for user data
-const DATABASE_URL = process.env.DATABASE_URL;
-
-if (!DATABASE_URL) {
-  throw new Error('Please define the DATABASE_URL environment variable inside .env.local');
+// NeonDB connection for user data - lazy initialization
+export function getSql() {
+  const DATABASE_URL = process.env.DATABASE_URL;
+  if (!DATABASE_URL) {
+    throw new Error('Please define the DATABASE_URL environment variable inside .env.local');
+  }
+  return neon(DATABASE_URL);
 }
-
-export const sql = neon(DATABASE_URL);
 
 // Initialize user tables
 export async function initializeUserTables() {
   try {
+    const sql = getSql();
     // Create users table
     await sql`
       CREATE TABLE IF NOT EXISTS users (
@@ -131,6 +137,7 @@ export async function createOrUpdateUser(userData: {
   profileImageUrl?: string;
 }) {
   try {
+    const sql = getSql();
     const result = await sql`
       INSERT INTO users (clerk_id, email, first_name, last_name, profile_image_url, updated_at)
       VALUES (${userData.clerkId}, ${userData.email}, ${userData.firstName || ''}, ${userData.lastName || ''}, ${userData.profileImageUrl || ''}, CURRENT_TIMESTAMP)
@@ -152,6 +159,7 @@ export async function createOrUpdateUser(userData: {
 
 export async function getUserByClerkId(clerkId: string) {
   try {
+    const sql = getSql();
     const result = await sql`
       SELECT * FROM users WHERE clerk_id = ${clerkId}
     `;
@@ -164,6 +172,7 @@ export async function getUserByClerkId(clerkId: string) {
 
 export async function updateUserActivity(userId: number, activityType: string, activityData: any = {}) {
   try {
+    const sql = getSql();
     await sql`
       INSERT INTO user_activity (user_id, activity_type, activity_data)
       VALUES (${userId}, ${activityType}, ${JSON.stringify(activityData)})
@@ -176,6 +185,7 @@ export async function updateUserActivity(userId: number, activityType: string, a
 
 export async function createUserNotification(userId: number, title: string, message: string, type: string = 'info') {
   try {
+    const sql = getSql();
     await sql`
       INSERT INTO user_notifications (user_id, title, message, type)
       VALUES (${userId}, ${title}, ${message}, ${type})
@@ -188,6 +198,7 @@ export async function createUserNotification(userId: number, title: string, mess
 
 export async function getUserNotifications(userId: number, unreadOnly: boolean = false) {
   try {
+    const sql = getSql();
     if (unreadOnly) {
       return await sql`
         SELECT * FROM user_notifications 

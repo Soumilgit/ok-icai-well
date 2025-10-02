@@ -153,7 +153,7 @@ export default function ContentRepurposing({ userPreferences }: ContentRepurposi
             <select
               value={originalFormat}
               onChange={(e) => setOriginalFormat(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
             >
               <option value="linkedin-post">LinkedIn Post</option>
               <option value="blog-post">Blog Post</option>
@@ -172,7 +172,7 @@ export default function ContentRepurposing({ userPreferences }: ContentRepurposi
               value={originalContent}
               onChange={(e) => setOriginalContent(e.target.value)}
               placeholder="Paste your original content here..."
-              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
             />
           </div>
         </div>

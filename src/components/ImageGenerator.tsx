@@ -181,7 +181,7 @@ const ImageGenerator: React.FC = () => {
                     <select
                       value={selectedContentType}
                       onChange={(e) => setSelectedContentType(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                     >
                       {Object.entries(contentTypes).map(([key, label]) => (
                         <option key={key} value={key}>{label}</option>
@@ -197,7 +197,7 @@ const ImageGenerator: React.FC = () => {
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="Describe the image you want to create..."
-                      className="w-full h-24 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full h-24 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
                       maxLength={500}
                     />
                     <div className="text-xs text-gray-500 mt-1">{prompt.length}/500 characters</div>
@@ -211,7 +211,7 @@ const ImageGenerator: React.FC = () => {
                       <select
                         value={style}
                         onChange={(e) => setStyle(e.target.value as any)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                       >
                         <option value="professional">Professional</option>
                         <option value="modern">Modern</option>
@@ -228,7 +228,7 @@ const ImageGenerator: React.FC = () => {
                       <select
                         value={size}
                         onChange={(e) => setSize(e.target.value as any)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                       >
                         <option value="1080x1080">Square (1080×1080)</option>
                         <option value="1200x630">Facebook/LinkedIn (1200×630)</option>
@@ -245,7 +245,7 @@ const ImageGenerator: React.FC = () => {
                     <select
                       value={theme}
                       onChange={(e) => setTheme(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                     >
                       <option value="">Select a theme...</option>
                       {caThemes.map((themeOption) => (

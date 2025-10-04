@@ -11,6 +11,12 @@ import CaseStudyGenerator from '@/components/CaseStudyGenerator';
 import ICAIComplianceChecker from '@/components/ICAIComplianceChecker';
 import LinkedInNetworkAnalyzer from '@/components/LinkedInNetworkAnalyzer';
 import ImageGenerator from '@/components/ImageGenerator';
+import UnifiedContentCreator from '@/app/components/UnifiedContentCreator';
+import DiscoverFeed from '@/app/components/DiscoverFeed';
+import ComplianceCenter from '@/app/components/ComplianceCenter';
+import TwitterPostCreator from '@/app/components/TwitterPostCreator';
+import EnhancedContentHub from '@/app/components/EnhancedContentHub';
+import ICAIComplianceCenter from '@/app/components/ICAIComplianceCenter';
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -18,7 +24,7 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen' | 'workflow' | 'chat' | 'marketing' | 'questionnaire' | 'linkedin' | 'repurposing' | 'case-studies' | 'compliance' | 'network' | 'images'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen' | 'workflow' | 'chat' | 'marketing' | 'questionnaire' | 'linkedin' | 'repurposing' | 'case-studies' | 'compliance' | 'network' | 'images' | 'unified-creator' | 'discover' | 'twitter' | 'enhanced-hub' | 'icai-center'>('overview');
   
   // Domain-based access control (aminutemantechnologies.com only)
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || '';
@@ -47,7 +53,8 @@ export default function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   
   // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Controls text expansion
+  const [mouseNearLeft, setMouseNearLeft] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   
   // Email testing state
@@ -106,6 +113,45 @@ export default function Dashboard() {
     }
   }, [isLoaded]);
 
+  // Mouse tracking for auto-open sidebar (throttled for performance)
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let isNearLeft = false;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Throttle mouse move events for better performance
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const nearLeft = e.clientX <= 30;
+        
+        if (nearLeft && !isNearLeft) {
+          isNearLeft = true;
+          setMouseNearLeft(true);
+          setSidebarOpen(true);
+        } else if (!nearLeft && isNearLeft) {
+          isNearLeft = false;
+          setMouseNearLeft(false);
+        }
+      }, 50); // Throttle to 20fps
+    };
+
+    const handleMouseLeave = () => {
+      isNearLeft = false;
+      setMouseNearLeft(false);
+    };
+
+    // Add event listeners with passive option for better performance
+    document.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    // Cleanup
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
   const loadUserPreferences = () => {
     try {
       const saved = localStorage.getItem('writing_voice_preferences');
@@ -120,6 +166,126 @@ export default function Dashboard() {
   const handleQuestionnaireComplete = (preferences: any) => {
     setUserPreferences(preferences);
     setActiveTab('overview'); // Redirect to overview after completion
+  };
+
+  const handleLinkedInAutomation = async (action: string) => {
+    setRunningAutomation(true);
+    try {
+      const response = await fetch('/api/linkedin-automation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trigger: action })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        let message = '';
+        switch (action) {
+          case 'generate_content':
+            message = `✅ Generated ${result.data?.data?.postsGenerated || 0} new posts from latest trends!`;
+            break;
+          case 'schedule_posts':
+            message = `✅ Scheduled ${result.data?.data?.postsScheduled || 0} approved posts!`;
+            break;
+          case 'post_now':
+            message = `✅ Posted ${result.data?.data?.postsPublished || 0} approved posts immediately to LinkedIn!`;
+            break;
+          case 'full_pipeline':
+            message = `✅ Full pipeline completed! Check the content approval dashboard.`;
+            break;
+        }
+        alert(message);
+      } else {
+        alert(`❌ Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('LinkedIn automation error:', error);
+      alert('❌ Failed to trigger LinkedIn automation');
+    } finally {
+      setRunningAutomation(false);
+    }
+  };
+
+  const handleLinkedInAuth = async () => {
+    try {
+      const response = await fetch('/api/linkedin-auth');
+      if (response.ok) {
+        const data = await response.json();
+        // Open LinkedIn authorization in a popup
+        const popup = window.open(data.data.authUrl, 'linkedin-auth', 'width=600,height=700,scrollbars=yes,resizable=yes');
+        
+        // Listen for messages from the popup
+        const messageHandler = (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+          
+          if (event.data.type === 'linkedin_auth_success') {
+            window.removeEventListener('message', messageHandler);
+            alert('✅ LinkedIn connected successfully! You can now post to LinkedIn.');
+            // Refresh to update the authentication status
+            window.location.reload();
+          } else if (event.data.type === 'linkedin_auth_error') {
+            window.removeEventListener('message', messageHandler);
+            alert(`❌ LinkedIn authentication failed: ${event.data.error}`);
+          }
+        };
+        
+        window.addEventListener('message', messageHandler);
+        
+        // Fallback: Monitor the popup for completion
+        const checkClosed = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', messageHandler);
+            // Small delay before refresh in case message didn't arrive
+            setTimeout(() => {
+              if (!document.hidden) { // Only reload if page is visible
+                console.log('Popup closed, checking authentication status...');
+                // Instead of full reload, just check if auth worked
+                fetch('/api/linkedin-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'check_auth' }) })
+                  .then(res => res.json())
+                  .then(result => {
+                    if (result.success) {
+                      alert('✅ LinkedIn authentication completed!');
+                      window.location.reload();
+                    }
+                  });
+              }
+            }, 2000);
+          }
+        }, 1000);
+      } else {
+        alert('Failed to initiate LinkedIn authentication');
+      }
+    } catch (error) {
+      console.error('LinkedIn auth error:', error);
+      alert('Error connecting to LinkedIn');
+    }
+  };
+
+  const handleTestLinkedInPost = async () => {
+    try {
+      const response = await fetch('/api/linkedin-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: `Test post from AccountantAI - LinkedIn integration is working! 🎉\n\nTimestamp: ${new Date().toLocaleString()}`
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert('✅ Test post successful! Check your LinkedIn profile.');
+      } else {
+        const error = await response.json();
+        alert(`❌ Test post failed: ${error.error || 'Unknown error'}\n\nTip: Make sure you\'ve connected your LinkedIn account first!`);
+      }
+    } catch (error) {
+      console.error('LinkedIn test post error:', error);
+      alert('❌ Error testing LinkedIn post');
+    }
   };
 
   const fetchDashboardData = async () => {
@@ -604,7 +770,7 @@ export default function Dashboard() {
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-xl">Loading CA Law Portal Dashboard...</p>
@@ -630,132 +796,357 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white flex">
-      {/* Left Edge Trigger Zone with Visual Indicator */}
-      <div 
-        className="fixed inset-y-0 left-0 z-40 w-8 h-full group cursor-pointer"
-        onClick={() => setSidebarOpen(true)}
-      >
-        {/* Subtle indicator line */}
-        <div className={`absolute top-1/2 left-0 w-1 h-16 rounded-r-full transform -translate-y-1/2 transition-all duration-300 ${
-          !sidebarOpen 
-            ? 'bg-blue-400/40 opacity-60 group-hover:opacity-100' 
-            : 'bg-white/20 opacity-0 group-hover:opacity-100'
-        }`} />
-        
-        {/* Hover hint text */}
-        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white/60 text-xs font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
-          Click for workflows
-        </div>
-        
-        {/* Manual close indicator */}
-        {!sidebarOpen && (
-          <div className="absolute top-4 left-2 w-1 h-1 bg-blue-400 rounded-full animate-pulse" />
-        )}
-      </div>
+    <div className="min-h-screen bg-black text-white flex relative">
 
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-80 bg-black/20 backdrop-blur-lg border-r border-white/20 transform transition-all duration-300 ease-out ${sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
+
+      {/* Sidebar - Always Visible */}
+      <div className={`fixed inset-y-0 left-0 z-50 bg-gray-900/95 backdrop-blur-lg border-r border-gray-700 transition-all duration-300 ease-out ${sidebarOpen ? 'w-80' : 'w-16'}`}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="p-6 border-b border-white/10">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-walsheim)' }}>
-                Workflows
-              </h2>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
-                title="Close sidebar"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className="p-4 border-b border-gray-700">
+            <div className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+              {sidebarOpen ? (
+                <>
+                  <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-walsheim)' }}>
+                    CA Portal
+                  </h2>
+                  <button
+                    onClick={() => setSidebarOpen(false)}
+                    className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
+                    title="Collapse sidebar"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <div className="text-blue-400">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
           
           {/* Sidebar Content */}
-          <div className="flex-1 overflow-y-auto p-6" style={{ fontFamily: 'var(--font-walsheim)' }}>
-            <div className="space-y-8">
-              {/* Google Sheets Integration */}
-              <div className="space-y-4">
-                <h3 className="font-bold text-white text-lg border-b border-white/20 pb-2">📊 Google Sheets</h3>
-                <div className="space-y-1">
-                  <button 
-                    onClick={() => {
-                      setShowSheetsWorkflow(!showSheetsWorkflow);
-                      setSheetsWorkflowType('drafting');
-                    }}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-blue-600/20 rounded"
-                  >
-                    📝 CA Drafting Workflow
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setShowSheetsWorkflow(!showSheetsWorkflow);
-                      setSheetsWorkflowType('auditing');
-                    }}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-blue-600/20 rounded"
-                  >
-                    🔍 CA Auditing Workflow
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setShowSheetsWorkflow(!showSheetsWorkflow);
-                      setSheetsWorkflowType('analytics');
-                    }}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-purple-600/20 rounded"
-                  >
-                    📈 Workflow Analytics
-                  </button>
+          <div className={`flex-1 overflow-y-auto ${sidebarOpen ? 'p-6' : 'p-2'}`} style={{ fontFamily: 'var(--font-walsheim)' }}>
+            <div className={`${sidebarOpen ? 'space-y-6' : 'space-y-3'}`}>
+
+              {/* AI Features */}
+              <div className="relative group">
+                <button 
+                  onClick={() => setActiveTab('enhanced-hub')}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  title={!sidebarOpen ? 'AI Features' : ''}
+                >
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {sidebarOpen && 'AI Features'}
+                </button>
+                
+                {/* Hover Dropdown */}
+                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
+                  <div className="p-3">
+                    <h4 className="text-white font-semibold mb-2 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      AI Features
+                    </h4>
+                    <div className="space-y-1">
+                      <button 
+                        onClick={() => setActiveTab('enhanced-hub')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center border-l-2 border-blue-500"
+                      >
+                        Enhanced Content Hub
+                        <span className="ml-2 px-2 py-1 text-xs bg-blue-600 text-white rounded-full">NEW</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('unified-creator')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Unified Content Creator
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('discover')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Discover Feed
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('case-studies')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Case Study Generator
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('writing-voice')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Writing Voice Setup
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media */}
+              <div className="relative group">
+                <button 
+                  onClick={() => setActiveTab('twitter')}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  title={!sidebarOpen ? 'Social Media Automation' : ''}
+                >
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd"/>
+                  </svg>
+                  {sidebarOpen && 'Social Media'}
+                </button>
+                
+                {/* Hover Dropdown */}
+                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
+                  <div className="p-3">
+                    <h4 className="text-white font-semibold mb-2 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd"/>
+                      </svg>
+                      Social Media
+                    </h4>
+                    <div className="space-y-1">
+                      <button 
+                        onClick={() => setActiveTab('linkedin')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        LinkedIn Automation
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('twitter')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center border-l-2 border-purple-500"
+                      >
+                        X (Twitter) Smart Automation
+                        <span className="ml-2 px-2 py-1 text-xs bg-purple-600 text-white rounded-full">SMART</span>
+                      </button>
+                      <button 
+                        onClick={() => setShowLinkedInAuth(true)}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Connect LinkedIn
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Google Sheets */}
+              <div className="relative group">
+                <button 
+                  onClick={() => {
+                    setShowSheetsWorkflow(!showSheetsWorkflow);
+                    setSheetsWorkflowType('drafting');
+                  }}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  title={!sidebarOpen ? 'Google Sheets Integration' : ''}
+                >
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd"/>
+                  </svg>
+                  {sidebarOpen && 'Google Sheets'}
+                </button>
+                
+                {/* Hover Dropdown */}
+                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
+                  <div className="p-3">
+                    <h4 className="text-white font-semibold mb-2 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd"/>
+                      </svg>
+                      Google Sheets
+                    </h4>
+                    <div className="space-y-1">
+                      <button 
+                        onClick={() => {
+                          setShowSheetsWorkflow(!showSheetsWorkflow);
+                          setSheetsWorkflowType('drafting');
+                        }}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        CA Drafting Workflow
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowSheetsWorkflow(!showSheetsWorkflow);
+                          setSheetsWorkflowType('auditing');
+                        }}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        CA Auditing Workflow
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowSheetsWorkflow(!showSheetsWorkflow);
+                          setSheetsWorkflowType('analytics');
+                        }}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Workflow Analytics
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               
               {/* Email Automation */}
-              <div className="space-y-4">
-                <h3 className="font-bold text-white text-lg border-b border-white/20 pb-2"> Email Automation</h3>
-                <div className="space-y-1">
-                  <button 
-                    onClick={() => setShowEmailTesting(!showEmailTesting)}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2 bg-blue-600/20 rounded"
-                  >
-                     Test Email System
-                  </button>
-                  <button className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2">
-                     Stakeholder Notifications
-                  </button>
-                  <button className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2">
-                     Executive Summaries
-                  </button>
-                  <button className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2">
-                     Alert Management
-                  </button>
+              <div className="relative group">
+                <button 
+                  onClick={() => setShowEmailTesting(!showEmailTesting)}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  title={!sidebarOpen ? 'Email Automation' : ''}
+                >
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                  </svg>
+                  {sidebarOpen && 'Email Automation'}
+                </button>
+                
+                {/* Hover Dropdown */}
+                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
+                  <div className="p-3">
+                    <h4 className="text-white font-semibold mb-2 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                      </svg>
+                      Email Automation
+                    </h4>
+                    <div className="space-y-1">
+                      <button 
+                        onClick={() => setShowEmailTesting(!showEmailTesting)}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Test Email System
+                      </button>
+                      <button 
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Stakeholder Notifications
+                      </button>
+                      <button 
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Executive Summaries
+                      </button>
+                      <button 
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Alert Management
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              {/* Workflow Pipeline */}
-              <div className="space-y-4">
-                <h3 className="font-bold text-white text-lg border-b border-white/20 pb-2"> Workflows</h3>
-                <div className="space-y-1">
-                  <button 
-                    onClick={() => setSelectedWorkflow('zapier-pipeline')}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2"
-                  >
-                     News → Content → Email
-                  </button>
-                  <button 
-                    onClick={() => setSelectedWorkflow('audit-workflow')}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2"
-                  >
-                     Compliance Workflow
-                  </button>
-                  <button 
-                    onClick={() => setSelectedWorkflow('reporting-workflow')}
-                    className="w-full text-left p-3 text-sm text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-2"
-                  >
-                     Reporting Pipeline
-                  </button>
+
+              {/* Compliance */}
+              <div className="relative group">
+                <button 
+                  onClick={() => setActiveTab('icai-center')}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  title={!sidebarOpen ? 'Compliance & Pipeline' : ''}
+                >
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  {sidebarOpen && 'Compliance & Pipeline'}
+                </button>
+                
+                {/* Hover Dropdown */}
+                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
+                  <div className="p-3">
+                    <h4 className="text-white font-semibold mb-2 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                      </svg>
+                      Compliance & Pipeline
+                    </h4>
+                    <div className="space-y-1">
+                      <button 
+                        onClick={() => setActiveTab('icai-center')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center border-l-2 border-green-500"
+                      >
+                        ICAI Compliance & Plagiarism
+                        <span className="ml-2 px-2 py-1 text-xs bg-green-600 text-white rounded-full">ENHANCED</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('compliance')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Basic Compliance Center
+                      </button>
+                      <button 
+                        onClick={() => setSelectedWorkflow('zapier-pipeline')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        News → Content → Email
+                      </button>
+                      <button 
+                        onClick={() => setSelectedWorkflow('audit-workflow')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Compliance Workflow
+                      </button>
+                      <button 
+                        onClick={() => setSelectedWorkflow('reporting-workflow')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Reporting Pipeline
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="relative group">
+                <button
+                  onClick={() => handleRunAutomation()}
+                  disabled={runningAutomation}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded disabled:opacity-50 ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  title={!sidebarOpen ? 'Quick Actions' : ''}
+                >
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"/>
+                  </svg>
+                  {sidebarOpen && 'Quick Actions'}
+                </button>
+                
+                {/* Hover Dropdown */}
+                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
+                  <div className="p-3">
+                    <h4 className="text-white font-semibold mb-2 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"/>
+                      </svg>
+                      Quick Actions
+                    </h4>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => handleRunAutomation()}
+                        disabled={runningAutomation}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded disabled:opacity-50"
+                      >
+                        {runningAutomation ? 'Running Automation...' : 'Run Daily Automation'}
+                      </button>
+                      <button
+                        onClick={() => router.push('/workflow-builder')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Workflow Builder
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -772,7 +1163,7 @@ export default function Dashboard() {
       )}
       
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-4' : ''}`}>
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-16'}`}>
         {/* Header */}
         <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -833,7 +1224,7 @@ export default function Dashboard() {
                 <h3 className="font-bold text-gray-800">Automation Notifications</h3>
                 <button
                   onClick={() => setAutomationNotifications([])}
-                  className="text-sm text-blue-600 hover:text-blue-700"
+                  className="text-sm text-gray-600 hover:text-gray-700"
                 >
                   Clear All
                 </button>
@@ -865,43 +1256,6 @@ export default function Dashboard() {
           </div>
         )}
       </header>
-
-      {/* Navigation Tabs */}
-      <nav className="bg-black/10 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            {[
-              { id: 'overview', label: '📊 Overview' },
-              { id: 'questionnaire', label: '📋 Writing Voice Setup' },
-              { id: 'linkedin', label: '💼 LinkedIn Automation' },
-              { id: 'repurposing', label: '🔄 Content Repurposing' },
-              { id: 'case-studies', label: '📊 Case Studies' },
-              { id: 'compliance', label: '✅ ICAI Compliance' },
-              { id: 'network', label: '🌐 Network Analyzer' },
-              { id: 'images', label: '🎨 AI Images' },
-              ...(hasWorkflowAccess ? [{ id: 'workflow', label: '🔧 Workflow Builder (Company)' }] : []),
-              { id: 'chat', label: '🤖 AI Chat' },
-              { id: 'marketing', label: '📈 Marketing & SEO' },
-              { id: 'news', label: '📰 Latest News' },
-              { id: 'content', label: '📝 Generated Content' },
-              { id: 'exam-gen', label: '❓ Exam Generator' },
-              { id: 'automation', label: '🤖 Automation' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`py-4 px-2 border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-white text-white'
-                    : 'border-transparent text-gray-300 hover:text-white hover:border-white/50'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -972,102 +1326,93 @@ export default function Dashboard() {
 
             {/* New Features Overview */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4">🆕 New AI-Powered Features</h2>
+              <h2 className="text-xl font-bold mb-4">🆕 Enhanced AI-Powered Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button
-                  onClick={() => setActiveTab('questionnaire')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  onClick={() => setActiveTab('unified-creator')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
                 >
-                  <div className="text-2xl mb-2">📋</div>
-                  <div className="font-semibold">Writing Voice Setup</div>
-                  <div className="text-sm text-blue-100">Personalize your content style</div>
+                  <div className="text-2xl mb-2">🎯</div>
+                  <div className="font-semibold">Unified Content Creator</div>
+                  <div className="text-sm text-gray-300">Quiz + AI Research + Images in one place</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('discover')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                >
+                  <div className="text-2xl mb-2">�</div>
+                  <div className="font-semibold">Discover Feed</div>
+                  <div className="text-sm text-gray-300">Latest 2025 news with instant post creation</div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('twitter')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                >
+                  <div className="text-2xl mb-2">𝕏</div>
+                  <div className="font-semibold">X (Twitter) Automation</div>
+                  <div className="text-sm text-gray-300">ICAI-compliant Twitter posting</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('linkedin')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
-                  <div className="text-2xl mb-2">💼</div>
+                  <div className="text-2xl mb-2">�</div>
                   <div className="font-semibold">LinkedIn Automation</div>
-                  <div className="text-sm text-blue-100">Automate post creation & publishing</div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('repurposing')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
-                >
-                  <div className="text-2xl mb-2">🔄</div>
-                  <div className="font-semibold">Content Repurposing</div>
-                  <div className="text-sm text-blue-100">Transform content for all platforms</div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('case-studies')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
-                >
-                  <div className="text-2xl mb-2">📊</div>
-                  <div className="font-semibold">Case Study Generator</div>
-                  <div className="text-sm text-blue-100">Create professional case studies</div>
+                  <div className="text-sm text-gray-300">Professional network posting</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('compliance')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
                 >
-                  <div className="text-2xl mb-2">✅</div>
-                  <div className="font-semibold">ICAI Compliance</div>
-                  <div className="text-sm text-blue-100">Ensure regulatory compliance</div>
+                  <div className="text-2xl mb-2">⚖️</div>
+                  <div className="font-semibold">ICAI Compliance Center</div>
+                  <div className="text-sm text-gray-300">Guidelines check + plagiarism detection</div>
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab('network')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  onClick={() => setActiveTab('case-studies')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
-                  <div className="text-2xl mb-2">🌐</div>
-                  <div className="font-semibold">Network Analyzer</div>
-                  <div className="text-sm text-blue-100">Optimize LinkedIn connections</div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('images')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg transition-all hover:scale-105 text-left"
-                >
-                  <div className="text-2xl mb-2">🎨</div>
-                  <div className="font-semibold">AI Image Generator</div>
-                  <div className="text-sm text-blue-100">Create professional visuals</div>
+                  <div className="text-2xl mb-2">📊</div>
+                  <div className="font-semibold">Case Study Generator</div>
+                  <div className="text-sm text-gray-300">Professional case studies</div>
                 </button>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4">🚀 Quick Actions</h2>
+            <div className="bg-black rounded-xl p-6 border border-gray-600">
+              <h2 className="text-xl font-bold mb-4 text-white">Quick Actions</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
                   onClick={runDailyAutomation}
                   disabled={runningAutomation}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 p-4 rounded-lg transition-colors font-semibold"
+                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 disabled:from-gray-900 disabled:to-gray-700 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600 disabled:border-gray-700"
                 >
                   {runningAutomation ? '⏳ Running...' : '🔄 Run Daily Automation'}
                 </button>
                 
                 <button
                   onClick={() => generateContent('tax-article')}
-                  className="bg-blue-600 hover:bg-blue-700 p-4 rounded-lg transition-colors font-semibold"
+                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600"
                 >
                   📊 Generate Tax Article
                 </button>
                 
                 <button
                   onClick={() => generateContent('audit-checklist')}
-                  className="bg-blue-600 hover:bg-blue-700 p-4 rounded-lg transition-colors font-semibold"
+                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600"
                 >
                   ✅ Create Audit Checklist
                 </button>
                 
                 <button
                   onClick={() => generateExamQuestions('General CA Topics')}
-                  className="bg-blue-600 hover:bg-blue-700 p-4 rounded-lg transition-colors font-semibold"
+                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600"
                 >
                   ❓ Generate Exam Questions
                 </button>
@@ -1086,7 +1431,7 @@ export default function Dashboard() {
                         <span>Real-time execution</span>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                         <span>Google Sheets integration</span>
                       </div>
                       <div className="flex items-center space-x-1">
@@ -1098,14 +1443,14 @@ export default function Dashboard() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => router.push('/workflow-builder')}
-                      className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-3 rounded-lg font-semibold transition-colors shadow-lg flex items-center space-x-2"
+                      className="bg-gray-700 text-white hover:bg-gray-600 px-4 py-3 rounded-lg font-semibold transition-colors shadow-lg flex items-center space-x-2"
                     >
                       <span>🚀</span>
                       <span>Open Builder</span>
                     </button>
                     <button
                       onClick={() => window.open('/workflow-builder', '_blank')}
-                      className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-3 rounded-lg font-medium transition-colors shadow-lg"
+                      className="bg-gray-600 text-white hover:bg-gray-500 px-3 py-3 rounded-lg font-medium transition-colors shadow-lg"
                       title="Open in new tab"
                     >
                       <span>↗️</span>
@@ -1139,104 +1484,100 @@ export default function Dashboard() {
             </div>
 
             {/* Platform Capabilities Overview */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-6">🚀 Complete AI-Powered CA Platform</h2>
+            <div className="bg-black rounded-xl p-6 border border-gray-600">
+              <h2 className="text-xl font-bold mb-6 text-white">Complete AI-Powered CA Platform</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
                 {/* Content Creation & Personalization */}
-                <div className="bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-lg p-4 border border-purple-400/30">
-                  <h3 className="text-lg font-semibold mb-3 text-purple-200">📝 Content Creation</h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Personalized Writing Voices (5 types)</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>100+ Swipe File Templates</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Content Repurposing (6+ formats)</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Case Study Generator</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>AI Image Generation</li>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Content Creation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Personalized Writing Voices (5 types)</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>100+ Swipe File Templates</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Content Repurposing (6+ formats)</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Case Study Generator</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>AI Image Generation</li>
                   </ul>
                 </div>
 
                 {/* LinkedIn & Social Media */}
-                <div className="bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-lg p-4 border border-blue-400/30">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-200">💼 LinkedIn Automation</h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Custom & Full Automation</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Direct Publishing</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Post Scheduling</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Network Analysis</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Engagement Tracking</li>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">LinkedIn Automation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Custom & Full Automation</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Direct Publishing</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Post Scheduling</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Network Analysis</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Engagement Tracking</li>
                   </ul>
                 </div>
 
                 {/* Compliance & News */}
-                <div className="bg-gradient-to-br from-red-600/20 to-orange-600/20 rounded-lg p-4 border border-red-400/30">
-                  <h3 className="text-lg font-semibold mb-3 text-red-200">✅ Compliance & News</h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>ICAI Compliance Checking</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Daily News Scraping (8 sources)</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Regulatory Updates</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Violation Detection</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Improvement Suggestions</li>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Compliance & News</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>ICAI Compliance Checking</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Daily News Scraping (8 sources)</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Regulatory Updates</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Violation Detection</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Improvement Suggestions</li>
                   </ul>
                 </div>
 
                 {/* AI & Automation */}
-                <div className="bg-gradient-to-br from-green-600/20 to-teal-600/20 rounded-lg p-4 border border-green-400/30">
-                  <h3 className="text-lg font-semibold mb-3 text-green-200">🤖 AI & Automation</h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Perplexity AI Integration</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Smart Content Analysis</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Automated Workflows</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Real-time Processing</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Intelligent Categorization</li>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">AI & Automation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Perplexity AI Integration</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Smart Content Analysis</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Automated Workflows</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Real-time Processing</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Intelligent Categorization</li>
                   </ul>
                 </div>
 
                 {/* Analytics & Insights */}
-                <div className="bg-gradient-to-br from-cyan-600/20 to-blue-600/20 rounded-lg p-4 border border-cyan-400/30">
-                  <h3 className="text-lg font-semibold mb-3 text-cyan-200">📊 Analytics & Insights</h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Network Growth Analysis</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Content Performance</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Engagement Metrics</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Opportunity Identification</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Professional Scoring</li>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Analytics & Insights</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Network Growth Analysis</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Content Performance</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Engagement Metrics</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Opportunity Identification</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Professional Scoring</li>
                   </ul>
                 </div>
 
                 {/* Education & Learning */}
-                <div className="bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-lg p-4 border border-yellow-400/30">
-                  <h3 className="text-lg font-semibold mb-3 text-yellow-200">🎓 Education & Learning</h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Exam Question Generation</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Topic-based Learning</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Knowledge Base Access</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>CA-specific Guidance</li>
-                    <li className="flex items-center"><span className="text-green-400 mr-2">✓</span>Professional Development</li>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Education & Learning</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Exam Question Generation</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Topic-based Learning</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Knowledge Base Access</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>CA-specific Guidance</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Professional Development</li>
                   </ul>
                 </div>
               </div>
 
               {/* Getting Started Guide */}
-              <div className="mt-6 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-lg p-6 border border-indigo-400/30">
-                <h3 className="text-lg font-semibold mb-4 text-indigo-200">🎯 Quick Start Guide</h3>
+              <div className="mt-6 bg-black rounded-lg p-6 border border-gray-600">
+                <h3 className="text-lg font-semibold mb-4 text-white">Quick Start Guide</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="text-2xl mb-2">1️⃣</div>
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
                     <div className="font-semibold text-white mb-1">Setup Your Voice</div>
                     <div className="text-sm text-gray-300">Complete the writing voice questionnaire to personalize your content</div>
                   </div>
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="text-2xl mb-2">2️⃣</div>
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
                     <div className="font-semibold text-white mb-1">Connect LinkedIn</div>
                     <div className="text-sm text-gray-300">Authorize LinkedIn integration for automated posting and analytics</div>
                   </div>
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="text-2xl mb-2">3️⃣</div>
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
                     <div className="font-semibold text-white mb-1">Create Content</div>
                     <div className="text-sm text-gray-300">Generate personalized content and repurpose across platforms</div>
                   </div>
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="text-2xl mb-2">4️⃣</div>
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
                     <div className="font-semibold text-white mb-1">Monitor & Optimize</div>
                     <div className="text-sm text-gray-300">Track performance and optimize your professional network</div>
                   </div>
@@ -1246,8 +1587,8 @@ export default function Dashboard() {
 
             {/* Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <h3 className="text-lg font-bold mb-4">📰 Recent News</h3>
+              <div className="bg-black rounded-xl p-6 border border-gray-600">
+                <h3 className="text-lg font-bold mb-4 text-white">Recent News</h3>
                 <div className="space-y-3">
                   {dashboardData?.recent?.news?.slice(0, 5).map((article: any, index: number) => (
                     <div key={index} className="border-b border-white/10 pb-3 last:border-b-0">
@@ -1266,12 +1607,12 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <h3 className="text-lg font-bold mb-4">📝 Recent Content</h3>
+              <div className="bg-black rounded-xl p-6 border border-gray-600">
+                <h3 className="text-lg font-bold mb-4 text-white">Recent Content</h3>
                 <div className="space-y-3">
                   {dashboardData?.recent?.content?.slice(0, 5).map((content: any, index: number) => (
-                    <div key={index} className="border-b border-white/10 pb-3 last:border-b-0">
-                      <h4 className="font-semibold text-sm">{content.title}</h4>
+                    <div key={index} className="border-b border-gray-600 pb-3 last:border-b-0">
+                      <h4 className="font-semibold text-sm text-white">{content.title}</h4>
                       <p className="text-xs text-gray-300">{content.type.replace('_', ' ')} • {content.metadata?.wordCount || 0} words</p>
                       <div className="flex space-x-2 mt-1">
                         <span className={`text-xs px-2 py-1 rounded ${
@@ -1295,7 +1636,7 @@ export default function Dashboard() {
               <h2 className="text-2xl font-bold">📰 Latest CA Law News</h2>
               <button
                 onClick={() => runDailyAutomation()}
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
+                className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors"
               >
                 🔄 Refresh News
               </button>
@@ -1316,7 +1657,7 @@ export default function Dashboard() {
                       }`}>
                         {article.impact} impact
                       </span>
-                      <span className="text-xs px-3 py-1 rounded-full bg-blue-600">
+                      <span className="text-xs px-3 py-1 rounded-full bg-gray-600">
                         {article.category}
                       </span>
                     </div>
@@ -1401,9 +1742,9 @@ export default function Dashboard() {
 
             {/* Usage Guidelines */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">💡 CA Assistant Tips</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
+                <h3 className="font-semibold text-white mb-2">💡 CA Assistant Tips</h3>
+                <ul className="text-sm text-gray-300 space-y-1">
                   <li>• Ask about latest tax regulations and GST updates</li>
                   <li>• Get audit procedures and compliance guidance</li>
                   <li>• Request calculation examples and case studies</li>
@@ -1443,7 +1784,7 @@ export default function Dashboard() {
                 
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                   <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
                     <span className="font-semibold">Marketing Strategy</span>
                   </div>
                   <p className="text-green-100 text-sm">Comprehensive marketing plans and customer acquisition</p>
@@ -1533,7 +1874,7 @@ export default function Dashboard() {
                       setActiveTab('chat'); 
                       setChatMode('marketing-strategy');
                     }}
-                    className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
+                    className="text-xs bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-600 transition-colors"
                   >
                     Use Template
                   </button>
@@ -2436,7 +2777,7 @@ export default function Dashboard() {
       {activeTab === 'workflow' && (
         <div className="space-y-8">
           {/* Workflow Builder Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 rounded-2xl p-8 text-white">
             <div className="max-w-4xl">
               <h1 className="text-4xl font-bold mb-4">🔧 Visual Workflow Builder</h1>
               <p className="text-xl text-blue-100 mb-6">
@@ -2616,15 +2957,137 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Unified Content Creator Tab */}
+      {activeTab === 'unified-creator' && (
+        <UnifiedContentCreator />
+      )}
+
+      {/* Enhanced Content Hub Tab - NEW! */}
+      {activeTab === 'enhanced-hub' && (
+        <EnhancedContentHub />
+      )}
+
+      {/* Discover Feed Tab */}
+      {activeTab === 'discover' && (
+        <DiscoverFeed />
+      )}
+
+      {/* ICAI Compliance & Plagiarism Center - ENHANCED! */}
+      {activeTab === 'icai-center' && (
+        <ICAIComplianceCenter />
+      )}
+
+      {/* Basic Compliance Center Tab */}
+      {activeTab === 'compliance' && (
+        <ComplianceCenter />
+      )}
+
+      {/* Twitter/X Tab */}
+      {activeTab === 'twitter' && (
+        <TwitterPostCreator />
+      )}
+
+      {/* Additional Twitter content (if needed) */}
+      {activeTab === 'twitter' && false && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">𝕏 Twitter/X Automation</h1>
+            <p className="text-xl text-blue-100">
+              ICAI-compliant Twitter posting with professional guidelines checking
+            </p>
+          </div>
+          
+          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-600">
+            <h2 className="text-2xl font-bold mb-4 text-white">🐦 Create Twitter Post</h2>
+            <TwitterPostCreator />
+          </div>
+        </div>
+      )}
+
       {/* LinkedIn Automation Tab */}
       {activeTab === 'linkedin' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 rounded-2xl p-8 text-white">
             <h1 className="text-4xl font-bold mb-4">💼 LinkedIn Automation</h1>
-            <p className="text-xl text-blue-100">
+            <p className="text-xl text-gray-100">
               Automate your LinkedIn content creation, scheduling, and engagement with AI-powered tools.
             </p>
           </div>
+          
+          {/* LinkedIn Authentication Status */}
+          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-600 mb-6">
+            <h2 className="text-2xl font-bold mb-4 text-white">🔐 LinkedIn Authentication</h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-lg font-medium text-white">Connection Status</div>
+                <div className="text-sm text-gray-600">Manage your LinkedIn integration</div>
+              </div>
+              <div className="space-x-3">
+                <button
+                  onClick={handleLinkedInAuth}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  🔗 Connect LinkedIn
+                </button>
+                <button
+                  onClick={handleTestLinkedInPost}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  🧪 Test Posting
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Pipeline Controls */}
+          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-600">
+            <h2 className="text-2xl font-bold mb-4 text-white">🚀 Content Pipeline Controls</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <button
+                onClick={() => handleLinkedInAutomation('generate_content')}
+                disabled={runningAutomation}
+                className="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {runningAutomation ? '⏳ Generating...' : '📊 Generate Content'}
+              </button>
+              <button
+                onClick={() => handleLinkedInAutomation('schedule_posts')}
+                disabled={runningAutomation}
+                className="bg-green-600 text-white px-6 py-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {runningAutomation ? '⏳ Scheduling...' : '📅 Schedule Posts'}
+              </button>
+              <button
+                onClick={() => handleLinkedInAutomation('post_now')}
+                disabled={runningAutomation}
+                className="bg-red-600 text-white px-6 py-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {runningAutomation ? '⏳ Posting...' : '🚀 Post Now'}
+              </button>
+              <button
+                onClick={() => handleLinkedInAutomation('full_pipeline')}
+                disabled={runningAutomation}
+                className="bg-purple-600 text-white px-6 py-4 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {runningAutomation ? '⏳ Running...' : '🔄 Full Pipeline'}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a
+                href="/content-approval"
+                className="bg-yellow-500 text-white px-6 py-4 rounded-lg hover:bg-yellow-600 transition-colors text-center block"
+              >
+                👀 Review & Approve Content
+              </a>
+              <button
+                onClick={() => window.open('https://linkedin.com', '_blank')}
+                className="bg-blue-500 text-white px-6 py-4 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                🔗 Open LinkedIn
+              </button>
+            </div>
+          </div>
+
           <LinkedInAutomation userPreferences={userPreferences || { writingVoice: { name: 'Professional' }, customizations: { formalityLevel: 7 }, targetAudience: ['Clients'], contentPreferences: ['Tax Updates'] }} />
         </div>
       )}

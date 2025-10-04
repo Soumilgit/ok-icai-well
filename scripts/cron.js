@@ -4,7 +4,7 @@ const axios = require('axios');
 // Set timezone
 process.env.TZ = process.env.CRON_TIMEZONE || 'Asia/Kolkata';
 
-console.log('🚀 Starting CA Law Portal Automation Service...');
+console.log('🚀 Starting CA Law Portal & LinkedIn Automation Service...');
 console.log('🌏 Timezone:', process.env.TZ);
 console.log('📡 API Base URL:', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
 
@@ -258,11 +258,68 @@ cron.schedule('0 * * * *', async () => {
   timezone: process.env.CRON_TIMEZONE || 'Asia/Kolkata'
 });
 
+// LinkedIn Content Pipeline Automation
+
+// Generate LinkedIn content from trends (twice daily)
+cron.schedule('0 8,16 * * *', async () => {
+  console.log(`\n🎯 [${new Date().toLocaleString()}] Running LinkedIn Content Generation...`);
+  try {
+    const result = await makeAPICall('/linkedin-pipeline', {
+      action: 'generate_content'
+    });
+    console.log('✅ LinkedIn content generated:', result);
+  } catch (error) {
+    console.error('❌ Error generating LinkedIn content:', error.message);
+  }
+}, {
+  scheduled: true,
+  timezone: process.env.CRON_TIMEZONE || 'Asia/Kolkata'
+});
+
+// Schedule approved posts (runs every 2 hours during business hours)
+cron.schedule('0 9-17/2 * * 1-5', async () => {
+  console.log(`\n📅 [${new Date().toLocaleString()}] Scheduling approved LinkedIn posts...`);
+  try {
+    const result = await makeAPICall('/linkedin-pipeline', {
+      action: 'schedule_approved'
+    });
+    console.log('✅ LinkedIn posts scheduled:', result);
+  } catch (error) {
+    console.error('❌ Error scheduling LinkedIn posts:', error.message);
+  }
+}, {
+  scheduled: true,
+  timezone: process.env.CRON_TIMEZONE || 'Asia/Kolkata'
+});
+
+// Run full LinkedIn pipeline (daily at 7 AM)
+cron.schedule('0 7 * * 1-5', async () => {
+  console.log(`\n🚀 [${new Date().toLocaleString()}] Running full LinkedIn pipeline...`);
+  try {
+    const result = await makeAPICall('/linkedin-pipeline', {
+      action: 'run_full_pipeline',
+      config: {
+        enableAutoApproval: true,
+        autoApprovalThreshold: 0.8
+      }
+    });
+    console.log('✅ LinkedIn full pipeline completed:', result);
+  } catch (error) {
+    console.error('❌ Error running LinkedIn pipeline:', error.message);
+  }
+}, {
+  scheduled: true,
+  timezone: process.env.CRON_TIMEZONE || 'Asia/Kolkata'
+});
+
 console.log('Cron jobs scheduled successfully');
 console.log('Daily news collection: 9:00 AM');
 console.log('Daily content generation: 10:00 AM');
 console.log('Daily notifications: 11:00 AM');
 console.log('Weekly exam generation: Sunday 2:00 PM');
+console.log('LinkedIn content generation: 8:00 AM & 4:00 PM');
+console.log('LinkedIn post scheduling: Every 2 hours (9 AM - 5 PM, weekdays)');
+console.log('LinkedIn full pipeline: 7:00 AM (weekdays)');
 console.log('Health checks: Every hour');
 console.log(`API Base URL: ${API_BASE_URL}`);
 

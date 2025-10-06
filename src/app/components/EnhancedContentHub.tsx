@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import WritingVoiceQuestionnaire from '@/components/WritingVoiceQuestionnaire';
 import ImageGenerator from '@/components/ImageGenerator';
+import WebLinksComponent from '@/components/WebLinksComponent';
 
 interface EnhancedContentHubProps {}
 
@@ -256,6 +257,14 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
                           {article.caImpact.toUpperCase()} Impact
                         </span>
                       </div>
+                      
+                      {/* Web Links Component */}
+                      <WebLinksComponent 
+                        headline={article.title}
+                        categories={[article.category]}
+                        maxLinks={2}
+                        className="mt-3"
+                      />
                     </div>
                     
                     <button

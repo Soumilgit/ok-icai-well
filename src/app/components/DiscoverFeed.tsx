@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import WebLinksComponent from '@/components/WebLinksComponent';
+import PerplexityNewsModal from '@/components/PerplexityNewsModal';
 
 interface NewsArticle {
   id: string;
@@ -99,6 +100,10 @@ export default function DiscoverFeed({}: DiscoverFeedProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [creatingPost, setCreatingPost] = useState<string | null>(null);
   const [researchingArticle, setResearchingArticle] = useState<string | null>(null);
+  
+  // Perplexity News Modal state
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [selectedNewsForModal, setSelectedNewsForModal] = useState<NewsArticle | null>(null);
 
   useEffect(() => {
     // Load news articles (in production, fetch from API)
@@ -282,6 +287,16 @@ How are you preparing for this shift? Share your experience below.
     return badges[impact as keyof typeof badges] || badges.medium;
   };
 
+  const handleNewsClick = (article: NewsArticle) => {
+    setSelectedNewsForModal(article);
+    setIsNewsModalOpen(true);
+  };
+
+  const closeNewsModal = () => {
+    setIsNewsModalOpen(false);
+    setSelectedNewsForModal(null);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="container mx-auto px-4 py-8">
@@ -330,7 +345,11 @@ How are you preparing for this shift? Share your experience below.
         {/* News Articles */}
         <div className="grid gap-6">
           {filteredArticles.map(article => (
-            <div key={article.id} className="bg-gray-800 rounded-2xl p-6 border border-gray-600 hover:border-gray-500 transition-colors">
+            <div 
+              key={article.id} 
+              onClick={() => handleNewsClick(article)}
+              className="bg-gray-800 rounded-2xl p-6 border border-gray-600 hover:border-gray-500 transition-colors cursor-pointer hover:bg-gray-700"
+            >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
@@ -383,14 +402,30 @@ How are you preparing for this shift? Share your experience below.
                 
                 <div className="flex space-x-3">
                   <button
-                    onClick={() => window.open(article.url, '_blank')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNewsClick(article);
+                    }}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    🤖 AI Summary
+                  </button>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(article.url, '_blank');
+                    }}
                     className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm font-medium"
                   >
                     📄 Read Full Article
                   </button>
                   
                   <button
-                    onClick={() => handleCreatePost(article)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCreatePost(article);
+                    }}
                     disabled={creatingPost === article.id}
                     className="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-600 rounded-lg transition-all font-medium flex items-center"
                   >
@@ -439,6 +474,13 @@ How are you preparing for this shift? Share your experience below.
           </div>
         </div>
       </div>
+      
+      {/* Perplexity News Modal */}
+      <PerplexityNewsModal
+        isOpen={isNewsModalOpen}
+        onClose={closeNewsModal}
+        newsItem={selectedNewsForModal}
+      />
     </div>
   );
 }

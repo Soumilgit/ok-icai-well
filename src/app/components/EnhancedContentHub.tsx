@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import WritingVoiceQuestionnaire from '@/components/WritingVoiceQuestionnaire';
 import ImageGenerator from '@/components/ImageGenerator';
 import WebLinksComponent from '@/components/WebLinksComponent';
+import PerplexityNewsModal from '@/components/PerplexityNewsModal';
 
 interface EnhancedContentHubProps {}
 
@@ -39,6 +40,10 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [researchResult, setResearchResult] = useState<ResearchResult | null>(null);
   const [isResearching, setIsResearching] = useState(false);
+  
+  // Perplexity News Modal state
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [selectedNewsForModal, setSelectedNewsForModal] = useState<NewsArticle | null>(null);
   const [postContent, setPostContent] = useState('');
   const [voiceType, setVoiceType] = useState<string>('Storyteller');
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -203,6 +208,16 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
     }
   };
 
+  const handleNewsClick = (article: NewsArticle) => {
+    setSelectedNewsForModal(article);
+    setIsNewsModalOpen(true);
+  };
+
+  const closeNewsModal = () => {
+    setIsNewsModalOpen(false);
+    setSelectedNewsForModal(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Navigation Tabs */}
@@ -240,7 +255,11 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
             
             <div className="grid gap-4">
               {newsArticles.map(article => (
-                <div key={article.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                <div 
+                  key={article.id} 
+                  onClick={() => handleNewsClick(article)}
+                  className="bg-gray-800/50 rounded-lg p-4 border border-gray-600 cursor-pointer hover:bg-gray-700/50 hover:border-gray-500 transition-all"
+                >
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold text-white mb-2">{article.title}</h4>
@@ -267,13 +286,27 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
                       />
                     </div>
                     
-                    <button
-                      onClick={() => handleResearchNews(article)}
-                      disabled={isResearching}
-                      className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    >
-                      {isResearching ? '🔍 Researching...' : '📝 Create Post'}
-                    </button>
+                    <div className="ml-4 flex flex-col space-y-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNewsClick(article);
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                      >
+                        🤖 AI Summary
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResearchNews(article);
+                        }}
+                        disabled={isResearching}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm"
+                      >
+                        {isResearching ? '🔍 Researching...' : '📝 Create Post'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -462,6 +495,13 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
           </div>
         </div>
       )}
+      
+      {/* Perplexity News Modal */}
+      <PerplexityNewsModal
+        isOpen={isNewsModalOpen}
+        onClose={closeNewsModal}
+        newsItem={selectedNewsForModal}
+      />
     </div>
   );
 }

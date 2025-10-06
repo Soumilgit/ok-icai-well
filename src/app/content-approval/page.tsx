@@ -8,15 +8,18 @@ interface TrendData {
   relevanceScore: number;
   trendScore: number;
   keywords: string[];
-  summary:   const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-600 text-yellow-100';
-      case 'approved': return 'bg-green-600 text-green-100';
-      case 'rejected': return 'bg-red-600 text-red-100';
-      case 'published': return 'bg-gray-600 text-gray-100';
-      default: return 'bg-gray-700 text-gray-300';
-    }
-  };}
+  summary: string;
+}
+
+const getStatusBadgeClass = (status: string) => {
+  switch (status) {
+    case 'pending': return 'bg-yellow-600 text-yellow-100';
+    case 'approved': return 'bg-green-600 text-green-100';
+    case 'rejected': return 'bg-red-600 text-red-100';
+    case 'published': return 'bg-gray-600 text-gray-100';
+    default: return 'bg-gray-700 text-gray-300';
+  }
+};
 
 interface PostForApproval {
   id: string;

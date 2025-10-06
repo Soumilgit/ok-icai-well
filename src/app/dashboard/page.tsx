@@ -48,6 +48,10 @@ export default function Dashboard() {
   const [editedContent, setEditedContent] = useState('');
   const [editedTitle, setEditedTitle] = useState('');
   
+  // Top news state
+  const [topNews, setTopNews] = useState<any[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  
   // Automation notifications
   const [automationNotifications, setAutomationNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -93,6 +97,7 @@ export default function Dashboard() {
     if (isLoaded) {
       fetchDashboardData();
       loadUserPreferences();
+      fetchTopNews(); // Fetch top news on initial load
       
       // Check for URL parameters
       const urlParams = new URLSearchParams(window.location.search);
@@ -303,6 +308,24 @@ export default function Dashboard() {
       setError('Failed to connect to server');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTopNews = async () => {
+    try {
+      setNewsLoading(true);
+      const response = await fetch('/api/news/enhanced?topNews=true&limit=3');
+      const result = await response.json();
+      
+      if (result.success) {
+        setTopNews(result.data.news);
+      } else {
+        console.error('Failed to fetch top news:', result.error);
+      }
+    } catch (err) {
+      console.error('Error fetching top news:', err);
+    } finally {
+      setNewsLoading(false);
     }
   };
 
@@ -753,20 +776,7 @@ export default function Dashboard() {
     }
   }, [workflowSpreadsheetId, showSheetsWorkflow, sheetsWorkflowType]);
 
-  // Auto-refresh function for real-time updates
-  const startAutoRefresh = () => {
-    const interval = setInterval(() => {
-      fetchDashboardData();
-    }, 30000); // Refresh every 30 seconds
-    
-    return () => clearInterval(interval);
-  };
-
-  // Start auto-refresh when component mounts
-  useEffect(() => {
-    const cleanup = startAutoRefresh();
-    return cleanup;
-  }, []);
+  // Removed auto-refresh for better performance - data will be fetched on demand only
 
   if (!isLoaded || loading) {
     return (
@@ -1261,6 +1271,78 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && (
           <div className="space-y-8">
+            {/* Top News Section */}
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center">
+                  <span className="mr-2">📰</span>
+                  Top CA & Finance News
+                </h2>
+                <button 
+                  onClick={() => setActiveTab('news')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View All →
+                </button>
+              </div>
+              
+              {newsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse bg-white/10 rounded-lg p-4 h-32"></div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {topNews.map((news, index) => (
+                    <div key={news.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group">
+                      <div className="flex items-start justify-between mb-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          news.sentiment?.label === 'positive' ? 'bg-green-600/20 text-green-400' :
+                          news.sentiment?.label === 'negative' ? 'bg-red-600/20 text-red-400' :
+                          'bg-gray-600/20 text-gray-400'
+                        }`}>
+                          {news.sentiment?.label || 'neutral'}
+                        </span>
+                        <span className="text-xs text-gray-400">{news.source}</span>
+                      </div>
+                      
+                      <h3 className="text-sm font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
+                        {news.title}
+                      </h3>
+                      
+                      <p className="text-xs text-gray-300 line-clamp-3 mb-3">
+                        {news.content}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-400">
+                            {new Date(news.publishedAt).toLocaleTimeString('en-IN', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </span>
+                          {news.relevanceScore > 0.7 && (
+                            <span className="bg-orange-600/20 text-orange-400 px-2 py-0.5 rounded-full text-xs">
+                              High Relevance
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          {news.categories?.slice(0, 2).map((cat) => (
+                            <span key={cat} className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs">
+                              {cat}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">

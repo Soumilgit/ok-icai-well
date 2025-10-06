@@ -17,6 +17,7 @@ import ComplianceCenter from '@/app/components/ComplianceCenter';
 import TwitterPostCreator from '@/app/components/TwitterPostCreator';
 import EnhancedContentHub from '@/app/components/EnhancedContentHub';
 import ICAIComplianceCenter from '@/app/components/ICAIComplianceCenter';
+import WebLinksComponent from '@/components/WebLinksComponent';
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -1315,27 +1316,64 @@ export default function Dashboard() {
                         {news.content}
                       </p>
                       
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-400">
-                            {new Date(news.publishedAt).toLocaleTimeString('en-IN', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </span>
-                          {news.relevanceScore > 0.7 && (
-                            <span className="bg-orange-600/20 text-orange-400 px-2 py-0.5 rounded-full text-xs">
-                              High Relevance
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-gray-400">
+                              {new Date(news.publishedAt).toLocaleTimeString('en-IN', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
                             </span>
-                          )}
+                            {news.relevanceScore > 0.7 && (
+                              <span className="bg-orange-600/20 text-orange-400 px-2 py-0.5 rounded-full text-xs">
+                                High Relevance
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            {news.categories?.slice(0, 2).map((cat) => (
+                              <span key={cat} className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs">
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          {news.categories?.slice(0, 2).map((cat) => (
-                            <span key={cat} className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs">
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
+                        
+                        {/* Relevant Web Links */}
+                        {news.relevantLinks && news.relevantLinks.length > 0 && (
+                          <div className="border-t border-white/10 pt-2">
+                            <p className="text-xs text-gray-400 mb-1">Related Links:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {news.relevantLinks.slice(0, 2).map((link, linkIndex) => (
+                                <a
+                                  key={linkIndex}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center px-2 py-1 text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-full transition-colors"
+                                  title={link.source}
+                                >
+                                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"/>
+                                  </svg>
+                                  {link.title.length > 15 ? link.title.substring(0, 15) + '...' : link.title}
+                                </a>
+                              ))}
+                              {news.relevantLinks.length > 2 && (
+                                <button
+                                  onClick={() => {
+                                    // Show all links in modal or expand
+                                    alert(`All links:\n${news.relevantLinks.map(l => `• ${l.title}: ${l.url}`).join('\n')}`);
+                                  }}
+                                  className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1 rounded-full bg-blue-600/10 hover:bg-blue-600/20 transition-colors"
+                                >
+                                  +{news.relevantLinks.length - 2} more
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1752,6 +1790,14 @@ export default function Dashboard() {
                       </span>
                     ))}
                   </div>
+                  
+                  {/* Web Links for News Articles */}
+                  <WebLinksComponent 
+                    headline={article.title}
+                    categories={article.category ? [article.category] : []}
+                    maxLinks={2}
+                    className="mb-4"
+                  />
                   
                   <div className="flex space-x-2">
                     <button 

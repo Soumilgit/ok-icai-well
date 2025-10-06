@@ -59,6 +59,154 @@ function calculateRelevanceScore(title: string, content: string): number {
   return Math.min(matchingKeywords.length / caKeywords.length * 2, 1); // Max score of 1
 }
 
+// Generate relevant web links using intelligent search
+async function generateRelevantLinks(title: string, category: string[]): Promise<Array<{url: string, title: string, source: string}>> {
+  const links: Array<{url: string, title: string, source: string}> = [];
+  
+  try {
+    // Try to call web search API for dynamic results
+    const response = await fetch('http://localhost:3000/api/web-search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        headline: title,
+        categories: category,
+        maxResults: 3
+      })
+    });
+    
+    if (response.ok) {
+      const searchData = await response.json();
+      if (searchData.success && searchData.data.results) {
+        return searchData.data.results.slice(0, 3).map((result: any) => ({
+          url: result.url,
+          title: result.title,
+          source: result.source
+        }));
+      }
+    }
+  } catch (error) {
+    // Fallback to static links if web search fails
+    console.log('Using fallback static links');
+  }
+  
+  // Static fallback links based on content analysis
+  const titleLower = title.toLowerCase();
+  
+  // RBI related links
+  if (titleLower.includes('rbi') || category.includes('Banking')) {
+    links.push({
+      url: 'https://www.rbi.org.in/Scripts/NotificationUser.aspx',
+      title: 'RBI Latest Notifications',
+      source: 'Reserve Bank of India'
+    });
+    links.push({
+      url: 'https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx',
+      title: 'RBI Press Releases',
+      source: 'RBI Official'
+    });
+  }
+  
+  // GST related links
+  if (titleLower.includes('gst') || category.includes('GST')) {
+    links.push({
+      url: 'https://www.gst.gov.in/newsandupdates',
+      title: 'GST Portal - News & Updates',
+      source: 'GST Official Portal'
+    });
+    links.push({
+      url: 'https://www.cbic.gov.in/resources//htdocs-cbec/gst/notifications.html',
+      title: 'GST Notifications - CBIC',
+      source: 'Central Board of Indirect Taxes'
+    });
+  }
+  
+  // ICAI related links
+  if (titleLower.includes('icai') || category.includes('ICAI')) {
+    links.push({
+      url: 'https://www.icai.org/new_category.html?c_id=302',
+      title: 'ICAI Latest Updates',
+      source: 'The Institute of Chartered Accountants of India'
+    });
+    links.push({
+      url: 'https://www.icai.org/new_category.html?c_id=89',
+      title: 'ICAI Announcements',
+      source: 'ICAI Official'
+    });
+  }
+  
+  // Income Tax related links
+  if (titleLower.includes('income tax') || titleLower.includes('tax') || category.includes('Taxation')) {
+    links.push({
+      url: 'https://www.incometax.gov.in/iec/foportal/news-and-updates',
+      title: 'Income Tax - News & Updates',
+      source: 'Income Tax Department'
+    });
+    links.push({
+      url: 'https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1',
+      title: 'Tax Filing Guidelines',
+      source: 'IT Department Official'
+    });
+  }
+  
+  // Ministry of Corporate Affairs
+  if (titleLower.includes('corporate') || titleLower.includes('company') || category.includes('Corporate')) {
+    links.push({
+      url: 'https://www.mca.gov.in/content/mca/global/en/mca/master-data/md-news.html',
+      title: 'MCA Latest News',
+      source: 'Ministry of Corporate Affairs'
+    });
+    links.push({
+      url: 'https://www.mca.gov.in/content/mca/global/en/acts-rules/notifications.html',
+      title: 'MCA Notifications',
+      source: 'MCA Official'
+    });
+  }
+  
+  // SEBI related links
+  if (titleLower.includes('sebi') || category.includes('Securities')) {
+    links.push({
+      url: 'https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=13',
+      title: 'SEBI Press Releases',
+      source: 'Securities and Exchange Board of India'
+    });
+    links.push({
+      url: 'https://www.sebi.gov.in/legal/circulars',
+      title: 'SEBI Circulars',
+      source: 'SEBI Official'
+    });
+  }
+  
+  // Finance Ministry
+  if (title.toLowerCase().includes('finance') || title.toLowerCase().includes('budget') || category.includes('Finance')) {
+    links.push({
+      url: 'https://finmin.nic.in/press_room/newsrelease',
+      title: 'Finance Ministry Press Releases',
+      source: 'Ministry of Finance'
+    });
+    links.push({
+      url: 'https://www.finmin.nic.in/',
+      title: 'Finance Ministry Official',
+      source: 'Government of India'
+    });
+  }
+  
+  // General CA News sources
+  links.push({
+    url: 'https://economictimes.indiatimes.com/topic/chartered-accountant',
+    title: 'Economic Times - CA News',
+    source: 'Economic Times'
+  });
+  
+  links.push({
+    url: 'https://www.business-standard.com/topic/accounting',
+    title: 'Business Standard - Accounting',
+    source: 'Business Standard'
+  });
+  
+  return links.slice(0, 3); // Return top 3 most relevant links
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -125,16 +273,18 @@ export async function GET(request: NextRequest) {
     ];
     
     // Process each news item
-    const processedNews = mockNews.map(news => {
+    const processedNews = await Promise.all(mockNews.map(async (news) => {
       const sentiment = analyzeSentiment(news.title + ' ' + news.content);
       const relevanceScore = calculateRelevanceScore(news.title, news.content);
+      const relevantLinks = await generateRelevantLinks(news.title, news.categories);
       
       return {
         ...news,
         sentiment,
-        relevanceScore
+        relevanceScore,
+        relevantLinks
       };
-    });
+    }));
     
     // Sort by relevance score and recency
     const sortedNews = processedNews.sort((a, b) => {

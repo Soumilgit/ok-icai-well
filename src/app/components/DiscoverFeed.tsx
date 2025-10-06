@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import WebLinksComponent from '@/components/WebLinksComponent';
 
 interface NewsArticle {
   id: string;
@@ -357,6 +358,14 @@ How are you preparing for this shift? Share your experience below.
                       </span>
                     ))}
                   </div>
+                  
+                  {/* Web Links Component for News Articles */}
+                  <WebLinksComponent 
+                    headline={article.title}
+                    categories={[article.category]}
+                    maxLinks={2}
+                    className="mb-4"
+                  />
                 </div>
               </div>
 

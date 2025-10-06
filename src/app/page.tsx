@@ -462,11 +462,20 @@ export default function Home() {
               who are building their personal brand with AI.
             </p>
             
-            {/* Small Learn More button */}
-            <div className="mb-12">
-              <button className="bg-black text-white px-8 py-3 rounded-full text-sm font-medium border border-white hover:bg-white hover:text-black transition-colors">
-                Learn More
-              </button>
+            {/* CTA Buttons */}
+            <div className="mb-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a 
+                href="/sign-up" 
+                className="bg-white text-black px-8 py-3 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                Get Started Free
+              </a>
+              <a 
+                href="/sign-in" 
+                className="bg-black text-white px-8 py-3 rounded-full text-sm font-medium border border-white hover:bg-white hover:text-black transition-colors"
+              >
+                Sign In to Dashboard
+              </a>
             </div>
             
             {/* Hand image */}

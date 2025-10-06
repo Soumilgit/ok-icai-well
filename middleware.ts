@@ -51,14 +51,8 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
-  // Redirect from root to dashboard if authenticated, otherwise to sign-in
-  if (req.nextUrl.pathname === '/') {
-    if (userId) {
-      return NextResponse.redirect(new URL('/dashboard', req.url));
-    } else {
-      return NextResponse.redirect(new URL('/sign-in', req.url));
-    }
-  }
+  // Allow home page to load naturally - don't force redirects
+  // Users can navigate to dashboard manually or via the home page buttons
 
   return NextResponse.next();
 });

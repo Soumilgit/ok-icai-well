@@ -103,6 +103,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (isLoaded) {
+      // If user is not authenticated, redirect to home page
+      if (!user) {
+        router.push('/');
+        return;
+      }
+      
       fetchDashboardData();
       loadUserPreferences();
       fetchTopNews(); // Fetch top news on initial load
@@ -305,15 +311,24 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const response = await fetch('/api/dashboard');
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        router.push('/sign-in');
+        return;
+      }
+      
       const result = await response.json();
       
       if (result.success) {
         setDashboardData(result.data);
+        setError(null); // Clear any previous errors
       } else {
         setError(result.error || 'Failed to fetch dashboard data');
       }
     } catch (err) {
-      setError('Failed to connect to server');
+      console.error('Dashboard fetch error:', err);
+      setError('Failed to connect to server. Please check your internet connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -796,12 +811,25 @@ export default function Dashboard() {
 
   // Removed auto-refresh for better performance - data will be fetched on demand only
 
+  // Show loading state
   if (!isLoaded || loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-xl">Loading CA Law Portal Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to home if not authenticated (this prevents red error screen)
+  if (isLoaded && !user) {
+    router.push('/');
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl">Redirecting to home page...</p>
         </div>
       </div>
     );

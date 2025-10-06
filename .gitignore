@@ -32,6 +32,9 @@ yarn-error.log*
 
 .env*.local
 
+# test files with API keys
+test-api.js
+**/test-api*.js
 
 # vercel
 .vercel

@@ -18,6 +18,9 @@ import TwitterPostCreator from '@/app/components/TwitterPostCreator';
 import EnhancedContentHub from '@/app/components/EnhancedContentHub';
 import ICAIComplianceCenter from '@/app/components/ICAIComplianceCenter';
 import WebLinksComponent from '@/components/WebLinksComponent';
+import PerplexityNewsModal from '@/components/PerplexityNewsModal';
+import LinkedInPostGenerator from '@/app/components/LinkedInPostGenerator';
+import TwitterPostGenerator from '@/app/components/TwitterPostGenerator';
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -52,6 +55,10 @@ export default function Dashboard() {
   // Top news state
   const [topNews, setTopNews] = useState<any[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
+  
+  // Perplexity News Modal state
+  const [selectedNewsItem, setSelectedNewsItem] = useState<any>(null);
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
   
   // Automation notifications
   const [automationNotifications, setAutomationNotifications] = useState<any[]>([]);
@@ -328,6 +335,16 @@ export default function Dashboard() {
     } finally {
       setNewsLoading(false);
     }
+  };
+
+  const handleNewsClick = (newsItem: any) => {
+    setSelectedNewsItem(newsItem);
+    setIsNewsModalOpen(true);
+  };
+
+  const closeNewsModal = () => {
+    setIsNewsModalOpen(false);
+    setSelectedNewsItem(null);
   };
 
   const runDailyAutomation = async () => {
@@ -929,22 +946,17 @@ export default function Dashboard() {
                     <div className="space-y-1">
                       <button 
                         onClick={() => setActiveTab('linkedin')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center"
                       >
-                        LinkedIn Automation
+                        💼 LinkedIn Post Creator
+                        <span className="ml-2 px-2 py-1 text-xs bg-blue-600 text-white rounded-full">AI CHAT</span>
                       </button>
                       <button 
                         onClick={() => setActiveTab('twitter')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center border-l-2 border-purple-500"
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center"
                       >
-                        X (Twitter) Smart Automation
-                        <span className="ml-2 px-2 py-1 text-xs bg-purple-600 text-white rounded-full">SMART</span>
-                      </button>
-                      <button 
-                        onClick={() => setShowLinkedInAuth(true)}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Connect LinkedIn
+                        🐦 Twitter Post Creator  
+                        <span className="ml-2 px-2 py-1 text-xs bg-sky-600 text-white rounded-full">AI CHAT</span>
                       </button>
                     </div>
                   </div>
@@ -1296,7 +1308,11 @@ export default function Dashboard() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {topNews.map((news, index) => (
-                    <div key={news.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group">
+                    <div 
+                      key={news.id} 
+                      onClick={() => handleNewsClick(news)}
+                      className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group hover:bg-white/20"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <span className={`text-xs px-2 py-1 rounded-full ${
                           news.sentiment?.label === 'positive' ? 'bg-green-600/20 text-green-400' :
@@ -1351,6 +1367,7 @@ export default function Dashboard() {
                                   href={link.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
                                   className="inline-flex items-center px-2 py-1 text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-full transition-colors"
                                   title={link.source}
                                 >
@@ -1362,8 +1379,8 @@ export default function Dashboard() {
                               ))}
                               {news.relevantLinks.length > 2 && (
                                 <button
-                                  onClick={() => {
-                                    // Show all links in modal or expand
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     alert(`All links:\n${news.relevantLinks.map(l => `• ${l.title}: ${l.url}`).join('\n')}`);
                                   }}
                                   className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1 rounded-full bg-blue-600/10 hover:bg-blue-600/20 transition-colors"
@@ -1764,7 +1781,21 @@ export default function Dashboard() {
             
             <div className="grid gap-6">
               {dashboardData?.recent?.news?.map((article: any, index: number) => (
-                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div 
+                  key={index} 
+                  onClick={() => handleNewsClick({
+                    id: article.id || index.toString(),
+                    title: article.title,
+                    content: article.content,
+                    summary: article.summary,
+                    source: article.source,
+                    publishedAt: article.publishedAt,
+                    category: article.category,
+                    categories: article.categories || [article.category],
+                    url: article.url
+                  })}
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 cursor-pointer hover:bg-white/20 hover:border-white/40 transition-all"
+                >
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold mb-2">{article.title}</h3>
@@ -1801,16 +1832,41 @@ export default function Dashboard() {
                   
                   <div className="flex space-x-2">
                     <button 
-                      onClick={() => generateContent('tax-article')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        generateContent('tax-article');
+                      }}
                       className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm transition-colors"
                     >
                       Generate Article
                     </button>
                     <button 
-                      onClick={() => generateContent('audit-checklist')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        generateContent('audit-checklist');
+                      }}
                       className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm transition-colors"
                     >
                       Create Checklist
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNewsClick({
+                          id: article.id || index.toString(),
+                          title: article.title,
+                          content: article.content,
+                          summary: article.summary,
+                          source: article.source,
+                          publishedAt: article.publishedAt,
+                          category: article.category,
+                          categories: article.categories || [article.category],
+                          url: article.url
+                        });
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm transition-colors flex items-center"
+                    >
+                      🤖 AI Summary
                     </button>
                   </div>
                 </div>
@@ -3112,112 +3168,12 @@ export default function Dashboard() {
 
       {/* Twitter/X Tab */}
       {activeTab === 'twitter' && (
-        <TwitterPostCreator />
-      )}
-
-      {/* Additional Twitter content (if needed) */}
-      {activeTab === 'twitter' && false && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">𝕏 Twitter/X Automation</h1>
-            <p className="text-xl text-blue-100">
-              ICAI-compliant Twitter posting with professional guidelines checking
-            </p>
-          </div>
-          
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-600">
-            <h2 className="text-2xl font-bold mb-4 text-white">🐦 Create Twitter Post</h2>
-            <TwitterPostCreator />
-          </div>
-        </div>
+        <TwitterPostGenerator />
       )}
 
       {/* LinkedIn Automation Tab */}
       {activeTab === 'linkedin' && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 rounded-2xl p-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">💼 LinkedIn Automation</h1>
-            <p className="text-xl text-gray-100">
-              Automate your LinkedIn content creation, scheduling, and engagement with AI-powered tools.
-            </p>
-          </div>
-          
-          {/* LinkedIn Authentication Status */}
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-600 mb-6">
-            <h2 className="text-2xl font-bold mb-4 text-white">🔐 LinkedIn Authentication</h2>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-lg font-medium text-white">Connection Status</div>
-                <div className="text-sm text-gray-600">Manage your LinkedIn integration</div>
-              </div>
-              <div className="space-x-3">
-                <button
-                  onClick={handleLinkedInAuth}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  🔗 Connect LinkedIn
-                </button>
-                <button
-                  onClick={handleTestLinkedInPost}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  🧪 Test Posting
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Content Pipeline Controls */}
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-600">
-            <h2 className="text-2xl font-bold mb-4 text-white">🚀 Content Pipeline Controls</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <button
-                onClick={() => handleLinkedInAutomation('generate_content')}
-                disabled={runningAutomation}
-                className="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {runningAutomation ? '⏳ Generating...' : '📊 Generate Content'}
-              </button>
-              <button
-                onClick={() => handleLinkedInAutomation('schedule_posts')}
-                disabled={runningAutomation}
-                className="bg-green-600 text-white px-6 py-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {runningAutomation ? '⏳ Scheduling...' : '📅 Schedule Posts'}
-              </button>
-              <button
-                onClick={() => handleLinkedInAutomation('post_now')}
-                disabled={runningAutomation}
-                className="bg-red-600 text-white px-6 py-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {runningAutomation ? '⏳ Posting...' : '🚀 Post Now'}
-              </button>
-              <button
-                onClick={() => handleLinkedInAutomation('full_pipeline')}
-                disabled={runningAutomation}
-                className="bg-purple-600 text-white px-6 py-4 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {runningAutomation ? '⏳ Running...' : '🔄 Full Pipeline'}
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a
-                href="/content-approval"
-                className="bg-yellow-500 text-white px-6 py-4 rounded-lg hover:bg-yellow-600 transition-colors text-center block"
-              >
-                👀 Review & Approve Content
-              </a>
-              <button
-                onClick={() => window.open('https://linkedin.com', '_blank')}
-                className="bg-blue-500 text-white px-6 py-4 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                🔗 Open LinkedIn
-              </button>
-            </div>
-          </div>
-
-          <LinkedInAutomation userPreferences={userPreferences || { writingVoice: { name: 'Professional' }, customizations: { formalityLevel: 7 }, targetAudience: ['Clients'], contentPreferences: ['Tax Updates'] }} />
-        </div>
+        <LinkedInPostGenerator />
       )}
 
       {/* Content Repurposing Tab */}
@@ -3299,6 +3255,13 @@ export default function Dashboard() {
           </div>
         </footer>
       </div>
+      
+      {/* Perplexity News Modal */}
+      <PerplexityNewsModal
+        isOpen={isNewsModalOpen}
+        onClose={closeNewsModal}
+        newsItem={selectedNewsItem}
+      />
     </div>
   );
 }

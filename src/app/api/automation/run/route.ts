@@ -10,11 +10,28 @@ import {
   runNotifications, 
   runFullAutomationPipeline 
 } from '@/lib/automation-tasks';
+import { infrastructureManager } from '@/lib/infrastructure-manager';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { task, topic, difficulty } = body;
+    
+    // Initialize infrastructure if needed
+    if (!infrastructureManager.isInitialized) {
+      await infrastructureManager.initialize();
+    }
+    
+    // Track automation task start
+    await infrastructureManager.publishEvent('user-events', {
+      type: 'automation-started',
+      data: {
+        task,
+        topic: topic || null,
+        difficulty: difficulty || null,
+        timestamp: new Date().toISOString(),
+      }
+    });
     
     let result;
     
@@ -45,6 +62,19 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
+    
+    // Track automation task completion
+    await infrastructureManager.publishEvent('user-events', {
+      type: 'automation-completed',
+      data: {
+        task,
+        topic: topic || null,
+        difficulty: difficulty || null,
+        succeeded: true,
+        result: result || {},
+        timestamp: new Date().toISOString(),
+      }
+    });
     
     return NextResponse.json({
       success: true,

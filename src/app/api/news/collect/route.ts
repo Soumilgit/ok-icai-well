@@ -2,15 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { collectAllNews } from '@/lib/news-collector';
 import { connectToDatabase } from '@/lib/database';
 import NewsArticle from '@/models/NewsArticle';
+import { infrastructureManager } from '@/lib/infrastructure-manager';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('Starting news collection process...');
     
+    // Initialize infrastructure if needed
+    if (!infrastructureManager.isInitialized) {
+      await infrastructureManager.initialize();
+    }
+    
     // Collect news from all sources
     const articles = await collectAllNews();
     
     console.log(`Collected ${articles.length} articles`);
+    
+    // Track news collection event
+    await infrastructureManager.publishEvent('news-events', {
+      type: 'news-collection',
+      data: {
+        articlesCount: articles.length,
+        timestamp: new Date().toISOString(),
+        source: 'automated',
+      }
+    });
     
     // Process articles
     await connectToDatabase();
@@ -24,6 +40,18 @@ export async function POST(request: NextRequest) {
           // Mark as processed
           await NewsArticle.findByIdAndUpdate(savedArticle._id, {
             processedAt: new Date()
+          });
+          
+          // Track article processing event
+          await infrastructureManager.publishEvent('news-events', {
+            type: 'news-article-processed',
+            data: {
+              articleId: savedArticle._id.toString(),
+              title: savedArticle.title,
+              source: savedArticle.source,
+              category: savedArticle.category,
+              timestamp: new Date().toISOString(),
+            }
           });
           
           console.log(`Processed article: ${savedArticle.title}`);
@@ -55,13 +83,40 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
+    // Initialize infrastructure if needed
+    if (!infrastructureManager.isInitialized) {
+      await infrastructureManager.initialize();
+    }
     
     const { searchParams } = new URL(request.url);
     const source = searchParams.get('source');
     const category = searchParams.get('category');
     const limit = parseInt(searchParams.get('limit') || '10');
     const page = parseInt(searchParams.get('page') || '1');
+    
+    // Create cache key for this query
+    const cacheKey = `news:${source || 'all'}:${category || 'all'}:${limit}:${page}`;
+    
+    // Try to get from cache first
+    const cached = await infrastructureManager.getCachedData(cacheKey);
+    if (cached) {
+      // Track cache hit
+      await infrastructureManager.publishEvent('news-events', {
+        type: 'news-cache-hit',
+        data: {
+          cacheKey,
+          source,
+          category,
+          limit,
+          page,
+          timestamp: new Date().toISOString(),
+        }
+      });
+      
+      return NextResponse.json(cached);
+    }
+    
+    await connectToDatabase();
     
     const query: any = {};
     if (source) query.source = source;
@@ -74,7 +129,7 @@ export async function GET(request: NextRequest) {
     
     const total = await NewsArticle.countDocuments(query);
     
-    return NextResponse.json({
+    const response = {
       success: true,
       articles,
       pagination: {
@@ -83,7 +138,26 @@ export async function GET(request: NextRequest) {
         total,
         pages: Math.ceil(total / limit)
       }
+    };
+    
+    // Cache the response for 5 minutes
+    await infrastructureManager.cacheData(cacheKey, response, 300);
+    
+    // Track news fetch event
+    await infrastructureManager.publishEvent('news-events', {
+      type: 'news-fetched',
+      data: {
+        source,
+        category,
+        articlesCount: articles.length,
+        limit,
+        page,
+        total,
+        timestamp: new Date().toISOString(),
+      }
     });
+    
+    return NextResponse.json(response);
     
   } catch (error) {
     console.error('Error fetching news:', error);

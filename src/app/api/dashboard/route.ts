@@ -2,12 +2,43 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/database';
 import { automationService } from '@/lib/automation-service';
 import { notificationService } from '@/lib/notification-service';
+import { infrastructureManager } from '@/lib/infrastructure-manager';
+import { redisService } from '@/lib/redis-service';
+import { kafkaService, KAFKA_TOPICS, EVENT_TYPES } from '@/lib/kafka-service';
 import NewsArticle from '@/models/NewsArticle';
 import GeneratedContent from '@/models/GeneratedContent';
 import Notification from '@/models/Notification';
 
 export async function GET(request: NextRequest) {
   try {
+    // Initialize infrastructure if not already done
+    if (!infrastructureManager.isInitialized) {
+      await infrastructureManager.initialize();
+    }
+
+    // Extract user ID from request headers (set by Clerk middleware)
+    const userId = request.headers.get('x-user-id') || 'anonymous';
+    const cacheKey = `dashboard:${userId}`;
+
+    // Try to get cached dashboard data first
+    const cachedData = await infrastructureManager.getCachedData(cacheKey);
+    if (cachedData) {
+      console.log('📋 Dashboard data served from cache');
+      
+      // Track dashboard view event
+      infrastructureManager.publishEvent(KAFKA_TOPICS.DASHBOARD_VIEWED, {
+        type: EVENT_TYPES.DASHBOARD_LOADED,
+        userId,
+        data: { source: 'cache' },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: cachedData,
+        source: 'redis-cache'
+      });
+    }
+
     // Try to connect to database with timeout
     const dbConnected = await Promise.race([
       connectToDatabase().then(() => true),
@@ -16,9 +47,14 @@ export async function GET(request: NextRequest) {
 
     if (!dbConnected) {
       console.warn('Database connection timeout, returning fallback data');
+      const fallbackData = getFallbackDashboardData();
+      
+      // Cache fallback data briefly
+      await infrastructureManager.cacheData(cacheKey, fallbackData, 60);
+      
       return NextResponse.json({
         success: true,
-        data: getFallbackDashboardData(),
+        data: fallbackData,
         source: 'fallback-db-timeout'
       });
     }
@@ -158,9 +194,24 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString()
     };
     
-    return NextResponse.json({
-      success: true,
-      data: dashboardData
+    // Cache the dashboard data for 5 minutes
+    await infrastructureManager.cacheData(cacheKey, dashboardData, 300);
+
+    // Track dashboard view event
+    infrastructureManager.publishEvent(KAFKA_TOPICS.DASHBOARD_VIEWED, {
+      type: EVENT_TYPES.DASHBOARD_LOADED,
+      userId,
+      data: { 
+        source: 'database',
+        newsCount: dashboardData.recent.news.length,
+        contentCount: dashboardData.recent.content.length
+      },
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      data: dashboardData,
+      source: 'database'
     });
     
   } catch (error) {

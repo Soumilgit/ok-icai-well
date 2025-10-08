@@ -36,8 +36,7 @@ const NewsArticleSchema = new Schema<INewsArticle>({
   },
   url: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   publishedAt: {
     type: Date,

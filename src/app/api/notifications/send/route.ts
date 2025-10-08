@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { notificationService } from '@/lib/notification-service';
+import { infrastructureManager } from '@/lib/infrastructure-manager';
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize infrastructure if needed
+    if (!infrastructureManager.isInitialized) {
+      await infrastructureManager.initialize();
+    }
+    
     const body = await request.json();
     const { 
       type, 
@@ -46,6 +52,18 @@ export async function POST(request: NextRequest) {
       recipients,
       priority,
       metadata
+    });
+    
+    // Track notification sent event
+    await infrastructureManager.publishEvent('user-events', {
+      type: 'notification-sent',
+      data: {
+        notificationId,
+        notificationType: type,
+        recipientCount: recipients.length,
+        priority,
+        timestamp: new Date().toISOString(),
+      }
     });
     
     return NextResponse.json({

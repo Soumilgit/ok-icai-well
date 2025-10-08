@@ -3,6 +3,7 @@ import { aiProcessor } from '@/lib/ai-processor';
 import { connectToDatabase } from '@/lib/database';
 import NewsArticle from '@/models/NewsArticle';
 import GeneratedContent from '@/models/GeneratedContent';
+import { infrastructureManager } from '@/lib/infrastructure-manager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,11 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Content type is required' },
         { status: 400 }
       );
+    }
+    
+    // Initialize infrastructure if needed
+    if (!infrastructureManager.isInitialized) {
+      await infrastructureManager.initialize();
     }
     
     await connectToDatabase();
@@ -29,6 +35,19 @@ export async function POST(request: NextRequest) {
       
       // Save the generated content
       const savedContent = await GeneratedContent.create(generatedContent);
+      
+      // Track content generation event
+      await infrastructureManager.publishEvent('content-events', {
+        type: 'content-generated',
+        data: {
+          contentId: savedContent._id.toString(),
+          contentType: type,
+          query,
+          model: model || 'default',
+          isSimple: true,
+          timestamp: new Date().toISOString(),
+        }
+      });
       
       return NextResponse.json({
         success: true,
@@ -76,6 +95,20 @@ export async function POST(request: NextRequest) {
     // Save to database
     const savedContent = await GeneratedContent.create(generatedContent);
     
+    // Track content generation event
+    await infrastructureManager.publishEvent('content-events', {
+      type: 'content-generated',
+      data: {
+        contentId: savedContent._id.toString(),
+        contentType: type,
+        model: model || 'default',
+        sourceArticlesCount: newsArticles.length,
+        sourceIds: sourceIds || [],
+        isSimple: false,
+        timestamp: new Date().toISOString(),
+      }
+    });
+    
     return NextResponse.json({
       success: true,
       content: savedContent,
@@ -97,13 +130,40 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
+    // Initialize infrastructure if needed
+    if (!infrastructureManager.isInitialized) {
+      await infrastructureManager.initialize();
+    }
     
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '10');
     const page = parseInt(searchParams.get('page') || '1');
+    
+    // Create cache key for this query
+    const cacheKey = `content:${type || 'all'}:${status || 'all'}:${limit}:${page}`;
+    
+    // Try to get from cache first
+    const cached = await infrastructureManager.getCachedData(cacheKey);
+    if (cached) {
+      // Track cache hit
+      await infrastructureManager.publishEvent('content-events', {
+        type: 'content-cache-hit',
+        data: {
+          cacheKey,
+          contentType: type,
+          status,
+          limit,
+          page,
+          timestamp: new Date().toISOString(),
+        }
+      });
+      
+      return NextResponse.json(cached);
+    }
+    
+    await connectToDatabase();
     
     const query: any = {};
     if (type) query.type = type;
@@ -117,7 +177,7 @@ export async function GET(request: NextRequest) {
     
     const total = await GeneratedContent.countDocuments(query);
     
-    return NextResponse.json({
+    const response = {
       success: true,
       content,
       pagination: {
@@ -126,7 +186,26 @@ export async function GET(request: NextRequest) {
         total,
         pages: Math.ceil(total / limit)
       }
+    };
+    
+    // Cache the response for 3 minutes (content changes more frequently)
+    await infrastructureManager.cacheData(cacheKey, response, 180);
+    
+    // Track content fetch event
+    await infrastructureManager.publishEvent('content-events', {
+      type: 'content-fetched',
+      data: {
+        contentType: type,
+        status,
+        contentCount: content.length,
+        limit,
+        page,
+        total,
+        timestamp: new Date().toISOString(),
+      }
     });
+    
+    return NextResponse.json(response);
     
   } catch (error) {
     console.error('Error fetching generated content:', error);

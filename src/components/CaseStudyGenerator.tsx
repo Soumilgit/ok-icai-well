@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PerplexityService } from '../lib/perplexity-service';
+import { GeminiService } from '../lib/gemini-service';
 import { UserPreferences } from '../lib/writing-voice-service';
 
 interface CaseStudyProps {
@@ -77,7 +77,7 @@ export default function CaseStudyGenerator({ userPreferences }: CaseStudyProps) 
   const [generatedCaseStudy, setGeneratedCaseStudy] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const perplexityService = new PerplexityService();
+  const geminiService = new GeminiService();
 
   const steps = [
     'Client Information',
@@ -142,75 +142,17 @@ export default function CaseStudyGenerator({ userPreferences }: CaseStudyProps) 
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const prompt = buildCaseStudyPrompt();
-      const response = await perplexityService.generateContent(prompt);
-      setGeneratedCaseStudy(response.choices[0]?.message.content || '');
+      const response = await geminiService.generateCaseStudy(caseStudyData);
+      setGeneratedCaseStudy(response || '');
     } catch (error) {
       console.error('Error generating case study:', error);
+      alert('Failed to generate case study. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const buildCaseStudyPrompt = (): string => {
-    const clientName = caseStudyData.client.anonymize 
-      ? `[Anonymous ${caseStudyData.client.industry} Company]` 
-      : caseStudyData.client.name;
 
-    return `
-Create a professional case study using the ${userPreferences.writingVoice.name} writing voice with the following information:
-
-TITLE: ${caseStudyData.title}
-
-CLIENT BACKGROUND:
-- Name: ${clientName}
-- Industry: ${caseStudyData.client.industry}
-- Size: ${caseStudyData.client.size}
-- Location: ${caseStudyData.client.location}
-
-CHALLENGE:
-- Description: ${caseStudyData.challenge.description}
-- Business Impact: ${caseStudyData.challenge.impact}
-- Urgency Level: ${caseStudyData.challenge.urgency}
-- Category: ${caseStudyData.challenge.category}
-
-SOLUTION:
-- Approach: ${caseStudyData.solution.approach}
-- Implementation Steps:
-${caseStudyData.solution.steps.filter(s => s.trim()).map((step, i) => `  ${i + 1}. ${step}`).join('\n')}
-- Timeline: ${caseStudyData.solution.timeline}
-- Resources Used: ${caseStudyData.solution.resources.filter(r => r.trim()).join(', ')}
-
-RESULTS:
-Quantitative Results:
-${caseStudyData.results.metrics.filter(m => m.metric.trim()).map(metric => 
-  `- ${metric.metric}: ${metric.before} → ${metric.after} (${metric.improvement})`
-).join('\n')}
-
-Qualitative Results:
-${caseStudyData.results.qualitativeResults.filter(r => r.trim()).map(result => `- ${result}`).join('\n')}
-
-Client Feedback: "${caseStudyData.results.clientFeedback}"
-
-TARGET AUDIENCE: ${caseStudyData.targetAudience.join(', ')}
-
-KEY TAKEAWAYS:
-${caseStudyData.keyTakeaways.filter(t => t.trim()).map(takeaway => `- ${takeaway}`).join('\n')}
-
-WRITING VOICE REQUIREMENTS:
-${userPreferences.writingVoice.characteristics.map(c => `- ${c}`).join('\n')}
-
-Create a comprehensive case study that:
-1. Follows the ${userPreferences.writingVoice.name} voice characteristics
-2. Is engaging for the target audience
-3. Demonstrates clear value and expertise
-4. Includes specific metrics and outcomes
-5. Provides actionable insights
-6. Maintains professional credibility
-
-Structure the case study with clear sections and compelling narrative flow.
-`;
-  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -418,32 +360,32 @@ function ChallengeDefinitionStep({ data, onChange }: any) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Challenge Description</label>
+        <label className="block text-sm font-medium text-black mb-2">Challenge Description</label>
         <textarea
           value={data.description}
           onChange={(e) => onChange({ ...data, description: e.target.value })}
           placeholder="Describe the main challenge or problem the client was facing..."
-          className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
+          className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black bg-white placeholder-gray-500"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Business Impact</label>
+        <label className="block text-sm font-medium text-black mb-2">Business Impact</label>
         <textarea
           value={data.impact}
           onChange={(e) => onChange({ ...data, impact: e.target.value })}
           placeholder="How was this challenge affecting the client's business? Include financial, operational, or strategic impacts..."
-          className="w-full h-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
+          className="w-full h-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black bg-white placeholder-gray-500"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Urgency Level</label>
+          <label className="block text-sm font-medium text-black mb-2">Urgency Level</label>
           <select
             value={data.urgency}
             onChange={(e) => onChange({ ...data, urgency: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black bg-white"
           >
             <option value="low">Low - Could be addressed over time</option>
             <option value="medium">Medium - Needed timely resolution</option>
@@ -451,11 +393,11 @@ function ChallengeDefinitionStep({ data, onChange }: any) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Challenge Category</label>
+          <label className="block text-sm font-medium text-black mb-2">Challenge Category</label>
           <select
             value={data.category}
             onChange={(e) => onChange({ ...data, category: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black bg-white"
           >
             <option value="">Select category</option>
             <option value="tax-compliance">Tax Compliance</option>
@@ -477,17 +419,17 @@ function SolutionApproachStep({ data, onChange, addArrayItem, removeArrayItem, u
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Solution Approach</label>
+        <label className="block text-sm font-medium text-black mb-2">Solution Approach</label>
         <textarea
           value={data.approach}
           onChange={(e) => onChange({ ...data, approach: e.target.value })}
           placeholder="Describe your overall approach and strategy to solve the challenge..."
-          className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Implementation Steps</label>
+        <label className="block text-sm font-medium text-black mb-2">Implementation Steps</label>
         {data.steps.map((step: string, index: number) => (
           <div key={index} className="flex gap-2 mb-2">
             <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
@@ -498,7 +440,7 @@ function SolutionApproachStep({ data, onChange, addArrayItem, removeArrayItem, u
               value={step}
               onChange={(e) => updateArrayItem('solution', 'steps', index, e.target.value)}
               placeholder={`Step ${index + 1}`}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
             />
             {data.steps.length > 1 && (
               <button
@@ -520,19 +462,19 @@ function SolutionApproachStep({ data, onChange, addArrayItem, removeArrayItem, u
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Timeline</label>
+          <label className="block text-sm font-medium text-black mb-2">Timeline</label>
           <input
             type="text"
             value={data.timeline}
             onChange={(e) => onChange({ ...data, timeline: e.target.value })}
             placeholder="e.g., 3 months, 6 weeks, etc."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Resources Used</label>
+        <label className="block text-sm font-medium text-black mb-2">Resources Used</label>
         {data.resources.map((resource: string, index: number) => (
           <div key={index} className="flex gap-2 mb-2">
             <input
@@ -540,7 +482,7 @@ function SolutionApproachStep({ data, onChange, addArrayItem, removeArrayItem, u
               value={resource}
               onChange={(e) => updateArrayItem('solution', 'resources', index, e.target.value)}
               placeholder="e.g., Team of 3 CAs, Specialized software, etc."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
             />
             {data.resources.length > 1 && (
               <button
@@ -567,7 +509,7 @@ function ResultsMetricsStep({ data, onChange, addArrayItem, removeArrayItem, upd
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-3">Quantitative Results</h4>
+        <h4 className="text-lg font-medium text-black mb-3">Quantitative Results</h4>
         {data.metrics.map((metric: any, index: number) => (
           <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
             <div className="grid grid-cols-4 gap-4 mb-2">
@@ -576,28 +518,28 @@ function ResultsMetricsStep({ data, onChange, addArrayItem, removeArrayItem, upd
                 value={metric.metric}
                 onChange={(e) => updateArrayItem('results', 'metrics', index, { ...metric, metric: e.target.value })}
                 placeholder="Metric name"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
               />
               <input
                 type="text"
                 value={metric.before}
                 onChange={(e) => updateArrayItem('results', 'metrics', index, { ...metric, before: e.target.value })}
                 placeholder="Before value"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
               />
               <input
                 type="text"
                 value={metric.after}
                 onChange={(e) => updateArrayItem('results', 'metrics', index, { ...metric, after: e.target.value })}
                 placeholder="After value"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
               />
               <input
                 type="text"
                 value={metric.improvement}
                 onChange={(e) => updateArrayItem('results', 'metrics', index, { ...metric, improvement: e.target.value })}
                 placeholder="% improvement"
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
               />
             </div>
             {data.metrics.length > 1 && (
@@ -619,7 +561,7 @@ function ResultsMetricsStep({ data, onChange, addArrayItem, removeArrayItem, upd
       </div>
 
       <div>
-        <h4 className="text-lg font-medium text-gray-900 mb-3">Qualitative Results</h4>
+        <h4 className="text-lg font-medium text-black mb-3">Qualitative Results</h4>
         {data.qualitativeResults.map((result: string, index: number) => (
           <div key={index} className="flex gap-2 mb-2">
             <input
@@ -627,7 +569,7 @@ function ResultsMetricsStep({ data, onChange, addArrayItem, removeArrayItem, upd
               value={result}
               onChange={(e) => updateArrayItem('results', 'qualitativeResults', index, e.target.value)}
               placeholder="e.g., Improved team confidence, Better stakeholder relationships"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
             />
             {data.qualitativeResults.length > 1 && (
               <button
@@ -648,12 +590,12 @@ function ResultsMetricsStep({ data, onChange, addArrayItem, removeArrayItem, upd
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Client Feedback/Testimonial</label>
+        <label className="block text-sm font-medium text-black mb-2">Client Feedback/Testimonial</label>
         <textarea
           value={data.clientFeedback}
           onChange={(e) => onChange({ ...data, clientFeedback: e.target.value })}
           placeholder="Include a quote from the client about the results or experience..."
-          className="w-full h-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          className="w-full h-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
         />
       </div>
     </div>
@@ -674,8 +616,8 @@ function TargetAudienceStep({ data, onChange, addArrayItem, removeArrayItem, upd
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
-        <p className="text-sm text-gray-600 mb-3">
+        <label className="block text-sm font-medium text-black mb-2">Target Audience</label>
+        <p className="text-sm text-black mb-3">
           Select who would be most interested in reading this case study
         </p>
         <div className="grid grid-cols-2 gap-2">
@@ -692,15 +634,15 @@ function TargetAudienceStep({ data, onChange, addArrayItem, removeArrayItem, upd
                 }}
                 className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <span className="text-sm">{option}</span>
+              <span className="text-sm text-black">{option}</span>
             </label>
           ))}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Key Takeaways</label>
-        <p className="text-sm text-gray-600 mb-3">
+        <label className="block text-sm font-medium text-black mb-2">Key Takeaways</label>
+        <p className="text-sm text-black mb-3">
           What are the main lessons or insights readers should gain from this case study?
         </p>
         {data.keyTakeaways.map((takeaway: string, index: number) => (
@@ -713,7 +655,7 @@ function TargetAudienceStep({ data, onChange, addArrayItem, removeArrayItem, upd
               value={takeaway}
               onChange={(e) => updateArrayItem('keyTakeaways', '', index, e.target.value)}
               placeholder="e.g., Proper planning can reduce compliance costs by 30%"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black"
             />
             {data.keyTakeaways.length > 1 && (
               <button
@@ -755,12 +697,12 @@ function ReviewGenerateStep({ data, generatedCaseStudy, isGenerating, onGenerate
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Case Study Summary</h3>
+        <h3 className="text-lg font-semibold mb-4 text-black">Case Study Summary</h3>
         <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-          <div><strong>Title:</strong> {data.title}</div>
-          <div><strong>Client:</strong> {data.client.anonymize ? `[Anonymous ${data.client.industry} Company]` : data.client.name}</div>
-          <div><strong>Challenge:</strong> {data.challenge.description.substring(0, 100)}...</div>
-          <div><strong>Target Audience:</strong> {data.targetAudience.join(', ')}</div>
+          <div className="text-black"><strong>Title:</strong> {data.title}</div>
+          <div className="text-black"><strong>Client:</strong> {data.client.anonymize ? `[Anonymous ${data.client.industry} Company]` : data.client.name}</div>
+          <div className="text-black"><strong>Challenge:</strong> {data.challenge.description.substring(0, 100)}...</div>
+          <div className="text-black"><strong>Target Audience:</strong> {data.targetAudience.join(', ')}</div>
         </div>
       </div>
 
@@ -777,7 +719,7 @@ function ReviewGenerateStep({ data, generatedCaseStudy, isGenerating, onGenerate
       {generatedCaseStudy && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Generated Case Study</h3>
+            <h3 className="text-lg font-semibold text-black">Generated Case Study</h3>
             <div className="flex gap-2">
               <button
                 onClick={() => navigator.clipboard.writeText(generatedCaseStudy)}
@@ -794,7 +736,7 @@ function ReviewGenerateStep({ data, generatedCaseStudy, isGenerating, onGenerate
             </div>
           </div>
           <div className="bg-white border border-gray-300 rounded-lg p-6 max-h-96 overflow-y-auto">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+            <pre className="whitespace-pre-wrap text-sm text-black font-sans">
               {generatedCaseStudy}
             </pre>
           </div>

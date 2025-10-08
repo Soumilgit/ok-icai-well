@@ -16,7 +16,7 @@ import DiscoverFeed from '@/app/components/DiscoverFeed';
 import ComplianceCenter from '@/app/components/ComplianceCenter';
 import TwitterPostCreator from '@/app/components/TwitterPostCreator';
 import EnhancedContentHub from '@/app/components/EnhancedContentHub';
-import ICAIComplianceCenter from '@/app/components/ICAIComplianceCenter';
+
 import WebLinksComponent from '@/components/WebLinksComponent';
 import PerplexityNewsModal from '@/components/PerplexityNewsModal';
 import LinkedInPostGenerator from '@/app/components/LinkedInPostGenerator';
@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen' | 'workflow' | 'chat' | 'marketing' | 'questionnaire' | 'linkedin' | 'repurposing' | 'case-studies' | 'compliance' | 'network' | 'images' | 'unified-creator' | 'discover' | 'twitter' | 'enhanced-hub' | 'icai-center'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen' | 'workflow' | 'chat' | 'marketing' | 'questionnaire' | 'linkedin' | 'repurposing' | 'case-studies' | 'compliance' | 'network' | 'images' | 'unified-creator' | 'discover' | 'twitter' | 'enhanced-hub'>('overview');
   
   // Domain-based access control (aminutemantechnologies.com only)
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || '';
@@ -64,8 +64,15 @@ export default function Dashboard() {
   const [automationNotifications, setAutomationNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   
-  // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Controls text expansion
+  // Sidebar state - auto-collapse for new users
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Check if user has previously set sidebar preference
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('sidebarOpen');
+      return savedState ? JSON.parse(savedState) : false; // Default collapsed for new users
+    }
+    return false;
+  });
   const [mouseNearLeft, setMouseNearLeft] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   
@@ -171,6 +178,13 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Save sidebar state to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarOpen', JSON.stringify(sidebarOpen));
+    }
+  }, [sidebarOpen]);
+
   const loadUserPreferences = () => {
     try {
       const saved = localStorage.getItem('writing_voice_preferences');
@@ -202,25 +216,25 @@ export default function Dashboard() {
         let message = '';
         switch (action) {
           case 'generate_content':
-            message = `✅ Generated ${result.data?.data?.postsGenerated || 0} new posts from latest trends!`;
+            message = `Generated ${result.data?.data?.postsGenerated || 0} new posts from latest trends!`;
             break;
           case 'schedule_posts':
-            message = `✅ Scheduled ${result.data?.data?.postsScheduled || 0} approved posts!`;
+            message = `Scheduled ${result.data?.data?.postsScheduled || 0} approved posts!`;
             break;
           case 'post_now':
-            message = `✅ Posted ${result.data?.data?.postsPublished || 0} approved posts immediately to LinkedIn!`;
+            message = `Posted ${result.data?.data?.postsPublished || 0} approved posts immediately to LinkedIn!`;
             break;
           case 'full_pipeline':
-            message = `✅ Full pipeline completed! Check the content approval dashboard.`;
+            message = `Full pipeline completed! Check the content approval dashboard.`;
             break;
         }
         alert(message);
       } else {
-        alert(`❌ Error: ${result.error}`);
+        alert(`Error: ${result.error}`);
       }
     } catch (error) {
       console.error('LinkedIn automation error:', error);
-      alert('❌ Failed to trigger LinkedIn automation');
+      alert('Failed to trigger LinkedIn automation');
     } finally {
       setRunningAutomation(false);
     }
@@ -240,12 +254,12 @@ export default function Dashboard() {
           
           if (event.data.type === 'linkedin_auth_success') {
             window.removeEventListener('message', messageHandler);
-            alert('✅ LinkedIn connected successfully! You can now post to LinkedIn.');
+            alert('LinkedIn connected successfully! You can now post to LinkedIn.');
             // Refresh to update the authentication status
             window.location.reload();
           } else if (event.data.type === 'linkedin_auth_error') {
             window.removeEventListener('message', messageHandler);
-            alert(`❌ LinkedIn authentication failed: ${event.data.error}`);
+            alert(`LinkedIn authentication failed: ${event.data.error}`);
           }
         };
         
@@ -265,7 +279,7 @@ export default function Dashboard() {
                   .then(res => res.json())
                   .then(result => {
                     if (result.success) {
-                      alert('✅ LinkedIn authentication completed!');
+                      alert('LinkedIn authentication completed!');
                       window.location.reload();
                     }
                   });
@@ -296,14 +310,14 @@ export default function Dashboard() {
 
       if (response.ok) {
         const result = await response.json();
-        alert('✅ Test post successful! Check your LinkedIn profile.');
+        alert('Test post successful! Check your LinkedIn profile.');
       } else {
         const error = await response.json();
-        alert(`❌ Test post failed: ${error.error || 'Unknown error'}\n\nTip: Make sure you\'ve connected your LinkedIn account first!`);
+        alert(`Test post failed: ${error.error || 'Unknown error'}\n\nTip: Make sure you\'ve connected your LinkedIn account first!`);
       }
     } catch (error) {
       console.error('LinkedIn test post error:', error);
-      alert('❌ Error testing LinkedIn post');
+      alert('Error testing LinkedIn post');
     }
   };
 
@@ -890,17 +904,17 @@ export default function Dashboard() {
           <div className={`flex-1 overflow-y-auto ${sidebarOpen ? 'p-6' : 'p-2'}`} style={{ fontFamily: 'var(--font-walsheim)' }}>
             <div className={`${sidebarOpen ? 'space-y-6' : 'space-y-3'}`}>
 
-              {/* AI Features */}
+              {/* Enhanced Content Hub */}
               <div className="relative group">
                 <button 
                   onClick={() => setActiveTab('enhanced-hub')}
                   className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
-                  title={!sidebarOpen ? 'AI Features' : ''}
+                  title={!sidebarOpen ? 'Enhanced Content Hub' : ''}
                 >
                   <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                  {sidebarOpen && 'AI Features'}
+                  {sidebarOpen && 'Enhanced Content Hub'}
                 </button>
                 
                 {/* Hover Dropdown */}
@@ -910,21 +924,32 @@ export default function Dashboard() {
                       <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
-                      AI Features
+                      Enhanced Content Hub
                     </h4>
                     <div className="space-y-1">
                       <button 
                         onClick={() => setActiveTab('enhanced-hub')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center border-l-2 border-blue-500"
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
                       >
-                        Enhanced Content Hub
-                        <span className="ml-2 px-2 py-1 text-xs bg-blue-600 text-white rounded-full">NEW</span>
+                        Content Generator
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('twitter')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        Twitter Post Creator
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('linkedin')}
+                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
+                      >
+                        LinkedIn Post Creator
                       </button>
                       <button 
                         onClick={() => setActiveTab('unified-creator')}
                         className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
                       >
-                        Unified Content Creator
+                        Unified Creator
                       </button>
                       <button 
                         onClick={() => setActiveTab('discover')}
@@ -932,34 +957,22 @@ export default function Dashboard() {
                       >
                         Discover Feed
                       </button>
-                      <button 
-                        onClick={() => setActiveTab('case-studies')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Case Study Generator
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('writing-voice')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Writing Voice Setup
-                      </button>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Social Media */}
+              
+              {/* Case Study Generator */}
               <div className="relative group">
                 <button 
-                  onClick={() => setActiveTab('twitter')}
+                  onClick={() => setActiveTab('case-studies')}
                   className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
-                  title={!sidebarOpen ? 'Social Media Automation' : ''}
+                  title={!sidebarOpen ? 'Case Study Generator' : ''}
                 >
                   <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd"/>
                   </svg>
-                  {sidebarOpen && 'Social Media'}
+                  {sidebarOpen && 'Case Study Generator'}
                 </button>
                 
                 {/* Hover Dropdown */}
@@ -969,98 +982,37 @@ export default function Dashboard() {
                       <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd"/>
                       </svg>
-                      Social Media
+                      Case Study Generator
                     </h4>
                     <div className="space-y-1">
                       <button 
-                        onClick={() => setActiveTab('linkedin')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center"
-                      >
-                        💼 LinkedIn Post Creator
-                        <span className="ml-2 px-2 py-1 text-xs bg-blue-600 text-white rounded-full">AI CHAT</span>
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('twitter')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center"
-                      >
-                        🐦 Twitter Post Creator  
-                        <span className="ml-2 px-2 py-1 text-xs bg-sky-600 text-white rounded-full">AI CHAT</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Google Sheets */}
-              <div className="relative group">
-                <button 
-                  onClick={() => {
-                    setShowSheetsWorkflow(!showSheetsWorkflow);
-                    setSheetsWorkflowType('drafting');
-                  }}
-                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
-                  title={!sidebarOpen ? 'Google Sheets Integration' : ''}
-                >
-                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd"/>
-                  </svg>
-                  {sidebarOpen && 'Google Sheets'}
-                </button>
-                
-                {/* Hover Dropdown */}
-                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
-                  <div className="p-3">
-                    <h4 className="text-white font-semibold mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd"/>
-                      </svg>
-                      Google Sheets
-                    </h4>
-                    <div className="space-y-1">
-                      <button 
-                        onClick={() => {
-                          setShowSheetsWorkflow(!showSheetsWorkflow);
-                          setSheetsWorkflowType('drafting');
-                        }}
+                        onClick={() => setActiveTab('case-studies')}
                         className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
                       >
-                        CA Drafting Workflow
+                        Create Case Study
                       </button>
                       <button 
-                        onClick={() => {
-                          setShowSheetsWorkflow(!showSheetsWorkflow);
-                          setSheetsWorkflowType('auditing');
-                        }}
+                        onClick={() => setActiveTab('repurposing')}
                         className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
                       >
-                        CA Auditing Workflow
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setShowSheetsWorkflow(!showSheetsWorkflow);
-                          setSheetsWorkflowType('analytics');
-                        }}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Workflow Analytics
+                        Content Repurposing
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Email Automation */}
+              {/* Voice Setup */}
               <div className="relative group">
                 <button 
-                  onClick={() => setShowEmailTesting(!showEmailTesting)}
+                  onClick={() => setActiveTab('writing-voice')}
                   className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
-                  title={!sidebarOpen ? 'Email Automation' : ''}
+                  title={!sidebarOpen ? 'Voice Setup' : ''}
                 >
                   <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                    <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/>
                   </svg>
-                  {sidebarOpen && 'Email Automation'}
+                  {sidebarOpen && 'Voice Setup'}
                 </button>
                 
                 {/* Hover Dropdown */}
@@ -1068,138 +1020,37 @@ export default function Dashboard() {
                   <div className="p-3">
                     <h4 className="text-white font-semibold mb-2 flex items-center">
                       <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                        <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/>
                       </svg>
-                      Email Automation
+                      Voice Setup
                     </h4>
                     <div className="space-y-1">
                       <button 
-                        onClick={() => setShowEmailTesting(!showEmailTesting)}
+                        onClick={() => setActiveTab('writing-voice')}
                         className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
                       >
-                        Test Email System
+                        Writing Voice Setup
                       </button>
-                      <button 
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Stakeholder Notifications
-                      </button>
-                      <button 
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Executive Summaries
-                      </button>
-                      <button 
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Alert Management
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Compliance */}
-              <div className="relative group">
-                <button 
-                  onClick={() => setActiveTab('icai-center')}
-                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
-                  title={!sidebarOpen ? 'Compliance & Pipeline' : ''}
-                >
-                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                  </svg>
-                  {sidebarOpen && 'Compliance & Pipeline'}
-                </button>
-                
-                {/* Hover Dropdown */}
-                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
-                  <div className="p-3">
-                    <h4 className="text-white font-semibold mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                      </svg>
-                      Compliance & Pipeline
-                    </h4>
-                    <div className="space-y-1">
                       <button 
                         onClick={() => setActiveTab('icai-center')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded flex items-center border-l-2 border-green-500"
-                      >
-                        ICAI Compliance & Plagiarism
-                        <span className="ml-2 px-2 py-1 text-xs bg-green-600 text-white rounded-full">ENHANCED</span>
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('compliance')}
                         className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
                       >
-                        Basic Compliance Center
-                      </button>
-                      <button 
-                        onClick={() => setSelectedWorkflow('zapier-pipeline')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        News → Content → Email
-                      </button>
-                      <button 
-                        onClick={() => setSelectedWorkflow('audit-workflow')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Compliance Workflow
-                      </button>
-                      <button 
-                        onClick={() => setSelectedWorkflow('reporting-workflow')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Reporting Pipeline
+                        ICAI Compliance Link
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="relative group">
-                <button
-                  onClick={() => handleRunAutomation()}
-                  disabled={runningAutomation}
-                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded disabled:opacity-50 ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
-                  title={!sidebarOpen ? 'Quick Actions' : ''}
-                >
-                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"/>
-                  </svg>
-                  {sidebarOpen && 'Quick Actions'}
-                </button>
-                
-                {/* Hover Dropdown */}
-                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
-                  <div className="p-3">
-                    <h4 className="text-white font-semibold mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"/>
-                      </svg>
-                      Quick Actions
-                    </h4>
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => handleRunAutomation()}
-                        disabled={runningAutomation}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded disabled:opacity-50"
-                      >
-                        {runningAutomation ? 'Running Automation...' : 'Run Daily Automation'}
-                      </button>
-                      <button
-                        onClick={() => router.push('/workflow-builder')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Workflow Builder
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
+
+
+              
+
+
+
+
+
             </div>
           </div>
         </div>
@@ -1230,16 +1081,35 @@ export default function Dashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <h1 className="text-2xl font-bold">CA Law Portal</h1>
+              <button 
+                onClick={() => setActiveTab('overview')}
+                className="text-2xl font-bold hover:text-blue-400 transition-colors cursor-pointer"
+                title="Return to Dashboard Home"
+              >
+                CA Law Portal
+              </button>
               <span className="bg-green-500 text-xs px-2 py-1 rounded-full">Live</span>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Global Search */}
+              <button
+                onClick={() => setActiveTab('search')}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                title="Global Search"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              
               {/* Notifications Bell */}
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
               >
-                🔔
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
                 {automationNotifications.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-xs w-5 h-5 rounded-full flex items-center justify-center">
                     {automationNotifications.length}
@@ -1291,7 +1161,7 @@ export default function Dashboard() {
                   <div key={index} className="p-4 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-start space-x-3">
                       <span className={`text-lg ${notification.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
-                        {notification.type === 'success' ? '✅' : '❌'}
+                        <div className={`w-2 h-2 rounded-full ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}></div>
                       </span>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-800">{notification.message}</p>
@@ -1342,13 +1212,6 @@ export default function Dashboard() {
                       className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group hover:bg-white/20"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          news.sentiment?.label === 'positive' ? 'bg-green-600/20 text-green-400' :
-                          news.sentiment?.label === 'negative' ? 'bg-red-600/20 text-red-400' :
-                          'bg-gray-600/20 text-gray-400'
-                        }`}>
-                          {news.sentiment?.label || 'neutral'}
-                        </span>
                         <span className="text-xs text-gray-400">{news.source}</span>
                       </div>
                       
@@ -1419,6 +1282,38 @@ export default function Dashboard() {
                             </div>
                           </div>
                         )}
+                        
+                        {/* Hover Actions */}
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-3 pt-3 border-t border-white/10">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveTab('enhanced-hub');
+                                // You can add logic here to pre-fill the content generator with this news
+                              }}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-xs transition-colors"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              <span>Generate Post</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveTab('news');
+                              }}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-xs transition-colors"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span>See More</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1444,7 +1339,11 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">Generated Content</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.generatedContent || 23}</p>
                   </div>
-                  <div className="text-2xl">📝</div>
+                  <div className="text-2xl">
+                    <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
               
@@ -1454,7 +1353,11 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">LinkedIn Posts</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.linkedinPosts || 8}</p>
                   </div>
-                  <div className="text-2xl">💼</div>
+                  <div className="text-2xl">
+                    <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />
+                    </svg>
+                  </div>
                 </div>
               </div>
               
@@ -1474,7 +1377,7 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">AI Images</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.aiImages || 12}</p>
                   </div>
-                  <div className="text-2xl">🎨</div>
+                  <div className="text-2xl text-purple-400">●</div>
                 </div>
               </div>
               
@@ -1484,7 +1387,7 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">Compliance Checks</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.complianceChecks || 6}</p>
                   </div>
-                  <div className="text-2xl">✅</div>
+                  <div className="text-2xl text-green-400">●</div>
                 </div>
               </div>
             </div>
@@ -1497,7 +1400,7 @@ export default function Dashboard() {
                   onClick={() => setActiveTab('unified-creator')}
                   className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
                 >
-                  <div className="text-2xl mb-2">🎯</div>
+                  <div className="text-2xl mb-2 text-blue-400">●</div>
                   <div className="font-semibold">Unified Content Creator</div>
                   <div className="text-sm text-gray-300">Quiz + AI Research + Images in one place</div>
                 </button>
@@ -1542,111 +1445,14 @@ export default function Dashboard() {
                   onClick={() => setActiveTab('case-studies')}
                   className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
-                  <div className="text-2xl mb-2">📊</div>
+                  <div className="text-2xl mb-2 text-green-400">●</div>
                   <div className="font-semibold">Case Study Generator</div>
                   <div className="text-sm text-gray-300">Professional case studies</div>
                 </button>
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-black rounded-xl p-6 border border-gray-600">
-              <h2 className="text-xl font-bold mb-4 text-white">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <button
-                  onClick={runDailyAutomation}
-                  disabled={runningAutomation}
-                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 disabled:from-gray-900 disabled:to-gray-700 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600 disabled:border-gray-700"
-                >
-                  {runningAutomation ? '⏳ Running...' : '🔄 Run Daily Automation'}
-                </button>
-                
-                <button
-                  onClick={() => generateContent('tax-article')}
-                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600"
-                >
-                  📊 Generate Tax Article
-                </button>
-                
-                <button
-                  onClick={() => generateContent('audit-checklist')}
-                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600"
-                >
-                  ✅ Create Audit Checklist
-                </button>
-                
-                <button
-                  onClick={() => generateExamQuestions('General CA Topics')}
-                  className="bg-gradient-to-br from-gray-800 to-gray-600 hover:from-gray-700 hover:to-gray-500 p-4 rounded-lg transition-all duration-300 font-semibold text-white border border-gray-600"
-                >
-                  ❓ Generate Exam Questions
-                </button>
-              </div>
-              
-              {/* Workflow Builder - @aminutemantechnologies.com Only */}
-              {hasWorkflowAccess && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl border border-blue-400">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-2">🔥 NEW: Visual Workflow Builder</h3>
-                    <p className="text-blue-100 text-sm mb-3">Create custom CA workflows with drag-and-drop interface, real-time execution monitoring, and live service connections.</p>
-                    <div className="flex items-center space-x-4 text-xs text-blue-200">
-                      <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span>Real-time execution</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <span>Google Sheets integration</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                        <span>n8n-style interface</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => router.push('/workflow-builder')}
-                      className="bg-gray-700 text-white hover:bg-gray-600 px-4 py-3 rounded-lg font-semibold transition-colors shadow-lg flex items-center space-x-2"
-                    >
-                      <span>🚀</span>
-                      <span>Open Builder</span>
-                    </button>
-                    <button
-                      onClick={() => window.open('/workflow-builder', '_blank')}
-                      className="bg-gray-600 text-white hover:bg-gray-500 px-3 py-3 rounded-lg font-medium transition-colors shadow-lg"
-                      title="Open in new tab"
-                    >
-                      <span>↗️</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              )}
 
-              {/* Show access info for non-company domain users */}
-              {!hasWorkflowAccess && (
-              <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-xl">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm">🔒</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">Workflow Builder</h3>
-                    <p className="text-gray-600 text-sm mb-2">
-                      Advanced workflow automation for CA professionals. Available for company team members only.
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      <strong>Access Requirements:</strong> @aminutemantechnologies.com email address required
-                    </p>
-                  </div>
-                </div>
-              </div>
-              )}
-            </div>
 
             {/* Platform Capabilities Overview */}
             <div className="bg-black rounded-xl p-6 border border-gray-600">
@@ -1750,48 +1556,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-black rounded-xl p-6 border border-gray-600">
-                <h3 className="text-lg font-bold mb-4 text-white">Recent News</h3>
-                <div className="space-y-3">
-                  {dashboardData?.recent?.news?.slice(0, 5).map((article: any, index: number) => (
-                    <div key={index} className="border-b border-white/10 pb-3 last:border-b-0">
-                      <h4 className="font-semibold text-sm">{article.title}</h4>
-                      <p className="text-xs text-gray-300">{article.source} • {article.category}</p>
-                      <div className="flex space-x-2 mt-1">
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          article.impact === 'high' ? 'bg-red-600' : 
-                          article.impact === 'medium' ? 'bg-yellow-600' : 'bg-green-600'
-                        }`}>
-                          {article.impact} impact
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              <div className="bg-black rounded-xl p-6 border border-gray-600">
-                <h3 className="text-lg font-bold mb-4 text-white">Recent Content</h3>
-                <div className="space-y-3">
-                  {dashboardData?.recent?.content?.slice(0, 5).map((content: any, index: number) => (
-                    <div key={index} className="border-b border-gray-600 pb-3 last:border-b-0">
-                      <h4 className="font-semibold text-sm text-white">{content.title}</h4>
-                      <p className="text-xs text-gray-300">{content.type.replace('_', ' ')} • {content.metadata?.wordCount || 0} words</p>
-                      <div className="flex space-x-2 mt-1">
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          content.status === 'published' ? 'bg-green-600' : 
-                          content.status === 'draft' ? 'bg-yellow-600' : 'bg-gray-600'
-                        }`}>
-                          {content.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -1803,7 +1568,10 @@ export default function Dashboard() {
                 onClick={() => runDailyAutomation()}
                 className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors"
               >
-                🔄 Refresh News
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh News
               </button>
             </div>
             
@@ -1830,13 +1598,7 @@ export default function Dashboard() {
                       <p className="text-gray-300 mb-2">{article.source} • {new Date(article.publishedAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex space-x-2">
-                      <span className={`text-xs px-3 py-1 rounded-full ${
-                        article.impact === 'high' ? 'bg-red-600' : 
-                        article.impact === 'medium' ? 'bg-yellow-600' : 'bg-green-600'
-                      }`}>
-                        {article.impact} impact
-                      </span>
-                      <span className="text-xs px-3 py-1 rounded-full bg-gray-600">
+                      <span className="text-xs px-3 py-1 rounded-full bg-blue-600">
                         {article.category}
                       </span>
                     </div>
@@ -1918,7 +1680,7 @@ export default function Dashboard() {
                     ? 'bg-white text-blue-600 shadow-lg' 
                     : 'bg-white/20 hover:bg-white/30'}`}
                 >
-                  <div className="text-sm font-medium">💬 General Chat</div>
+                  <div className="text-sm font-medium">General Chat</div>
                 </button>
                 <button
                   onClick={() => setChatMode('ca-assistant')}
@@ -1934,7 +1696,7 @@ export default function Dashboard() {
                     ? 'bg-white text-blue-600 shadow-lg' 
                     : 'bg-white/20 hover:bg-white/30'}`}
                 >
-                  <div className="text-sm font-medium">📝 SEO Content</div>
+                  <div className="text-sm font-medium">SEO Content</div>
                 </button>
                 <button
                   onClick={() => setChatMode('marketing-strategy')}
@@ -1942,7 +1704,7 @@ export default function Dashboard() {
                     ? 'bg-white text-blue-600 shadow-lg' 
                     : 'bg-white/20 hover:bg-white/30'}`}
                 >
-                  <div className="text-sm font-medium">📈 Marketing</div>
+                  <div className="text-sm font-medium">Marketing</div>
                 </button>
               </div>
             </div>
@@ -1955,7 +1717,7 @@ export default function Dashboard() {
             {/* Usage Guidelines */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-                <h3 className="font-semibold text-white mb-2">💡 CA Assistant Tips</h3>
+                <h3 className="font-semibold text-white mb-2">CA Assistant Tips</h3>
                 <ul className="text-sm text-gray-300 space-y-1">
                   <li>• Ask about latest tax regulations and GST updates</li>
                   <li>• Get audit procedures and compliance guidance</li>
@@ -1964,7 +1726,7 @@ export default function Dashboard() {
                 </ul>
               </div>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-semibold text-green-900 mb-2">📝 SEO Content Tips</h3>
+                <h3 className="font-semibold text-green-900 mb-2">SEO Content Tips</h3>
                 <ul className="text-sm text-green-800 space-y-1">
                   <li>• Use format: "topic: [title], keywords: [keyword1, keyword2]"</li>
                   <li>• Specify content type: blog, landing-page, meta-tags</li>
@@ -1980,7 +1742,7 @@ export default function Dashboard() {
         {activeTab === 'marketing' && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl p-8 text-white">
-              <h1 className="text-4xl font-bold mb-4">📈 Marketing & SEO Automation</h1>
+              <h1 className="text-4xl font-bold mb-4">Marketing & SEO Automation</h1>
               <p className="text-xl text-green-100 mb-6">
                 AI-powered marketing strategies, SEO content generation, and automated campaign creation for your business growth.
               </p>
@@ -2018,7 +1780,11 @@ export default function Dashboard() {
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">📝</span>
+                    <span className="text-2xl">
+                      <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </span>
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">SEO Content Generator</h3>
@@ -2031,7 +1797,10 @@ export default function Dashboard() {
                     onClick={() => { setActiveTab('chat'); setChatMode('seo-content'); }}
                     className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
                   >
-                    🚀 Start SEO Content Creation
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Start SEO Content Creation
                   </button>
                   
                   <div className="text-xs text-gray-500 space-y-1">
@@ -2047,7 +1816,11 @@ export default function Dashboard() {
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">📈</span>
+                    <span className="text-2xl">
+                      <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </span>
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Marketing Strategy Planner</h3>
@@ -2060,7 +1833,7 @@ export default function Dashboard() {
                     onClick={() => { setActiveTab('chat'); setChatMode('marketing-strategy'); }}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
                   >
-                    🎯 Create Marketing Strategy
+                    Create Marketing Strategy
                   </button>
                   
                   <div className="text-xs text-gray-500 space-y-1">
@@ -2075,7 +1848,7 @@ export default function Dashboard() {
 
             {/* Marketing Templates */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">🎨 Marketing Templates & Examples</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Marketing Templates & Examples</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="border border-gray-200 rounded-lg p-4">
@@ -2126,7 +1899,7 @@ export default function Dashboard() {
 
         {activeTab === 'content' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">📝 Generated Content Library</h2>
+            <h2 className="text-2xl font-bold">Generated Content Library</h2>
             
             <div className="grid gap-6">
               {dashboardData?.recent?.content?.map((content: any, index: number) => (
@@ -2185,7 +1958,7 @@ export default function Dashboard() {
                   disabled={isGenerating}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 p-4 rounded-lg transition-colors"
                 >
-                  📊 Tax & GST Questions
+                  Tax & GST Questions
                 </button>
                 
                 <button
@@ -2193,7 +1966,7 @@ export default function Dashboard() {
                   disabled={isGenerating}
                   className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 p-4 rounded-lg transition-colors"
                 >
-                  ✅ Audit Questions
+                  Audit Questions
                 </button>
                 
                 <button
@@ -2207,7 +1980,7 @@ export default function Dashboard() {
 
               {/* Chat Interface */}
               <div className="bg-white/5 rounded-lg p-6 min-h-[400px] flex flex-col">
-                <h3 className="font-bold mb-4">💬 Question Generator Chat</h3>
+                <h3 className="font-bold mb-4">Question Generator Chat</h3>
                 
                 {/* Messages Area */}
                 <div className="flex-1 space-y-4 mb-4 max-h-[300px] overflow-y-auto">
@@ -2224,7 +1997,13 @@ export default function Dashboard() {
                       }`}>
                         <div className="flex items-start space-x-3">
                           <div className="text-2xl">
-                            {message.type === 'user' ? '👤' : message.type === 'error' ? '❌' : '🤖'}
+                            <span className={`inline-flex w-6 h-6 rounded-full items-center justify-center text-xs font-bold ${
+                              message.type === 'user' ? 'bg-blue-500 text-white' : 
+                              message.type === 'error' ? 'bg-red-500 text-white' : 
+                              'bg-green-500 text-white'
+                            }`}>
+                              {message.type === 'user' ? 'U' : message.type === 'error' ? 'E' : 'AI'}
+                            </span>
                           </div>
                           <div className="flex-1">
                             {message.title && (
@@ -2293,7 +2072,7 @@ export default function Dashboard() {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <h3 className="text-lg font-bold mb-4">🔄 Daily Automation</h3>
+                <h3 className="text-lg font-bold mb-4">Daily Automation</h3>
                 <p className="text-gray-300 mb-4">
                   Automatically collect news from ANI, Economic Times & ICAI, generate content, 
                   create audit checklists, and send notifications to CEOs and users.
@@ -2303,12 +2082,12 @@ export default function Dashboard() {
                   disabled={runningAutomation}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 py-3 px-4 rounded-lg transition-colors font-semibold"
                 >
-                  {runningAutomation ? '⏳ Running Daily Automation...' : '🚀 Run Daily Automation'}
+                  {runningAutomation ? 'Running Daily Automation...' : 'Run Daily Automation'}
                 </button>
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <h3 className="text-lg font-bold mb-4">📊 Automation Status</h3>
+                <h3 className="text-lg font-bold mb-4">Automation Status</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Last Run:</span>
@@ -2320,7 +2099,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-green-400">✅ Active</span>
+                    <span className="text-green-400">Active</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tasks Completed Today:</span>
@@ -2332,20 +2111,20 @@ export default function Dashboard() {
 
             {/* Manual Tasks */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <h3 className="text-lg font-bold mb-4">⚡ Manual Tasks</h3>
+              <h3 className="text-lg font-bold mb-4">Manual Tasks</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
                   onClick={() => generateContent('tax-article')}
                   className="bg-green-600 hover:bg-green-700 p-4 rounded-lg transition-colors text-sm font-semibold"
                 >
-                  📊 Generate Tax Article
+                  Generate Tax Article
                 </button>
                 
                 <button
                   onClick={() => generateContent('seo-content')}
                   className="bg-purple-600 hover:bg-purple-700 p-4 rounded-lg transition-colors text-sm font-semibold"
                 >
-                  🎯 Create SEO Content
+                  Create SEO Content
                 </button>
                 
                 <button
@@ -2464,7 +2243,7 @@ export default function Dashboard() {
 
               {/* Content Metadata */}
               <div className="mt-8 pt-6 border-t border-white/20">
-                <h3 className="text-lg font-bold mb-4">📊 Content Details</h3>
+                <h3 className="text-lg font-bold mb-4">Content Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-400">Status:</span>
@@ -2524,7 +2303,7 @@ export default function Dashboard() {
                     onClick={cancelEditing}
                     className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded transition-colors"
                   >
-                    ❌ Cancel
+                    Cancel
                   </button>
                   <button
                     onClick={saveEditedContent}
@@ -3184,10 +2963,7 @@ export default function Dashboard() {
         <DiscoverFeed />
       )}
 
-      {/* ICAI Compliance & Plagiarism Center - ENHANCED! */}
-      {activeTab === 'icai-center' && (
-        <ICAIComplianceCenter />
-      )}
+
 
       {/* Basic Compliance Center Tab */}
       {activeTab === 'compliance' && (
@@ -3230,24 +3006,13 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ICAI Compliance Checker Tab */}
-      {activeTab === 'compliance' && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">✅ ICAI Compliance Checker</h1>
-            <p className="text-xl text-blue-100">
-              Ensure your content meets ICAI guidelines and regulatory requirements with AI-powered compliance checking.
-            </p>
-          </div>
-          <ICAIComplianceChecker />
-        </div>
-      )}
+
 
       {/* LinkedIn Network Analyzer Tab */}
       {activeTab === 'network' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">🌐 LinkedIn Network Analyzer</h1>
+            <h1 className="text-4xl font-bold mb-4">LinkedIn Network Analyzer</h1>
             <p className="text-xl text-cyan-100">
               Analyze your LinkedIn network, discover opportunities, and optimize your professional connections.
             </p>
@@ -3260,12 +3025,61 @@ export default function Dashboard() {
       {activeTab === 'images' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">🎨 AI Image Generator</h1>
+            <h1 className="text-4xl font-bold mb-4">AI Image Generator</h1>
             <p className="text-xl text-blue-100">
               Create professional images for your content using AI-powered generation with CA-specific templates.
             </p>
           </div>
           <ImageGenerator />
+        </div>
+      )}
+
+      {/* Global Search Tab */}
+      {activeTab === 'search' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-2xl p-8 text-white">
+            <h1 className="text-4xl font-bold mb-4">Global Search</h1>
+            <p className="text-xl text-purple-100">
+              Search across all your content, news, case studies, and generated materials in one place.
+            </p>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  placeholder="Search across all content..."
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 pl-12 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+                <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <button className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors">
+                Search
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <button className="p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left transition-colors">
+                <div className="font-semibold text-white mb-1">News Articles</div>
+                <div className="text-sm text-gray-300">Search across collected news</div>
+              </button>
+              <button className="p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left transition-colors">
+                <div className="font-semibold text-white mb-1">Generated Content</div>
+                <div className="text-sm text-gray-300">Find your created posts & articles</div>
+              </button>
+              <button className="p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left transition-colors">
+                <div className="font-semibold text-white mb-1">Case Studies</div>
+                <div className="text-sm text-gray-300">Search through case studies</div>
+              </button>
+            </div>
+            
+            <div className="text-center text-gray-400">
+              <p>Start typing to see search results across all your content.</p>
+            </div>
+          </div>
         </div>
       )}
 

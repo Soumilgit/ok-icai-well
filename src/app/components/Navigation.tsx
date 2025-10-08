@@ -16,7 +16,7 @@ export default function Navigation() {
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-              Features
+              Home
             </Link>
             <Link href="/workflow" className="text-gray-400 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
               Workflow Builder

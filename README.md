@@ -151,11 +151,15 @@ GEMINI_API_KEY=your_gemini_api_key
 GROQ_API_KEY=your_groq_api_key
 PERPLEXITY_API_KEY=your_perplexity_key
 
-# Infrastructure (Optional)
-REDIS_URL=your_redis_connection
+# Infrastructure (Optional but recommended for 600-800 users)
+REDIS_URL=rediss://username:password@your-redis-host:port
+REDIS_PASSWORD=your_redis_password
+REDIS_TLS=true
 KAFKA_BROKERS=your_kafka_brokers
 ENABLE_REDIS=true
 ENABLE_KAFKA=true
+
+# See REDIS-SETUP.md for detailed Redis configuration guide
 
 # Email Service
 SMTP_HOST=smtp.gmail.com

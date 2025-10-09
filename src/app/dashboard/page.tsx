@@ -867,10 +867,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex relative">
-
-
-      {/* Sidebar - Always Visible */}
-      <div className={`fixed inset-y-0 left-0 z-50 bg-gray-900/95 backdrop-blur-lg border-r border-gray-700 transition-all duration-300 ease-out ${sidebarOpen ? 'w-80' : 'w-16'}`}>
+      {/* Sidebar - Always Visible - Adjusted for global navigation */}
+      <div className={`fixed inset-y-0 left-0 z-40 bg-gray-900/95 backdrop-blur-lg border-r border-gray-700 transition-all duration-300 ease-out ${sidebarOpen ? 'w-80' : 'w-16'} pt-16`}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-700">
@@ -1064,9 +1062,9 @@ export default function Dashboard() {
         />
       )}
       
-      {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-16'}`}>
-        {/* Header */}
+      {/* Main Content - Adjusted for global navigation */}
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-16'} pt-16`}>
+        {/* Dashboard Header - Below global navigation */}
         <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">

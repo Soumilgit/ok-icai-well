@@ -12,19 +12,73 @@ export class RedisService {
   private maxReconnectAttempts: number = 3;
 
   constructor() {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = process.env.REDIS_URL;
+    const redisHost = process.env.REDIS_HOST || 'localhost';
+    const redisPort = parseInt(process.env.REDIS_PORT || '6379');
+    const redisPassword = process.env.REDIS_PASSWORD;
+    const redisUsername = process.env.REDIS_USERNAME || 'default';
+    const redisDb = parseInt(process.env.REDIS_DB || '0');
+    const redisTls = process.env.REDIS_TLS === 'true';
+    
     const maxRetries = parseInt(process.env.REDIS_MAX_RETRIES || '3');
     const retryDelayOnFailover = parseInt(process.env.REDIS_RETRY_DELAY || '1000');
+    const connectTimeout = parseInt(process.env.REDIS_CONNECT_TIMEOUT || '10000');
+    const commandTimeout = parseInt(process.env.REDIS_COMMAND_TIMEOUT || '5000');
+    const keepAlive = parseInt(process.env.REDIS_KEEP_ALIVE || '30000');
 
-    this.client = new Redis(redisUrl, {
+    // Configure Redis connection options
+    const redisOptions: any = {
       retryDelayOnFailover,
       maxRetriesPerRequest: maxRetries,
       lazyConnect: true,
       enableOfflineQueue: false,
-      // Graceful connection handling
-      connectTimeout: 10000,
-      commandTimeout: 5000,
-    });
+      connectTimeout,
+      commandTimeout,
+      keepAlive,
+      db: redisDb,
+    };
+
+    // Add authentication if provided
+    if (redisPassword) {
+      redisOptions.password = redisPassword;
+      if (redisUsername && redisUsername !== 'default') {
+        redisOptions.username = redisUsername;
+      }
+    }
+
+    // Add TLS configuration if enabled
+    if (redisTls) {
+      redisOptions.tls = {
+        // TLS options - customize based on your certificate setup
+        rejectUnauthorized: process.env.NODE_ENV === 'production',
+      };
+      
+      // Add certificate paths if provided
+      if (process.env.REDIS_TLS_CERT_PATH) {
+        redisOptions.tls.cert = require('fs').readFileSync(process.env.REDIS_TLS_CERT_PATH);
+      }
+      if (process.env.REDIS_TLS_KEY_PATH) {
+        redisOptions.tls.key = require('fs').readFileSync(process.env.REDIS_TLS_KEY_PATH);
+      }
+      if (process.env.REDIS_TLS_CA_PATH) {
+        redisOptions.tls.ca = require('fs').readFileSync(process.env.REDIS_TLS_CA_PATH);
+      }
+    }
+
+    // Initialize Redis client
+    if (redisUrl) {
+      // Use URL if provided (takes precedence)
+      this.client = new Redis(redisUrl, redisOptions);
+      console.log('🔧 Redis initialized with URL:', redisUrl.replace(/:\/\/.*@/, '://***:***@'));
+    } else {
+      // Use individual connection parameters
+      this.client = new Redis({
+        host: redisHost,
+        port: redisPort,
+        ...redisOptions
+      });
+      console.log(`🔧 Redis initialized with host: ${redisHost}:${redisPort}, DB: ${redisDb}`);
+    }
 
     this.setupEventHandlers();
   }

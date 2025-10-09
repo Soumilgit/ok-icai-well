@@ -1,11 +1,4 @@
-'use client'
-
-import React from 'react'
-import { WorkflowSocketProvider } from '@/lib/workflow/socket-context'
-import ReactFlowBuilder from '@/components/workflow/ReactFlowBuilder'
-import Navigation from '@/app/components/Navigation'
-import { NodeType } from '@/lib/workflow/types'
-import { Node, Edge } from '@xyflow/react'
+'use client';
 
 const WorkflowBuilderPage: React.FC = () => {
   // Demo workflow with CA-specific nodes

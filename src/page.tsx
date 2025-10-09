@@ -11,7 +11,7 @@ export default function Home() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  const fullText = 'AccountantAI';
+  const fullText = 'CA Authority';
 
   // Typewriter effect for beta benefits
   const [benefitText, setBenefitText] = useState('');
@@ -116,7 +116,7 @@ export default function Home() {
               <span>Professional Services</span>
               <span className="mx-2">&gt;</span>
                   <span className="text-white">
-                    {isClient ? displayText : 'AccountantAI'}
+                    {isClient ? displayText : 'CA Authority'}
                     {isClient && <span className="ml-1 w-0.5 h-3 bg-white animate-blink inline-block"></span>}
                   </span>
             </nav>
@@ -173,7 +173,7 @@ export default function Home() {
           {/* 2x2 Image Grid */}
               <div className="grid grid-cols-2 gap-6 w-full max-w-6xl mx-auto mt-16">
                 <div className="aspect-square">
-                  <Image src="/mugen-1.jpg" alt="Mugen Template 1" width={400} height={400} className="w-full h-full object-cover rounded-lg" />
+                  <Image src="/mugen-1.png" alt="Mugen Template 1" width={400} height={400} className="w-full h-full object-cover rounded-lg" />
                 </div>
                 <div className="aspect-square">
                   <Image src="/mugen-2.jpg" alt="Mugen Template 2" width={400} height={400} className="w-full h-full object-cover rounded-lg" />
@@ -414,7 +414,7 @@ export default function Home() {
                 After successfully building two companies and raising significant venture capital, I realized that most CAs struggle with LinkedIn content creation, compliance concerns, and time management.
               </p>
               <p className="text-blue-400 text-lg leading-relaxed mb-6 font-semibold">
-                That&apos;s when I decided to create AccountantAI.
+                That&apos;s when I decided to create CA Authority.
               </p>
               <p className="text-gray-200 text-lg leading-relaxed">
                 A platform built specifically for Chartered Accountants, by someone who understands the unique challenges, compliance requirements, and professional standards of our industry. <span className="text-white font-semibold">Because every CA deserves to build a personal brand that attracts the clients they truly want.</span>
@@ -435,7 +435,7 @@ export default function Home() {
           {/* Main Heading */}
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-normal text-white leading-tight mb-8">
-              We built AccountantAI to help
+              We built CA Authority to help
               <br />
               Chartered Accountants work
               <br />

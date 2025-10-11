@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Footer from './components/Footer';
+import ChatInterface from '@/components/ChatInterface';
 
 export default function Home() {
   const [displayText, setDisplayText] = useState('');
@@ -15,6 +16,9 @@ export default function Home() {
   const [benefitText, setBenefitText] = useState('');
   const [isDeletingBenefit, setIsDeletingBenefit] = useState(false);
   const [benefitIndex, setBenefitIndex] = useState(0);
+
+  // Chat interface state
+  const [chatMode, setChatMode] = useState<'general' | 'ca-assistant' | 'seo-content' | 'marketing-strategy'>('ca-assistant');
 
   const benefitTexts = useMemo(() => [
     'Exclusive discounted pricing',
@@ -164,6 +168,126 @@ export default function Home() {
                   <Image src="/mugen-4.jpg" alt="Mugen Template 4" width={400} height={400} className="w-full h-full object-cover rounded-lg" />
                 </div>
               </div>
+        </div>
+      </section>
+
+      {/* Chat Interface Section */}
+      <section className="py-20 bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Try Our AI Assistant
+            </h2>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              Get instant help with CA queries, tax calculations, and compliance questions. Our AI assistant is trained on the latest ICAI regulations.
+            </p>
+          </div>
+
+          {/* Chat Mode Selector */}
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <button
+              onClick={() => setChatMode('ca-assistant')}
+              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+                chatMode === 'ca-assistant' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              CA Assistant
+            </button>
+            <button
+              onClick={() => setChatMode('seo-content')}
+              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+                chatMode === 'seo-content' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              SEO Content
+            </button>
+            <button
+              onClick={() => setChatMode('marketing-strategy')}
+              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+                chatMode === 'marketing-strategy' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              Marketing Strategy
+            </button>
+            <button
+              onClick={() => setChatMode('general')}
+              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+                chatMode === 'general' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              General Chat
+            </button>
+          </div>
+
+          {/* Chat Interface */}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-xl shadow-xl">
+              <ChatInterface mode={chatMode} onModeChange={setChatMode} />
+            </div>
+          </div>
+
+          {/* Social Media Sharing Buttons */}
+          <div className="max-w-4xl mx-auto mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* LinkedIn Button */}
+              <button
+                onClick={() => {
+                  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`;
+                  window.open(linkedinUrl, '_blank');
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center space-x-3 shadow-lg"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+                <span>Post on LinkedIn</span>
+              </button>
+
+              {/* Twitter Button */}
+              <button
+                onClick={() => {
+                  const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent('Check out this AI-powered content creation tool for CAs!')}`;
+                  window.open(twitterUrl, '_blank');
+                }}
+                className="w-full bg-gray-900 hover:bg-black text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center space-x-3 shadow-lg"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                <span>Post on X</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Usage Tips */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+              <h3 className="font-semibold text-white mb-3">CA Assistant Tips</h3>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li>• Ask about latest tax regulations and GST updates</li>
+                <li>• Get audit procedures and compliance guidance</li>
+                <li>• Request calculation examples and case studies</li>
+                <li>• Inquire about recent circulars and notifications</li>
+              </ul>
+            </div>
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+              <h3 className="font-semibold text-white mb-3">Content Creation Tips</h3>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li>• Generate SEO-optimized blog posts and articles</li>
+                <li>• Create LinkedIn posts that comply with ICAI guidelines</li>
+                <li>• Develop marketing strategies for CA practices</li>
+                <li>• Generate client-friendly explanations of complex topics</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 

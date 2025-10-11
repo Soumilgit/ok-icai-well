@@ -1,14 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useUser, SignOutButton } from '@clerk/nextjs';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-export default function Navigation() {
+function NavigationContent() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const { user, isSignedIn } = useUser();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Check for welcome parameter
+  useEffect(() => {
+    if (searchParams.get('welcome') === 'true' && isSignedIn) {
+      setShowWelcome(true);
+      // Remove the welcome parameter from URL after showing
+      const url = new URL(window.location.href);
+      url.searchParams.delete('welcome');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams, isSignedIn]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -57,6 +70,9 @@ export default function Navigation() {
             <Link href="/dashboard" className={getLinkClass('/dashboard')}>
               Dashboard
             </Link>
+            <Link href="/content-writer" className={getLinkClass('/content-writer')}>
+              Content Writer
+            </Link>
             <Link href="/content-pipeline" className={getLinkClass('/content-pipeline')}>
               Content Pipeline
             </Link>
@@ -75,9 +91,14 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-4">
             {isSignedIn ? (
               <div className="flex items-center space-x-4">
-                <span className="text-gray-400 text-sm">
-                  Hello, {user?.firstName || user?.emailAddresses[0]?.emailAddress}
-                </span>
+                {showWelcome && (
+                  <div className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse">
+                    Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}! ✨
+                  </div>
+                )}
+                <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                  Go to Dashboard
+                </Link>
                 <SignOutButton>
                   <button className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
                     Sign Out
@@ -155,6 +176,13 @@ export default function Navigation() {
                 Dashboard
               </Link>
               <Link
+                href="/content-writer"
+                className={getMobileLinkClass('/content-writer')}
+                onClick={() => setIsOpen(false)}
+              >
+                Content Writer
+              </Link>
+              <Link
                 href="/content-pipeline"
                 className={getMobileLinkClass('/content-pipeline')}
                 onClick={() => setIsOpen(false)}
@@ -187,9 +215,18 @@ export default function Navigation() {
               <div className="pt-4 border-t border-gray-700">
                 {isSignedIn ? (
                   <div className="space-y-2">
-                    <div className="px-3 py-2 text-gray-400 text-sm">
-                      Hello, {user?.firstName || user?.emailAddresses[0]?.emailAddress}
-                    </div>
+                    {showWelcome && (
+                      <div className="bg-green-600 text-white px-3 py-2 rounded-full text-sm font-medium text-center animate-pulse">
+                        Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}! ✨
+                      </div>
+                    )}
+                    <Link
+                      href="/dashboard"
+                      className="block mx-3 my-2 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-500 transition-colors text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Go to Dashboard
+                    </Link>
                     <SignOutButton>
                       <button 
                         className="block px-3 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors w-full text-left"
@@ -223,5 +260,13 @@ export default function Navigation() {
         )}
       </div>
     </nav>
+  );
+}
+
+export default function Navigation() {
+  return (
+    <Suspense fallback={<div className="bg-black fixed top-0 left-0 right-0 z-50 h-16"></div>}>
+      <NavigationContent />
+    </Suspense>
   );
 }

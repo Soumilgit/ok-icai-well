@@ -85,7 +85,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
       
       switch (mode) {
         case 'ca-assistant':
-          response = await fetch('/api/chat/ca-assistant', {
+          response = await fetch('/api/chat/ca-assistant-gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -102,7 +102,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
             const [, topic, keywordsStr, contentType] = seoMatch
             const keywords = keywordsStr ? keywordsStr.split(/[,;]/).map(k => k.trim()) : []
             
-            response = await fetch('/api/marketing/seo-content', {
+            response = await fetch('/api/marketing/seo-content-gemini', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -113,7 +113,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
             })
           } else {
             // Fallback to general content generation
-            response = await fetch('/api/marketing/seo-content', {
+            response = await fetch('/api/marketing/seo-content-gemini', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -131,7 +131,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
           if (marketingMatch) {
             const [, businessType, targetMarket, budget] = marketingMatch
             
-            response = await fetch('/api/marketing/strategy', {
+            response = await fetch('/api/marketing/strategy-gemini', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -142,7 +142,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
             })
           } else {
             // Fallback to general business consultation
-            response = await fetch('/api/marketing/strategy', {
+            response = await fetch('/api/marketing/strategy-gemini', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -154,7 +154,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
           break
 
         default:
-          response = await fetch('/api/chat/perplexity', {
+          response = await fetch('/api/chat/general-gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

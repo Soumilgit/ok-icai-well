@@ -296,7 +296,7 @@ Generate ${postType} content that is specifically tailored to "${newsTitle}" and
       
       // Fallback to Gemini API
       try {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -334,7 +334,7 @@ ${contextualPrompt}`
       if (apiUsed === 'perplexity' && process.env.GEMINI_API_KEY) {
         console.log('🔄 Perplexity failed, trying Gemini as backup...');
         try {
-          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

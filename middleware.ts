@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
 
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
+  '/content-writer(.*)',
   '/api/dashboard(.*)',
   '/api/content(.*)',
   '/api/automation(.*)',
@@ -46,9 +47,9 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  // Redirect authenticated users from public auth pages to dashboard
+  // Redirect authenticated users from public auth pages to homepage with welcome
   if (userId && (req.nextUrl.pathname === '/sign-in' || req.nextUrl.pathname === '/sign-up')) {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    return NextResponse.redirect(new URL('/?welcome=true', req.url));
   }
 
   // Allow home page to load naturally - don't force redirects

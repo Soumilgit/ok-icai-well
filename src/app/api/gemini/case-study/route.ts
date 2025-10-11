@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use the correct model parameter
-    const model = 'gemini-flash-lite-latest';
+    const model = 'gemini-2.5-flash-lite';
     const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     // Create the comprehensive prompt

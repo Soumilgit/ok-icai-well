@@ -21,6 +21,7 @@ import WebLinksComponent from '@/components/WebLinksComponent';
 import PerplexityNewsModal from '@/components/PerplexityNewsModal';
 import LinkedInPostGenerator from '@/app/components/LinkedInPostGenerator';
 import TwitterPostGenerator from '@/app/components/TwitterPostGenerator';
+import GeminiContentGenerator from '@/app/components/GeminiContentGenerator';
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -1317,6 +1318,19 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Gemini Content Generator Section */}
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 mb-8">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  AI Content Creation Assistant
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  Generate professional content for LinkedIn, Twitter, and other platforms
+                </p>
+              </div>
+              <GeminiContentGenerator />
             </div>
 
             {/* Stats Cards */}

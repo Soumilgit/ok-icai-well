@@ -17,7 +17,7 @@ export default function SignUpPage() {
               headerSubtitle: 'hidden'
             }
           }}
-          redirectUrl="/dashboard"
+          redirectUrl="/?welcome=true"
           signInUrl="/sign-in"
         />
       </div>

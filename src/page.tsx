@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import Sidebar from './components/Sidebar';
+import SimpleChatBox from './components/SimpleChatBox';
 
 export default function Home() {
   const [displayText, setDisplayText] = useState('');
@@ -188,6 +189,32 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Gemini Content Generator Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              AI Content Creation Made Simple
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Generate professional content for LinkedIn, Twitter, and other platforms in seconds. 
+              Our AI understands your voice and creates engaging posts that build your authority.
+            </p>
+          </div>
+          
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-red-500 p-8 mb-8 text-center">
+              <h1 className="text-4xl font-bold text-white mb-4">🚨 CHATBOX SHOULD BE BELOW THIS RED BOX 🚨</h1>
+              <p className="text-2xl text-white">If you don't see a white chatbox below this red box, there's a display issue!</p>
+            </div>
+            
+            <div className="bg-yellow-400 p-8 mb-8 text-center">
+              <h2 className="text-3xl font-bold text-black mb-4">🟡 CHATBOX IS HERE 🟡</h2>
+              <SimpleChatBox />
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Problem Section */}
       <section id="content-section" className="py-20 bg-black">

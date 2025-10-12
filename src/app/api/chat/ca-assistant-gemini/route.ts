@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { WritingVoicePromptService } from '../../../../lib/writing-voice-prompts';
 
 export async function POST(request: NextRequest) {
   try {
-    const { question, context, searchRecency = 'month' } = await request.json();
+    const { 
+      question, 
+      context, 
+      searchRecency = 'month',
+      writingVoice = 'fact-presenter',
+      userPreferences = null 
+    } = await request.json();
 
     if (!question) {
       return NextResponse.json(
@@ -26,8 +33,9 @@ export async function POST(request: NextRequest) {
     const model = 'gemini-2.5-flash-lite';
     const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
-    // Create CA-specific prompt
-    const prompt = createCAAssistantPrompt(question, context);
+    // Create CA-specific prompt with writing voice integration
+    const writingVoiceService = new WritingVoicePromptService();
+    const prompt = createCAAssistantPrompt(question, context, writingVoice, writingVoiceService);
     
     const response = await fetch(`${baseUrl}?key=${apiKey}`, {
       method: 'POST',
@@ -122,10 +130,33 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function createCAAssistantPrompt(question: string, context?: string): string {
+function createCAAssistantPrompt(
+  question: string, 
+  context?: string, 
+  writingVoice: string = 'fact-presenter', 
+  writingVoiceService?: WritingVoicePromptService
+): string {
+  
+  // Get writing voice specific instructions
+  let voiceInstructions = '';
+  if (writingVoiceService && writingVoice !== 'fact-presenter') {
+    // Use writing voice templates for more engaging responses
+    const voicePrompt = writingVoiceService.createPromptForVoice(
+      writingVoice, 
+      question, 
+      'general', 
+      '200-400'
+    );
+    voiceInstructions = `\n\nWRITING VOICE: ${writingVoice.toUpperCase()}
+Apply the following voice characteristics to your response:
+${voicePrompt}
+
+Adapt this voice while maintaining technical accuracy and compliance focus.`;
+  }
+
   return `You are an expert Chartered Accountant (CA) and ICAI compliance specialist with comprehensive knowledge of:
 - Indian taxation (Income Tax, GST, TDS, etc.)
-- Accounting standards (Ind AS, AS)
+- Accounting standards (Ind AS, AS)  
 - Auditing procedures and standards (SA, AAS)
 - Corporate laws and regulations
 - ICAI guidelines and ethical requirements
@@ -139,26 +170,31 @@ CRITICAL INSTRUCTIONS:
 1. ALWAYS provide a complete, well-structured response
 2. For audit procedures, provide step-by-step detailed procedures
 3. Include specific section references (e.g., Section 44AD, SA 500, etc.) when applicable
-4. Use clear numbering and bullet points for better readability
-5. Provide practical examples where relevant
+4. Use clear numbering and natural formatting for better readability
+5. Provide practical examples where relevant${voiceInstructions}
 6. If calculations are involved, show complete step-by-step workings
 7. Include recent updates or changes if applicable
 8. End with practical tips or important considerations
 
 RESPONSE STRUCTURE:
-1. **Direct Answer**: Start with a clear, concise answer
-2. **Detailed Explanation**: Comprehensive breakdown with proper formatting
-3. **Legal/Regulatory References**: Cite relevant sections, standards, or notifications
-4. **Practical Examples**: Real-world applications where appropriate
-5. **Important Notes**: Key considerations, recent updates, or disclaimers
+1. Direct Answer: Start with a clear, concise answer
+2. Detailed Explanation: Comprehensive breakdown with proper formatting
+3. Legal/Regulatory References: Cite relevant sections, standards, or notifications
+4. Practical Examples: Real-world applications where appropriate
+5. Important Notes: Key considerations, recent updates, or disclaimers
 
-FORMATTING REQUIREMENTS:
-- Use markdown formatting (**, *, numbers, bullets)
-- Structure information clearly with headers
-- Ensure readability with proper spacing
-- Make responses comprehensive but organized
+FORMATTING REQUIREMENTS - VERY IMPORTANT:
+- DO NOT use any markdown symbols like *, **, #, ##, ###, or other special formatting characters
+- DO NOT use asterisks for bold or italic text
+- DO NOT use hashtags for headers
+- Use plain text with clear organization through numbering (1., 2., 3.) and line breaks
+- Separate sections with blank lines for better readability
+- Use simple dashes (-) only for list items if needed
+- Write section titles on their own line followed by content
+- Make the output clean, natural, and easy to read like a professional document
+- Focus on clarity and readability without any markdown styling
 
-Please provide a detailed, well-formatted response:`;
+Please provide a detailed, cleanly formatted response in plain text:`;
 }
 
 function generateRelatedQuestions(question: string): string[] {

@@ -117,26 +117,30 @@ TASK: Create SEO-optimized ${contentType} content about "${topic}"
 KEYWORDS TO INCLUDE: ${keywordText}
 
 CONTENT REQUIREMENTS:
-1. **SEO Optimization**: Include primary and secondary keywords naturally throughout
-2. **Professional Tone**: Suitable for CA professionals and finance industry
-3. **Engaging Structure**: Use headers, bullet points, and clear formatting
-4. **Value-Driven**: Provide actionable insights and practical information
-5. **ICAI Compliant**: Ensure content adheres to professional standards
-6. **Length**: Comprehensive but readable (800-1200 words for blog posts)
+1. SEO Optimization: Include primary and secondary keywords naturally throughout
+2. Professional Tone: Suitable for CA professionals and finance industry
+3. Engaging Structure: Use clear organization and natural formatting
+4. Value-Driven: Provide actionable insights and practical information
+5. ICAI Compliant: Ensure content adheres to professional standards
+6. Length: Comprehensive but readable (800-1200 words for blog posts)
 
-FORMATTING INSTRUCTIONS:
-- Use markdown formatting (##, **, *, bullet points)
-- Include clear headings and subheadings
-- Add meta description suggestions
-- Structure for readability and engagement
-- Include call-to-action where appropriate
+FORMATTING INSTRUCTIONS - VERY IMPORTANT:
+- DO NOT use any markdown symbols like *, **, #, ##, ###, or other special formatting characters
+- DO NOT use asterisks for bold or italic text
+- DO NOT use hashtags for headers
+- Use plain text with clear organization through numbering and line breaks
+- Separate sections with blank lines for better readability
+- Use simple dashes (-) only for list items if needed
+- Write section titles on their own line followed by content
+- Make the output clean, natural, and easy to read like a professional document
+- Focus on clarity and readability without any markdown styling
 
 OUTPUT FORMAT:
-1. **SEO Title**: Compelling, keyword-rich title (60 characters max)
-2. **Meta Description**: Search snippet description (155 characters max)
-3. **Main Content**: Full article/post with proper formatting
-4. **Keywords Used**: List of SEO keywords incorporated
-5. **SEO Tips**: Brief optimization suggestions
+1. SEO Title: Compelling, keyword-rich title (60 characters max)
+2. Meta Description: Search snippet description (155 characters max)
+3. Main Content: Full article/post with proper formatting
+4. Keywords Used: List of SEO keywords incorporated
+5. SEO Tips: Brief optimization suggestions
 
-Please create comprehensive, professional SEO content:`;
+Please create comprehensive, professional SEO content in clean plain text:`;
 }

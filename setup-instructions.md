@@ -11,6 +11,8 @@ MONGODB_URI=mongodb://localhost:27017/ca-law-portal
 
 # AI Services (Required)
 GROQ_API_KEY=your_groq_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+META_LLAMA_API_KEY=your_meta_llama_api_key_here
 
 # Email Configuration (Required for notifications)
 SMTP_HOST=smtp.gmail.com
@@ -33,6 +35,17 @@ CRON_TIMEZONE=Asia/Kolkata
 1. Sign up at https://console.groq.com/
 2. Get your API key from the dashboard
 3. Add to GROQ_API_KEY in .env.local
+
+#### Gemini (Google AI)
+1. Visit https://ai.google.dev/
+2. Sign up and create a new project
+3. Generate an API key for Gemini
+4. Add to GEMINI_API_KEY in .env.local
+
+#### Meta-Llama (for Social Media Automation)
+1. Sign up at https://together.ai/ or your preferred Llama provider
+2. Get your API key for Llama-3-8b model
+3. Add to META_LLAMA_API_KEY in .env.local
 
 #### Email (Gmail)
 1. Enable 2-factor authentication

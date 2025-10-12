@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser, SignOutButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import ChatInterface from '@/components/ChatInterface';
+import DashboardChatInterface from '@/components/DashboardChatInterface';
 import WritingVoiceQuestionnaire from '@/components/WritingVoiceQuestionnaire';
 import LinkedInAutomation from '@/components/LinkedInAutomation';
 import ContentRepurposing from '@/components/ContentRepurposing';
@@ -1722,9 +1723,7 @@ export default function Dashboard() {
             </div>
 
             {/* Chat Interface */}
-            <div className="bg-black rounded-xl shadow-sm border border-gray-700">
-              <ChatInterface mode={chatMode} onModeChange={setChatMode} />
-            </div>
+            <DashboardChatInterface mode={chatMode} onModeChange={setChatMode} />
 
             {/* Usage Guidelines */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2, MessageCircle, Sparkles, FileText, TrendingUp, RefreshCw, Shield, PenTool, Users, Linkedin, Twitter, Copy, X, Maximize2 } from 'lucide-react'
+import { Send, Bot, User, Loader2, MessageCircle, Sparkles, FileText, TrendingUp, RefreshCw, Shield, PenTool, Users, Linkedin, Twitter, Copy, X, Maximize2, Settings } from 'lucide-react'
+import SocialAutomationSidebar from './SocialAutomationSidebar'
 
 interface Message {
   id: string
@@ -15,15 +16,27 @@ interface Message {
 interface ChatInterfaceProps {
   mode: 'general' | 'ca-assistant' | 'seo-content' | 'marketing-strategy'
   onModeChange?: (mode: string) => void
+  variant?: 'homepage' | 'dashboard'
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, variant = 'homepage' }) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isFocused, setIsFocused] = useState(false)
+  const [writingVoice, setWritingVoice] = useState('fact-presenter')
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false)
+  const [showSocialAutomation, setShowSocialAutomation] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const writingVoices = [
+    { id: 'storyteller', name: 'Storyteller', icon: '📖' },
+    { id: 'opinionator', name: 'Opinionator', icon: '💬' },
+    { id: 'fact-presenter', name: 'Fact Presenter', icon: '📊' },
+    { id: 'frameworker', name: 'Frameworker', icon: '🔧' },
+    { id: 'f-bomber', name: 'F-Bomber', icon: '⚡' }
+  ]
 
   // Helper function to extract shareable content
   const extractShareableContent = (content: string): string => {
@@ -139,7 +152,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               question: userMessage.content,
-              context: messages.length > 0 ? messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n') : ''
+              context: messages.length > 0 ? messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n') : '',
+              writingVoice: writingVoice
             })
           })
           break
@@ -220,7 +234,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
                   role: 'user',
                   content: userMessage.content
                 }
-              ]
+              ],
+              writingVoice: writingVoice
             })
           })
       }
@@ -277,6 +292,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
 
   const config = getModeConfig()
 
+  // Helper function for button styling based on variant
+  const getButtonStyle = (baseStyle: string = 'p-2 text-white rounded-lg transition-colors border border-gray-600') => {
+    return variant === 'dashboard' 
+      ? `p-3 text-white rounded-lg transition-colors border border-gray-600 bg-gray-800 hover:bg-gray-700 shadow-lg` 
+      : `${baseStyle} bg-gray-700 hover:bg-gray-600`
+  }
+
   return (
     <>
       {/* Blur background when focused */}
@@ -287,13 +309,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
         />
       )}
       
-      <div className={`flex flex-col h-full rounded-lg shadow-sm border border-gray-700 transition-all duration-300 ${
-        isFocused 
-          ? 'fixed inset-4 z-50 bg-gray-100 shadow-2xl' 
-          : 'bg-gray-100'
+      <div className={`flex flex-col h-full rounded-lg transition-all duration-300 ${
+        variant === 'dashboard' 
+          ? `relative border border-gray-200 shadow-xl ${isFocused ? 'fixed inset-4 z-50 bg-white shadow-2xl' : 'bg-white'}` 
+          : `border border-gray-700 shadow-sm ${isFocused ? 'fixed inset-4 z-50 bg-gray-100 shadow-2xl' : 'bg-gray-100'}`
       }`}>
       {/* Header */}
-      <div className="bg-gray-900 text-white p-4 rounded-t-lg border-b border-gray-700">
+      <div className={`p-4 rounded-t-lg border-b ${
+        variant === 'dashboard' 
+          ? 'bg-white text-black border-gray-200' 
+          : 'bg-gray-900 text-white border-gray-700'
+      }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {config.icon}
@@ -304,7 +330,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
               <select
                 value={mode}
                 onChange={(e) => onModeChange(e.target.value)}
-                className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+                className={`rounded px-2 py-1 text-sm ${
+                  variant === 'dashboard' 
+                    ? 'bg-gray-100 border border-gray-300 text-black' 
+                    : 'bg-gray-800 border border-gray-600 text-white'
+                }`}
               >
                 <option value="general">General Chat</option>
                 <option value="ca-assistant">CA Assistant</option>
@@ -312,9 +342,61 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
                 <option value="marketing-strategy">Marketing</option>
               </select>
             )}
+            {/* Writing Voice Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowVoiceSelector(!showVoiceSelector)}
+                className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                  variant === 'dashboard' 
+                    ? 'bg-gray-100 hover:bg-gray-200 border border-gray-300 text-black' 
+                    : 'bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:block">Voice</span>
+              </button>
+              
+              {showVoiceSelector && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  {writingVoices.map((voice) => (
+                    <button
+                      key={voice.id}
+                      onClick={() => {
+                        setWritingVoice(voice.id)
+                        setShowVoiceSelector(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors ${
+                        writingVoice === voice.id ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                      }`}
+                    >
+                      <span className="mr-2">{voice.icon}</span>
+                      {voice.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Social Automation Button */}
+            <button
+              onClick={() => setShowSocialAutomation(true)}
+              className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-blue-100 hover:bg-blue-200 border border-blue-300 text-blue-700' 
+                  : 'bg-blue-600 hover:bg-blue-700 border border-blue-500 text-white'
+              }`}
+            >
+              <Bot className="w-4 h-4" />
+              <span className="hidden sm:block">Social</span>
+            </button>
+
             <button
               onClick={clearChat}
-              className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors border border-gray-600 text-white"
+              className={`px-3 py-1 rounded text-sm transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 border border-gray-300 text-black' 
+                  : 'bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white'
+              }`}
             >
               Clear
             </button>
@@ -330,7 +412,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
             {!isFocused && (
               <button
                 onClick={() => setIsFocused(true)}
-                className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition-colors text-white"
+                className={`p-2 rounded-lg transition-colors ${
+                  variant === 'dashboard' 
+                    ? 'bg-gray-100 hover:bg-gray-200 text-black' 
+                    : 'bg-gray-700 hover:bg-gray-600 text-white'
+                }`}
                 title="Enter Focus Mode"
               >
                 <Maximize2 className="w-4 h-4" />
@@ -375,9 +461,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-              message.role === 'user' 
-                ? 'bg-gray-900 text-white border border-gray-600' 
-                : 'bg-gray-50 text-gray-900 border border-gray-200'
+              variant === 'dashboard' 
+                ? message.role === 'user' 
+                  ? 'bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-200 text-black border border-gray-300'
+                : message.role === 'user' 
+                  ? 'bg-gray-900 text-white border border-gray-600' 
+                  : 'bg-gray-50 text-gray-900 border border-gray-200'
             }`}>
               <div className="flex items-center space-x-2 mb-1">
                 {message.role === 'user' ? (
@@ -437,7 +527,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-700 bg-gray-900">
+      <div className={`p-4 border-t ${
+        variant === 'dashboard' 
+          ? 'border-gray-200 bg-white' 
+          : 'border-gray-700 bg-gray-900'
+      }`}>
         {error && (
           <div className="mb-2 p-2 bg-red-900 border border-red-700 rounded text-red-300 text-sm">
             {error}
@@ -457,23 +551,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
           <button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white p-2 rounded-lg transition-colors border border-gray-600"
+            className={`p-2 rounded-lg transition-colors ${
+              variant === 'dashboard' 
+                ? 'bg-gray-800 hover:bg-gray-700 disabled:bg-gray-400 text-white border border-gray-600' 
+                : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white border border-gray-600'
+            }`}
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-start space-x-2 mt-4 pt-4 border-t border-gray-700">
+        <div className={variant === 'dashboard' 
+          ? `fixed bottom-4 left-4 flex items-center space-x-2 z-10`
+          : `flex items-center space-x-2 mt-4 pt-4 border-t justify-start border-gray-700`
+        }>
           <button
-            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
+            className={getButtonStyle()}
             title="Regenerate"
           >
             <RefreshCw className="w-5 h-5" />
           </button>
           
           <button
-            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
+            className={getButtonStyle()}
             title="ICAI Compliance Check"
           >
             <Shield className="w-5 h-5" />
@@ -498,7 +599,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
                 window.open(linkedinUrl, '_blank');
               }
             }}
-            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className={variant === 'dashboard' 
+              ? "p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg border border-gray-600" 
+              : "p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            }
             title="Post on LinkedIn"
           >
             <Linkedin className="w-5 h-5" />
@@ -523,21 +627,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
                 window.open(twitterUrl, '_blank');
               }
             }}
-            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
+            className={getButtonStyle()}
             title="Post on X"
           >
             <Twitter className="w-5 h-5" />
           </button>
           
           <button
-            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
+            className={getButtonStyle()}
             title="Change Writing Voice"
           >
             <PenTool className="w-5 h-5" />
           </button>
           
           <button
-            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
+            className={getButtonStyle()}
             title="Change Target Audience"
           >
             <Users className="w-5 h-5" />
@@ -565,7 +669,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
                 });
               }
             }}
-            className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            className={variant === 'dashboard' 
+              ? "p-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors shadow-lg border border-gray-600" 
+              : "p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            }
             title="Copy to Clipboard"
           >
             <Copy className="w-5 h-5" />
@@ -577,13 +684,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
           <div className="mt-2 flex flex-wrap gap-1">
             <button
               onClick={() => setInput('topic: Digital Marketing for Small Business, keywords: digital marketing, small business, online marketing')}
-              className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition-colors text-white border border-gray-600"
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
             >
               SEO Blog Template
             </button>
             <button
               onClick={() => setInput('topic: Product Landing Page, type: landing-page')}
-              className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition-colors text-white border border-gray-600"
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
             >
               Landing Page
             </button>
@@ -594,13 +709,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
           <div className="mt-2 flex flex-wrap gap-1">
             <button
               onClick={() => setInput('business: SaaS startup, target: B2B companies, budget: $10k/month')}
-              className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition-colors text-white border border-gray-600"
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
             >
               SaaS Marketing
             </button>
             <button
               onClick={() => setInput('business: E-commerce store, target: millennials, budget: $5k/month')}
-              className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition-colors text-white border border-gray-600"
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
             >
               E-commerce Strategy
             </button>
@@ -608,6 +731,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
         )}
       </div>
       </div>
+      
+      {/* Social Automation Sidebar */}
+      <SocialAutomationSidebar 
+        isOpen={showSocialAutomation} 
+        onClose={() => setShowSocialAutomation(false)} 
+      />
     </>
   )
 }

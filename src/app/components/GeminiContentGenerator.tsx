@@ -60,47 +60,29 @@ export default function GeminiContentGenerator({
     setInputMessage('');
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call real Gemini API
+      const response = await fetch('/api/gemini/ca-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          contentType: detectContentType(prompt)
+        })
+      });
 
-      // Generate AI response based on prompt
-      let aiResponse = '';
-      
-      if (prompt.toLowerCase().includes('linkedin') || prompt.toLowerCase().includes('post')) {
-        aiResponse = `Here's a professional LinkedIn post for you:
-
-🚀 **CA Industry Update: Digital Transformation**
-
-The accounting profession is evolving rapidly, and CAs who adapt to digital tools are seeing 40% more efficiency in their practice.
-
-Key takeaways:
-✅ Automation reduces manual errors by 85%
-✅ Cloud-based solutions improve client collaboration
-✅ AI-powered insights help in better decision making
-
-The question isn't whether to embrace technology, but how quickly you can integrate it into your practice.
-
-What's your experience with digital transformation in your CA practice? Share your insights below!
-
-#CA #DigitalTransformation #AccountingTech #ProfessionalGrowth #CACommunity`;
-      } else if (prompt.toLowerCase().includes('twitter') || prompt.toLowerCase().includes('x')) {
-        aiResponse = `Here's a concise Twitter post:
-
-💡 CA Tip: Use cloud accounting software to reduce client meeting time by 60% and improve accuracy.
-
-Real-time collaboration = Better client relationships.
-
-#CA #Accounting #CloudSoftware #Efficiency`;
-      } else {
-        aiResponse = `I'd be happy to help you create content! Here's what I can assist with:
-
-📝 **LinkedIn Posts**: Professional articles, industry insights, thought leadership content
-🐦 **Twitter/X Posts**: Quick updates, tips, and engaging short-form content  
-📊 **Client Communications**: Newsletters, updates, and educational materials
-🎯 **Marketing Content**: Social media campaigns and promotional materials
-
-What specific type of content would you like to create? Just let me know your topic, target audience, and preferred platform!`;
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate content');
+      }
+
+      const aiResponse = data.content;
 
       // Add typing effect
       const assistantMessage: Message = {
@@ -114,7 +96,7 @@ What specific type of content would you like to create? Just let me know your to
 
       // Simulate typing effect
       for (let i = 0; i <= aiResponse.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 20));
+        await new Promise(resolve => setTimeout(resolve, 15));
         setMessages(prev => 
           prev.map(msg => 
             msg.id === assistantMessage.id 
@@ -137,6 +119,15 @@ What specific type of content would you like to create? Just let me know your to
       setIsGenerating(false);
       setIsTyping(false);
     }
+  };
+
+  const detectContentType = (prompt: string): string => {
+    const lowerPrompt = prompt.toLowerCase();
+    if (lowerPrompt.includes('linkedin')) return 'linkedin';
+    if (lowerPrompt.includes('twitter') || lowerPrompt.includes('x')) return 'twitter';
+    if (lowerPrompt.includes('newsletter') || lowerPrompt.includes('email')) return 'newsletter';
+    if (lowerPrompt.includes('blog') || lowerPrompt.includes('article')) return 'blog';
+    return 'general';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -171,7 +162,7 @@ What specific type of content would you like to create? Just let me know your to
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center border border-gray-600">
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-600">
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
             </svg>
@@ -188,7 +179,7 @@ What specific type of content would you like to create? Just let me know your to
       </div>
 
       {/* Messages */}
-      <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-900">
+      <div className="h-96 overflow-y-auto p-4 space-y-4 bg-white">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -197,13 +188,13 @@ What specific type of content would you like to create? Just let me know your to
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.type === 'user'
-                  ? 'bg-black text-white border border-gray-600'
-                  : 'bg-gray-800 text-gray-100 border border-gray-600'
+                  ? 'bg-gray-400 text-black border border-gray-600'
+                  : 'bg-gray-300 text-gray-900 border border-gray-600'
               }`}
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               <p className={`text-xs mt-1 ${
-                message.type === 'user' ? 'text-gray-300' : 'text-gray-400'
+                message.type === 'user' ? 'text-gray-900' : 'text-gray-900'
               }`}>
                 {message.timestamp.toLocaleTimeString([], { 
                   hour: '2-digit', 
@@ -237,7 +228,7 @@ What specific type of content would you like to create? Just let me know your to
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Ask me to create content for LinkedIn, Twitter, or any platform..."
-            className="flex-1 px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-0 focus:border-gray-500 bg-gray-700 text-white placeholder-gray-400"
+            className="flex-1 px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-0 focus:border-gray-500 bg-gray-200 text-black placeholder-gray-400"
             disabled={isGenerating}
           />
           <button

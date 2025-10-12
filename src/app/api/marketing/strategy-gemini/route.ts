@@ -134,14 +134,25 @@ STRATEGY COMPONENTS:
 - Budget allocation suggestions
 - Timeline and milestones
 
-RESPONSE FORMAT:
-1. **Executive Summary**: Key strategic recommendations
-2. **Target Audience**: Detailed audience analysis
-3. **Marketing Channels**: Recommended channels with rationale
-4. **Content Strategy**: Content types and calendar suggestions
-5. **Budget Allocation**: How to allocate marketing spend
-6. **Implementation Timeline**: Phased approach with milestones
-7. **Success Metrics**: KPIs to track and measure
+FORMATTING REQUIREMENTS - VERY IMPORTANT:
+- DO NOT use any markdown symbols like *, **, #, ##, ###, or other special formatting characters
+- DO NOT use asterisks for bold or italic text
+- DO NOT use hashtags for headers
+- Use plain text with clear organization through numbering and line breaks
+- Separate sections with blank lines for better readability
+- Use simple dashes (-) only for list items if needed
+- Write section titles on their own line followed by content
+- Make the output clean, natural, and easy to read like a professional document
+- Focus on clarity and readability without any markdown styling
 
-Please provide a detailed, actionable marketing strategy:`;
+RESPONSE FORMAT:
+1. Executive Summary: Key strategic recommendations
+2. Target Audience: Detailed audience analysis
+3. Marketing Channels: Recommended channels with rationale
+4. Content Strategy: Content types and calendar suggestions
+5. Budget Allocation: How to allocate marketing spend
+6. Implementation Timeline: Phased approach with milestones
+7. Success Metrics: KPIs to track and measure
+
+Please provide a detailed, actionable marketing strategy in clean plain text:`;
 }

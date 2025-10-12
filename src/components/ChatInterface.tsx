@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2, MessageCircle, Sparkles, FileText, TrendingUp } from 'lucide-react'
+import { Send, Bot, User, Loader2, MessageCircle, Sparkles, FileText, TrendingUp, RefreshCw, Shield, PenTool, Users, Linkedin, Twitter } from 'lucide-react'
 
 interface Message {
   id: string
@@ -360,6 +360,85 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white p-2 rounded-lg transition-colors"
           >
             <Send className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-gray-200">
+          <button
+            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            title="Regenerate"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
+          
+          <button
+            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            title="ICAI Compliance Check"
+          >
+            <Shield className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={() => {
+              // Get the latest assistant message that comes after a user message (skip initial welcome message)
+              const userMessages = messages.filter(msg => msg.role === 'user');
+              if (userMessages.length > 0) {
+                const lastUserMessageIndex = messages.findLastIndex(msg => msg.role === 'user');
+                const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.role === 'assistant');
+                const content = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
+                
+                // LinkedIn sharing with content as text
+                const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
+                window.open(linkedinUrl, '_blank');
+              } else {
+                // Fallback if no user messages yet
+                const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent('Check out this AI-powered content creation tool for CAs!')}`;
+                window.open(linkedinUrl, '_blank');
+              }
+            }}
+            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            title="Post on LinkedIn"
+          >
+            <Linkedin className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={() => {
+              // Get the latest assistant message that comes after a user message (skip initial welcome message)
+              const userMessages = messages.filter(msg => msg.role === 'user');
+              if (userMessages.length > 0) {
+                const lastUserMessageIndex = messages.findLastIndex(msg => msg.role === 'user');
+                const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.role === 'assistant');
+                const content = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
+                
+                // Twitter sharing with generated content
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`;
+                window.open(twitterUrl, '_blank');
+              } else {
+                // Fallback if no user messages yet
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out this AI-powered content creation tool for CAs!')}`;
+                window.open(twitterUrl, '_blank');
+              }
+            }}
+            className="p-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors"
+            title="Post on X"
+          >
+            <Twitter className="w-5 h-5" />
+          </button>
+          
+          <button
+            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            title="Change Writing Voice"
+          >
+            <PenTool className="w-5 h-5" />
+          </button>
+          
+          <button
+            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            title="Change Target Audience"
+          >
+            <Users className="w-5 h-5" />
           </button>
         </div>
 

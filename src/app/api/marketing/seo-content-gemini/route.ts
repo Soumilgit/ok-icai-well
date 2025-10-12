@@ -29,8 +29,6 @@ export async function POST(request: NextRequest) {
     // Create SEO-specific prompt
     const prompt = createSEOContentPrompt(topic, keywords, contentType);
     
-    console.log('🚀 Calling Gemini API for SEO Content with model:', model);
-    
     const response = await fetch(`${baseUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -82,8 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     const content = data.candidates[0].content.parts[0].text;
-    
-    console.log('✅ SEO Content generated successfully via Gemini');
     
     return NextResponse.json({
       success: true,

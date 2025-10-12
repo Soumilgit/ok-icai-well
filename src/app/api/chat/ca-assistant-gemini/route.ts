@@ -29,8 +29,6 @@ export async function POST(request: NextRequest) {
     // Create CA-specific prompt
     const prompt = createCAAssistantPrompt(question, context);
     
-    console.log('🚀 Calling Gemini API for CA Assistant with model:', model);
-    
     const response = await fetch(`${baseUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -76,8 +74,6 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     
-    console.log('📄 Gemini API Response Structure:', JSON.stringify(data, null, 2));
-    
     if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
       console.error('❌ Invalid Gemini response structure:', data);
       
@@ -99,8 +95,6 @@ export async function POST(request: NextRequest) {
     if (!answer || answer.trim().length === 0) {
       throw new Error('Empty response received from Gemini API');
     }
-    
-    console.log('✅ CA Assistant response generated successfully via Gemini');
     
     return NextResponse.json({
       success: true,

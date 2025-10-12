@@ -26,9 +26,11 @@ export default function Home() {
     'First access before public launch'
   ], []);
 
-  // Set client flag on mount
+  // Set client flag on mount and scroll to top
   useEffect(() => {
     setIsClient(true);
+    // Ensure page loads at the top
+    window.scrollTo(0, 0);
   }, []);
   
   useEffect(() => {
@@ -89,7 +91,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black">
       {/* Hero Section */}
-      <section className="bg-black text-white pt-32 pb-32">
+      <section className="bg-black text-white pt-8 pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumbs */}
           <div className="mb-6">
@@ -172,10 +174,10 @@ export default function Home() {
       </section>
 
       {/* Chat Interface Section */}
-      <section className="py-20 bg-gray-900">
+      <section className="py-20 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-normal text-gray-400 mb-4">
               Try Our AI Assistant
             </h2>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
@@ -187,40 +189,40 @@ export default function Home() {
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <button
               onClick={() => setChatMode('ca-assistant')}
-              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+              className={`px-6 py-3 rounded-full transition-all font-medium border ${
                 chatMode === 'ca-assistant' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'border-white text-white' 
+                  : 'border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white'
               }`}
             >
               CA Assistant
             </button>
             <button
               onClick={() => setChatMode('seo-content')}
-              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+              className={`px-6 py-3 rounded-full transition-all font-medium border ${
                 chatMode === 'seo-content' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'border-white text-white' 
+                  : 'border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white'
               }`}
             >
               SEO Content
             </button>
             <button
               onClick={() => setChatMode('marketing-strategy')}
-              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+              className={`px-6 py-3 rounded-full transition-all font-medium border ${
                 chatMode === 'marketing-strategy' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'border-white text-white' 
+                  : 'border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white'
               }`}
             >
               Marketing Strategy
             </button>
             <button
               onClick={() => setChatMode('general')}
-              className={`px-6 py-3 rounded-lg transition-all font-medium ${
+              className={`px-6 py-3 rounded-full transition-all font-medium border ${
                 chatMode === 'general' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'border-white text-white' 
+                  : 'border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white'
               }`}
             >
               General Chat
@@ -238,7 +240,7 @@ export default function Home() {
 
           {/* Usage Tips */}
           <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="bg-black border border-gray-700 rounded-lg p-6">
               <h3 className="font-semibold text-white mb-3">CA Assistant Tips</h3>
               <ul className="text-sm text-gray-300 space-y-2">
                 <li>• Ask about latest tax regulations and GST updates</li>
@@ -247,7 +249,7 @@ export default function Home() {
                 <li>• Inquire about recent circulars and notifications</li>
               </ul>
             </div>
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="bg-black border border-gray-700 rounded-lg p-6">
               <h3 className="font-semibold text-white mb-3">Content Creation Tips</h3>
               <ul className="text-sm text-gray-300 space-y-2">
                 <li>• Generate SEO-optimized blog posts and articles</li>
@@ -446,20 +448,6 @@ export default function Home() {
         
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            {/* Avatar with enhanced styling */}
-            <div className="mb-8">
-              <div className="relative inline-block">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-30 scale-110"></div>
-        <Image
-                  src="/647a571d951cf02b2826ad76_headshot justing.webp" 
-                  alt="Twinkle Dixit" 
-                  width={144}
-                  height={144}
-                  className="relative w-36 h-36 rounded-full mx-auto object-cover border-4 border-white/20 shadow-2xl"
-                />
-              </div>
-            </div>
-            
             {/* Enhanced Title */}
             <div className="mb-12">
               <div className="inline-block px-4 py-2 bg-blue-500/10 rounded-full border border-blue-500/20 mb-6">

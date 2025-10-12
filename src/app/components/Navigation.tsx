@@ -34,7 +34,7 @@ function NavigationContent() {
   };
 
   const getLinkClass = (path: string) => {
-    const baseClass = "px-3 py-2 text-sm font-medium transition-colors";
+    const baseClass = "px-2 xl:px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap";
     const activeClass = "text-white";
     const inactiveClass = "text-gray-400 hover:text-white";
     return `${baseClass} ${isActive(path) ? activeClass : inactiveClass}`;
@@ -48,11 +48,11 @@ function NavigationContent() {
   };
 
   return (
-    <nav className="bg-black fixed top-0 left-0 right-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-black fixed top-0 left-0 right-0 z-50 shadow-lg">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo - Always clickable to home */}
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <Link href="/" className="text-xl font-bold text-white flex items-center hover:text-gray-300 transition-colors">
               CaAuthority
               <span className="ml-1 w-0.5 h-6 bg-white animate-blink"></span>
@@ -60,7 +60,7 @@ function NavigationContent() {
           </div>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-1 xl:space-x-4 flex-1 justify-center">
             <Link href="/" className={getLinkClass('/')}>
               Home
             </Link>
@@ -88,29 +88,29 @@ function NavigationContent() {
           </div>
 
           {/* Desktop Right side buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-3 flex-shrink-0">
             {isSignedIn ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 {showWelcome && (
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse">
+                  <div className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse whitespace-nowrap">
                     Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}! ✨
                   </div>
                 )}
-                <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap">
                   Go to Dashboard
                 </Link>
                 <SignOutButton>
-                  <button className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+                  <button className="text-gray-400 hover:text-white text-sm font-medium transition-colors whitespace-nowrap">
                     Sign Out
                   </button>
                 </SignOutButton>
               </div>
             ) : (
               <>
-                <Link href="/sign-in" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+                <Link href="/sign-in" className="text-gray-400 hover:text-white text-sm font-medium transition-colors whitespace-nowrap">
                   Sign In
                 </Link>
-                <Link href="/sign-up" className="bg-transparent text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-white hover:text-black transition-colors border border-white">
+                <Link href="/sign-up" className="bg-transparent text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-white hover:text-black transition-colors border border-white whitespace-nowrap">
                   Start Free Trial
                 </Link>
               </>
@@ -118,7 +118,7 @@ function NavigationContent() {
           </div>
 
           {/* Mobile hamburger menu button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={toggleMenu}
               className="text-gray-400 hover:text-white focus:outline-none focus:text-white transition-colors"
@@ -152,7 +152,7 @@ function NavigationContent() {
 
         {/* Mobile Navigation Menu */}
         {isOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-black border-t border-gray-700">
               <Link
                 href="/"

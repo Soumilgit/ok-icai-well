@@ -84,7 +84,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
     switch (mode) {
       case 'ca-assistant':
         return {
-          title: '🧮 CA Assistant',
+          title: 'CA Assistant',
           placeholder: 'Ask about Indian tax laws, GST, compliance, audit procedures...',
           icon: <FileText className="w-5 h-5" />,
           color: 'from-blue-500 to-indigo-600'
@@ -289,11 +289,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
       
       <div className={`flex flex-col h-full rounded-lg shadow-sm border border-gray-700 transition-all duration-300 ${
         isFocused 
-          ? 'fixed inset-4 z-50 bg-gray-100 shadow-2xl' 
-          : 'bg-gray-100'
+          ? 'fixed inset-4 z-50 bg-black shadow-2xl' 
+          : 'bg-black'
       }`}>
       {/* Header */}
-      <div className="bg-gray-900 text-white p-4 rounded-t-lg border-b border-gray-700">
+      <div className="bg-black text-white p-4 rounded-t-lg border-b border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {config.icon}
@@ -304,7 +304,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
               <select
                 value={mode}
                 onChange={(e) => onModeChange(e.target.value)}
-                className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+                className="bg-black border border-gray-600 rounded px-2 py-1 text-sm text-white"
               >
                 <option value="general">General Chat</option>
                 <option value="ca-assistant">CA Assistant</option>
@@ -341,30 +341,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white" style={{
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black" style={{
         maxHeight: isFocused ? 'calc(100vh - 200px)' : '24rem',
         scrollbarWidth: 'thin',
-        scrollbarColor: '#000000 #f3f4f6'
+        scrollbarColor: '#4b5563 #000000'
       }}>
         <style jsx>{`
           div::-webkit-scrollbar {
             width: 8px;
           }
           div::-webkit-scrollbar-track {
-            background: #f3f4f6;
-            border-radius: 4px;
-          }
-          div::-webkit-scrollbar-thumb {
             background: #000000;
             border-radius: 4px;
           }
+          div::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+          }
           div::-webkit-scrollbar-thumb:hover {
-            background: #333333;
+            background: #6b7280;
           }
         `}</style>
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 border border-gray-300">
+          <div className="text-center text-gray-400 py-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 border border-gray-700">
               {config.icon}
             </div>
             <p className="text-lg font-medium">Start a conversation</p>
@@ -376,8 +376,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
           <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
               message.role === 'user' 
-                ? 'bg-gray-900 text-white border border-gray-600' 
-                : 'bg-gray-50 text-gray-900 border border-gray-200'
+                ? 'bg-gray-800 text-white border border-gray-600' 
+                : 'bg-gray-900 text-gray-100 border border-gray-700'
             }`}>
               <div className="flex items-center space-x-2 mb-1">
                 {message.role === 'user' ? (
@@ -393,7 +393,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
               
               {/* Citations */}
               {message.citations && message.citations.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-300">
+                <div className="mt-2 pt-2 border-t border-gray-700">
                   <p className="text-xs font-medium mb-1">Sources:</p>
                   {message.citations.slice(0, 3).map((citation, idx) => (
                     <p key={idx} className="text-xs opacity-75 truncate">
@@ -405,7 +405,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
               
               {/* Related Questions */}
               {message.relatedQuestions && message.relatedQuestions.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-300">
+                <div className="mt-2 pt-2 border-t border-gray-700">
                   <p className="text-xs font-medium mb-1">Related:</p>
                   {message.relatedQuestions.slice(0, 2).map((question, idx) => (
                     <button
@@ -424,10 +424,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+            <div className="bg-gray-900 px-4 py-2 rounded-lg border border-gray-700">
               <div className="flex items-center space-x-2">
-                <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
-                <span className="text-sm text-gray-600">Thinking...</span>
+                <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
+                <span className="text-sm text-gray-300">Thinking...</span>
               </div>
             </div>
           </div>
@@ -437,7 +437,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-700 bg-gray-900">
+      <div className="p-4 border-t border-gray-700 bg-black">
         {error && (
           <div className="mb-2 p-2 bg-red-900 border border-red-700 rounded text-red-300 text-sm">
             {error}
@@ -450,14 +450,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange }) => 
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={config.placeholder}
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-0 focus:border-gray-500 resize-none text-gray-900 bg-white placeholder-gray-500"
+            className="flex-1 border border-gray-600 rounded-lg px-3 py-2 focus:ring-0 focus:border-gray-400 resize-none text-white bg-gray-900 placeholder-gray-400"
             rows={2}
             disabled={isLoading}
           />
           <button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white p-2 rounded-lg transition-colors border border-gray-600"
+            className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-600 text-white p-2 rounded-lg transition-colors border border-gray-600"
           >
             <Send className="w-5 h-5" />
           </button>

@@ -32,6 +32,7 @@ An **enterprise-grade AI-powered automation platform for Chartered Accountants**
 ### 🏗️ **Enterprise Infrastructure**
 * **Redis Caching**: High-performance data caching for 600-800 users
 * **Kafka Event Streaming**: Real-time event processing and queuing
+* **Docker**: Containerization, deployment-ready building.
 * **Auto-scaling**: Dynamic resource allocation based on user load
 * **Health Monitoring**: Comprehensive system diagnostics
 
@@ -49,6 +50,7 @@ An **enterprise-grade AI-powered automation platform for Chartered Accountants**
 * **Next.js API Routes**: Serverless function architecture
 * **Redis**: In-memory caching and session management
 * **Apache Kafka**: Event streaming and message queuing
+* **Docker**: Containerized & deployment-ready via WSL
 * **MongoDB + Mongoose**: Document database with ODM
 
 ### **AI & Machine Learning**

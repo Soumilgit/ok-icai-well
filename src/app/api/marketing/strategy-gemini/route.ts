@@ -29,8 +29,6 @@ export async function POST(request: NextRequest) {
     // Create marketing strategy prompt
     const prompt = createMarketingPrompt(businessType, targetMarket, budget);
     
-    console.log('🚀 Calling Gemini API for Marketing Strategy with model:', model);
-    
     const response = await fetch(`${baseUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -82,8 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     const strategy = data.candidates[0].content.parts[0].text;
-    
-    console.log('✅ Marketing Strategy generated successfully via Gemini');
     
     return NextResponse.json({
       success: true,

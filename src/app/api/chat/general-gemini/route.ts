@@ -29,8 +29,6 @@ export async function POST(request: NextRequest) {
     // Create general chat prompt
     const prompt = createGeneralChatPrompt(messages);
     
-    console.log('🚀 Calling Gemini API for General Chat with model:', model);
-    
     const response = await fetch(`${baseUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -82,8 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     const response_text = data.candidates[0].content.parts[0].text;
-    
-    console.log('✅ General Chat response generated successfully via Gemini');
     
     return NextResponse.json({
       success: true,

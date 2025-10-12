@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-import Navigation from './components/Navigation';
-import Footer from './components/Footer';
-import Sidebar from './components/Sidebar';
-import SimpleChatBox from './components/SimpleChatBox';
+import Navigation from './app/components/Navigation';
+import Footer from './app/components/Footer';
+import Sidebar from './Sidebar';
+import ChatInterface from './components/ChatInterface';
 
 export default function Home() {
   const [displayText, setDisplayText] = useState('');
@@ -22,6 +22,9 @@ export default function Home() {
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovering, setSidebarHovering] = useState(false);
+  
+  // Chat mode state for homepage - supporting SEO marketing and general chat
+  const [chatMode, setChatMode] = useState<'general' | 'ca-assistant' | 'seo-content' | 'marketing-strategy'>('general');
 
   const benefitTexts = useMemo(() => [
     'Exclusive discounted pricing',
@@ -203,15 +206,7 @@ export default function Home() {
           </div>
           
           <div className="max-w-4xl mx-auto">
-            <div className="bg-red-500 p-8 mb-8 text-center">
-              <h1 className="text-4xl font-bold text-white mb-4">🚨 CHATBOX SHOULD BE BELOW THIS RED BOX 🚨</h1>
-              <p className="text-2xl text-white">If you don't see a white chatbox below this red box, there's a display issue!</p>
-            </div>
-            
-            <div className="bg-yellow-400 p-8 mb-8 text-center">
-              <h2 className="text-3xl font-bold text-black mb-4">🟡 CHATBOX IS HERE 🟡</h2>
-              <SimpleChatBox />
-            </div>
+            <ChatInterface mode={chatMode} onModeChange={(mode: string) => setChatMode(mode as 'general' | 'ca-assistant' | 'seo-content' | 'marketing-strategy')} />
           </div>
         </div>
       </section>
@@ -510,7 +505,7 @@ export default function Home() {
             
             {/* Small Learn More button */}
             <div className="mb-12">
-              <button className="bg-black text-white px-8 py-3 rounded-full text-sm font-medium border border-white hover:bg-white hover:text-black transition-colors">
+              <button className="bg-black text-white px-8 py-3 rounded-full text-sm font-medium border border-white hover:bg-black hover:text-white transition-colors">
                 Learn More
               </button>
             </div>

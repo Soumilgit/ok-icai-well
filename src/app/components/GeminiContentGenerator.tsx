@@ -151,7 +151,7 @@ What specific type of content would you like to create? Just let me know your to
       onLinkedInPost(content);
     } else {
       // Default LinkedIn posting behavior
-      const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
+      const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent('AI-Generated Content')}&summary=${encodeURIComponent(content)}`;
       window.open(linkedinUrl, '_blank');
     }
   };
@@ -161,34 +161,34 @@ What specific type of content would you like to create? Just let me know your to
       onTwitterPost(content);
     } else {
       // Default Twitter posting behavior
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}&url=${encodeURIComponent(window.location.href)}`;
       window.open(twitterUrl, '_blank');
     }
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-lg border border-gray-200 ${className}`}>
+    <div className={`bg-gray-900 rounded-xl shadow-lg border border-gray-700 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-gray-700">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center border border-gray-600">
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Gemini Content Assistant</h3>
-            <p className="text-sm text-gray-500">AI-powered content creation</p>
+            <h3 className="font-semibold text-white">Gemini Content Assistant</h3>
+            <p className="text-sm text-gray-400">AI-powered content creation</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span className="text-sm text-gray-500">Online</span>
+          <span className="text-sm text-gray-400">Online</span>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="h-96 overflow-y-auto p-4 space-y-4">
+      <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-900">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -197,13 +197,13 @@ What specific type of content would you like to create? Just let me know your to
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.type === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-900'
+                  ? 'bg-black text-white border border-gray-600'
+                  : 'bg-gray-800 text-gray-100 border border-gray-600'
               }`}
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               <p className={`text-xs mt-1 ${
-                message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                message.type === 'user' ? 'text-gray-300' : 'text-gray-400'
               }`}>
                 {message.timestamp.toLocaleTimeString([], { 
                   hour: '2-digit', 
@@ -216,7 +216,7 @@ What specific type of content would you like to create? Just let me know your to
         
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-gray-200 text-gray-900 px-4 py-2 rounded-lg">
+            <div className="bg-gray-800 text-gray-100 px-4 py-2 rounded-lg border border-gray-600">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
@@ -230,20 +230,20 @@ What specific type of content would you like to create? Just let me know your to
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-200 p-4 bg-gray-100">
+      <div className="border-t border-gray-700 p-4 bg-gray-800">
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Ask me to create content for LinkedIn, Twitter, or any platform..."
-            className="flex-1 px-3 py-2 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-0 focus:border-blue-600 bg-white text-black"
+            className="flex-1 px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-0 focus:border-gray-500 bg-gray-700 text-white placeholder-gray-400"
             disabled={isGenerating}
           />
           <button
             type="submit"
             disabled={isGenerating || !inputMessage.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-12 h-10"
+            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-12 h-10 border border-gray-600"
           >
             {isGenerating ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -256,16 +256,16 @@ What specific type of content would you like to create? Just let me know your to
         </form>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-center space-x-2 mt-4 pt-4 border-t border-gray-700">
           <button
-            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
             title="Regenerate"
           >
             <RefreshCw className="w-5 h-5" />
           </button>
           
           <button
-            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
             title="ICAI Compliance Check"
           >
             <Shield className="w-5 h-5" />
@@ -280,7 +280,7 @@ What specific type of content would you like to create? Just let me know your to
                 const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.type === 'assistant');
                 const content = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
                 
-                // LinkedIn sharing with content as text
+                // LinkedIn sharing with working URL format
                 const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
                 window.open(linkedinUrl, '_blank');
               } else {
@@ -313,21 +313,21 @@ What specific type of content would you like to create? Just let me know your to
                 window.open(twitterUrl, '_blank');
               }
             }}
-            className="p-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors"
+            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
             title="Post on X"
           >
             <Twitter className="w-5 h-5" />
           </button>
           
           <button
-            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
             title="Change Writing Voice"
           >
             <PenTool className="w-5 h-5" />
           </button>
           
           <button
-            className="p-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+            className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors border border-gray-600"
             title="Change Target Audience"
           >
             <Users className="w-5 h-5" />

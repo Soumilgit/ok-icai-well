@@ -1680,41 +1680,41 @@ export default function Dashboard() {
         {/* AI Chat Tab */}
         {activeTab === 'chat' && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
+            <div className="bg-black border border-gray-700 rounded-2xl p-8 text-white">
               <h1 className="text-4xl font-bold mb-4">🤖 AI Chat Assistant</h1>
-              <p className="text-xl text-blue-100 mb-4">
+              <p className="text-xl text-gray-300 mb-4">
                 Powered by Perplexity AI - Get instant answers, CA guidance, and expert assistance with real-time information.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <button
                   onClick={() => setChatMode('general')}
                   className={`p-3 rounded-lg transition-all ${chatMode === 'general' 
-                    ? 'bg-white text-blue-600 shadow-lg' 
-                    : 'bg-white/20 hover:bg-white/30'}`}
+                    ? 'bg-white text-black shadow-lg' 
+                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
                 >
                   <div className="text-sm font-medium">General Chat</div>
                 </button>
                 <button
                   onClick={() => setChatMode('ca-assistant')}
                   className={`p-3 rounded-lg transition-all ${chatMode === 'ca-assistant' 
-                    ? 'bg-white text-blue-600 shadow-lg' 
-                    : 'bg-white/20 hover:bg-white/30'}`}
+                    ? 'bg-white text-black shadow-lg' 
+                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
                 >
                   <div className="text-sm font-medium">🧮 CA Assistant</div>
                 </button>
                 <button
                   onClick={() => setChatMode('seo-content')}
                   className={`p-3 rounded-lg transition-all ${chatMode === 'seo-content' 
-                    ? 'bg-white text-blue-600 shadow-lg' 
-                    : 'bg-white/20 hover:bg-white/30'}`}
+                    ? 'bg-white text-black shadow-lg' 
+                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
                 >
                   <div className="text-sm font-medium">SEO Content</div>
                 </button>
                 <button
                   onClick={() => setChatMode('marketing-strategy')}
                   className={`p-3 rounded-lg transition-all ${chatMode === 'marketing-strategy' 
-                    ? 'bg-white text-blue-600 shadow-lg' 
-                    : 'bg-white/20 hover:bg-white/30'}`}
+                    ? 'bg-white text-black shadow-lg' 
+                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
                 >
                   <div className="text-sm font-medium">Marketing</div>
                 </button>
@@ -1722,7 +1722,7 @@ export default function Dashboard() {
             </div>
 
             {/* Chat Interface */}
-            <div className="bg-white rounded-xl shadow-sm">
+            <div className="bg-black rounded-xl shadow-sm border border-gray-700">
               <ChatInterface mode={chatMode} onModeChange={setChatMode} />
             </div>
 
@@ -2003,14 +2003,14 @@ export default function Dashboard() {
                   ) : (
                     examResults.map((message, index) => (
                       <div key={index} className={`p-4 rounded-lg ${
-                        message.type === 'user' ? 'bg-blue-600/20 ml-8' : 
-                        message.type === 'error' ? 'bg-red-600/20 mr-8' :
-                        'bg-green-600/20 mr-8'
+                        message.type === 'user' ? 'bg-gray-800/50 ml-8 border border-gray-600' : 
+                        message.type === 'error' ? 'bg-red-600/20 mr-8 border border-red-600' :
+                        'bg-green-600/20 mr-8 border border-green-600'
                       }`}>
                         <div className="flex items-start space-x-3">
                           <div className="text-2xl">
                             <span className={`inline-flex w-6 h-6 rounded-full items-center justify-center text-xs font-bold ${
-                              message.type === 'user' ? 'bg-blue-500 text-white' : 
+                              message.type === 'user' ? 'bg-gray-700 text-white' : 
                               message.type === 'error' ? 'bg-red-500 text-white' : 
                               'bg-green-500 text-white'
                             }`}>
@@ -2068,7 +2068,7 @@ export default function Dashboard() {
                       }
                     }}
                     disabled={isGenerating}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded-lg transition-colors"
+                    className="bg-black hover:bg-gray-800 disabled:bg-gray-600 px-6 py-2 rounded-lg transition-colors border border-gray-600"
                   >
                     {isGenerating ? '⏳' : '📤 Send'}
                   </button>

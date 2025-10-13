@@ -109,6 +109,16 @@ export default function Dashboard() {
     findings: ''
   });
 
+  // Prevent browser scroll restoration and ensure top scroll
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
   useEffect(() => {
     if (isLoaded) {
       // If user is not authenticated, redirect to home page
@@ -116,6 +126,11 @@ export default function Dashboard() {
         router.push('/');
         return;
       }
+      
+      // Ensure page loads at the top
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       
       fetchDashboardData();
       loadUserPreferences();
@@ -185,6 +200,11 @@ export default function Dashboard() {
       localStorage.setItem('sidebarOpen', JSON.stringify(sidebarOpen));
     }
   }, [sidebarOpen]);
+
+  // Scroll to top when active tab changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
 
   const loadUserPreferences = () => {
     try {
@@ -869,10 +889,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black text-white flex relative">
       {/* Sidebar - Always Visible - Adjusted for global navigation */}
-      <div className={`fixed inset-y-0 left-0 z-40 bg-gray-900/95 backdrop-blur-lg border-r border-gray-700 transition-all duration-300 ease-out ${sidebarOpen ? 'w-80' : 'w-16'} pt-16`}>
+      <div className={`fixed inset-y-0 left-0 z-40 bg-gray-900/95 backdrop-blur-lg border-r border-gray-700 transition-all duration-300 ease-out ${sidebarOpen ? 'w-80' : 'w-0 md:w-12'} pt-16 overflow-hidden`}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-gray-700">
+          <div className={`${sidebarOpen ? 'p-4' : 'p-2'} border-b border-gray-700`}>
             <div className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
               {sidebarOpen ? (
                 <>
@@ -900,145 +920,148 @@ export default function Dashboard() {
           </div>
           
           {/* Sidebar Content */}
-          <div className={`flex-1 overflow-y-auto ${sidebarOpen ? 'p-6' : 'p-2'}`} style={{ fontFamily: 'var(--font-walsheim)' }}>
-            <div className={`${sidebarOpen ? 'space-y-6' : 'space-y-3'}`}>
+          <div className={`flex-1 overflow-y-auto ${sidebarOpen ? 'p-4' : 'p-1'}`} style={{ fontFamily: 'var(--font-walsheim)' }}>
+            <div className={`${sidebarOpen ? 'space-y-4' : 'space-y-3'}`}>
 
               {/* Enhanced Content Hub */}
-              <div className="relative group">
+              <div className="relative">
                 <button 
                   onClick={() => setActiveTab('enhanced-hub')}
-                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-2 text-sm text-gray-300 hover:text-white flex items-center' : 'p-1 flex justify-center'}`}
                   title={!sidebarOpen ? 'Enhanced Content Hub' : ''}
                 >
-                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-4 h-4'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                   {sidebarOpen && 'Enhanced Content Hub'}
                 </button>
                 
-                {/* Hover Dropdown */}
-                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
-                  <div className="p-3">
-                    <h4 className="text-white font-semibold mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Enhanced Content Hub
-                    </h4>
-                    <div className="space-y-1">
-                      <button 
-                        onClick={() => setActiveTab('enhanced-hub')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Content Generator
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('twitter')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Twitter Post Creator
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('linkedin')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        LinkedIn Post Creator
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('unified-creator')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Unified Creator
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('discover')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Discover Feed
-                      </button>
-                    </div>
+                {/* Always visible on mobile, hover on desktop */}
+                {sidebarOpen && (
+                  <div className="mt-1 ml-6 space-y-1">
+                    <button 
+                      onClick={() => {
+                        setActiveTab('enhanced-hub');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      Content Generator
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setActiveTab('twitter');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      Twitter Post Creator
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setActiveTab('linkedin');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      LinkedIn Post Creator
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setActiveTab('unified-creator');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      Unified Creator
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setActiveTab('discover');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      Discover Feed
+                    </button>
                   </div>
-                </div>
+                )}
               </div>
               
               {/* Case Study Generator */}
-              <div className="relative group">
+              <div className="relative">
                 <button 
                   onClick={() => setActiveTab('case-studies')}
-                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-2 text-sm text-gray-300 hover:text-white flex items-center' : 'p-1 flex justify-center'}`}
                   title={!sidebarOpen ? 'Case Study Generator' : ''}
                 >
-                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-4 h-4'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd"/>
                   </svg>
                   {sidebarOpen && 'Case Study Generator'}
                 </button>
                 
-                {/* Hover Dropdown */}
-                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
-                  <div className="p-3">
-                    <h4 className="text-white font-semibold mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd"/>
-                      </svg>
-                      Case Study Generator
-                    </h4>
-                    <div className="space-y-1">
-                      <button 
-                        onClick={() => setActiveTab('case-studies')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Create Case Study
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('repurposing')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Content Repurposing
-                      </button>
-                    </div>
+                {/* Always visible on mobile */}
+                {sidebarOpen && (
+                  <div className="mt-1 ml-6 space-y-1">
+                    <button 
+                      onClick={() => {
+                        setActiveTab('case-studies');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      Create Case Study
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setActiveTab('repurposing');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      Content Repurposing
+                    </button>
                   </div>
-                </div>
+                )}
               </div>
               
               {/* Voice Setup */}
-              <div className="relative group">
+              <div className="relative">
                 <button 
                   onClick={() => setActiveTab('writing-voice')}
-                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-3 text-sm text-gray-300 hover:text-white flex items-center' : 'p-2 flex justify-center'}`}
+                  className={`w-full text-left transition-all duration-300 hover:bg-gray-800 rounded ${sidebarOpen ? 'p-2 text-sm text-gray-300 hover:text-white flex items-center' : 'p-1 flex justify-center'}`}
                   title={!sidebarOpen ? 'Voice Setup' : ''}
                 >
-                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 20 20">
+                  <svg className={`text-gray-400 ${sidebarOpen ? 'w-5 h-5 mr-3' : 'w-4 h-4'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/>
                   </svg>
                   {sidebarOpen && 'Voice Setup'}
                 </button>
                 
-                {/* Hover Dropdown */}
-                <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 origin-top z-50">
-                  <div className="p-3">
-                    <h4 className="text-white font-semibold mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/>
-                      </svg>
-                      Voice Setup
-                    </h4>
-                    <div className="space-y-1">
-                      <button 
-                        onClick={() => setActiveTab('writing-voice')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        Writing Voice Setup
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('icai-center')}
-                        className="w-full text-left p-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                      >
-                        ICAI Compliance Link
-                      </button>
-                    </div>
+                {/* Always visible on mobile */}
+                {sidebarOpen && (
+                  <div className="mt-1 ml-6 space-y-1">
+                    <button 
+                      onClick={() => {
+                        setActiveTab('writing-voice');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      Writing Voice Setup
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setActiveTab('icai-center');
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
+                    >
+                      ICAI Compliance Link
+                    </button>
                   </div>
-                </div>
+                )}
               </div>
 
 
@@ -1064,39 +1087,39 @@ export default function Dashboard() {
       )}
       
       {/* Main Content - Adjusted for global navigation */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-16'} pt-16`}>
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-0 md:ml-12'} pt-16 flex flex-col min-h-screen`}>
         {/* Dashboard Header - Below global navigation */}
-        <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
+        <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 relative -mt-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 gap-2 sm:gap-0">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
               {/* Hamburger Menu Button */}
               <button 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-105"
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-105 flex-shrink-0"
                 title="Open workflows sidebar"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
               <button 
                 onClick={() => setActiveTab('overview')}
-                className="text-2xl font-bold hover:text-blue-400 transition-colors cursor-pointer"
+                className="text-lg sm:text-2xl font-bold hover:text-blue-400 transition-colors cursor-pointer truncate"
                 title="Return to Dashboard Home"
               >
                 CA Law Portal
               </button>
-              <span className="bg-green-500 text-xs px-2 py-1 rounded-full">Live</span>
+              <span className="bg-green-500 text-xs px-2 py-1 rounded-full flex-shrink-0">Live</span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end">
               {/* Global Search */}
               <button
                 onClick={() => setActiveTab('search')}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
                 title="Global Search"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
@@ -1104,31 +1127,31 @@ export default function Dashboard() {
               {/* Notifications Bell */}
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                className="relative p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {automationNotifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-xs w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center">
                     {automationNotifications.length}
                   </span>
                 )}
               </button>
               
-              <div className="text-sm">
-                <p>Welcome, {user?.firstName || 'User'}</p>
-                <p className="text-gray-300">{user?.emailAddresses[0]?.emailAddress}</p>
+              <div className="hidden md:block text-xs sm:text-sm">
+                <p className="truncate max-w-[150px]">Welcome, {user?.firstName || 'User'}</p>
+                <p className="text-gray-300 truncate max-w-[150px]">{user?.emailAddresses[0]?.emailAddress}</p>
               </div>
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
                 {user?.imageUrl ? (
-                  <img src={user.imageUrl} alt="Profile" className="w-8 h-8 rounded-full" />
+                  <img src={user.imageUrl} alt="Profile" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full" />
                 ) : (
-                  <span className="text-sm font-bold">{user?.firstName?.[0] || 'U'}</span>
+                  <span className="text-xs sm:text-sm font-bold">{user?.firstName?.[0] || 'U'}</span>
                 )}
               </div>
               <SignOutButton>
-                <button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors">
+                <button className="hidden sm:block bg-red-600 hover:bg-red-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm">
                   Sign Out
                 </button>
               </SignOutButton>
@@ -1178,47 +1201,46 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3 sm:py-4 flex-1">
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Top News Section */}
-            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <span className="mr-2">📰</span>
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-3 sm:p-4 lg:p-6 border border-white/20">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-white flex items-center">
                   Top CA & Finance News
                 </h2>
                 <button 
                   onClick={() => setActiveTab('news')}
-                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-xs sm:text-sm text-blue-400 hover:text-blue-300 transition-colors whitespace-nowrap"
                 >
                   View All →
                 </button>
               </div>
               
               {newsLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="animate-pulse bg-white/10 rounded-lg p-4 h-32"></div>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {topNews.map((news, index) => (
                     <div 
                       key={news.id} 
                       onClick={() => handleNewsClick(news)}
-                      className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group hover:bg-white/20"
+                      className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group hover:bg-white/20"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <span className="text-xs text-gray-400">{news.source}</span>
+                        <span className="text-xs text-gray-400 truncate">{news.source}</span>
                       </div>
                       
-                      <h3 className="text-sm font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
+                      <h3 className="text-xs sm:text-sm font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
                         {news.title}
                       </h3>
                       
-                      <p className="text-xs text-gray-300 line-clamp-3 mb-3">
+                      <p className="text-xs text-gray-300 line-clamp-2 sm:line-clamp-3 mb-3">
                         {news.content}
                       </p>
                       
@@ -1283,33 +1305,26 @@ export default function Dashboard() {
                         )}
                         
                         {/* Hover Actions */}
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-3 pt-3 border-t border-white/10">
-                          <div className="flex items-center justify-between">
+                        <div className="md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 mt-3 pt-3 border-t border-white/10">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:justify-between">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveTab('enhanced-hub');
                                 // You can add logic here to pre-fill the content generator with this news
                               }}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-xs transition-colors"
+                              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-xs transition-colors"
                             >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                              <span>Generate Post</span>
+                              <span className="whitespace-nowrap">Generate Post</span>
                             </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveTab('news');
                               }}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-xs transition-colors"
+                              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-xs transition-colors"
                             >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              <span>See More</span>
+                              <span className="whitespace-nowrap">See More</span>
                             </button>
                           </div>
                         </div>
@@ -1334,14 +1349,13 @@ export default function Dashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 sm:p-3 lg:p-4 border border-white/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-300">Daily News</p>
-                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.newsArticles || 47}</p>
+                    <p className="text-xs text-gray-300 truncate">Daily News</p>
+                    <p className="text-xl sm:text-2xl font-bold">{dashboardData?.overview?.today?.newsArticles || 47}</p>
                   </div>
-                  <div className="text-2xl">📰</div>
                 </div>
               </div>
               
@@ -1350,11 +1364,6 @@ export default function Dashboard() {
                   <div>
                     <p className="text-xs text-gray-300">Generated Content</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.generatedContent || 23}</p>
-                  </div>
-                  <div className="text-2xl">
-                    <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
                   </div>
                 </div>
               </div>
@@ -1365,11 +1374,6 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">LinkedIn Posts</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.linkedinPosts || 8}</p>
                   </div>
-                  <div className="text-2xl">
-                    <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />
-                    </svg>
-                  </div>
                 </div>
               </div>
               
@@ -1379,7 +1383,6 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">Repurposed Content</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.repurposedContent || 15}</p>
                   </div>
-                  <div className="text-2xl">�</div>
                 </div>
               </div>
               
@@ -1389,7 +1392,6 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">AI Images</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.aiImages || 12}</p>
                   </div>
-                  <div className="text-2xl text-purple-400">●</div>
                 </div>
               </div>
               
@@ -1399,67 +1401,63 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-300">Compliance Checks</p>
                     <p className="text-2xl font-bold">{dashboardData?.overview?.today?.complianceChecks || 6}</p>
                   </div>
-                  <div className="text-2xl text-green-400">●</div>
                 </div>
               </div>
             </div>
 
             {/* New Features Overview */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4">🆕 Enhanced AI-Powered Features</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 lg:p-6 border border-white/20">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">🆕 Enhanced AI-Powered Features</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <button
                   onClick={() => setActiveTab('unified-creator')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
                 >
-                  <div className="text-2xl mb-2 text-blue-400">●</div>
-                  <div className="font-semibold">Unified Content Creator</div>
-                  <div className="text-sm text-gray-300">Quiz + AI Research + Images in one place</div>
+                  <div className="font-semibold text-sm sm:text-base">Unified Content Creator</div>
+                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Quiz + AI Research + Images in one place</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('discover')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
                 >
-                  <div className="text-2xl mb-2">�</div>
-                  <div className="font-semibold">Discover Feed</div>
-                  <div className="text-sm text-gray-300">Latest 2025 news with instant post creation</div>
+                  <div className="font-semibold text-sm sm:text-base">Discover Feed</div>
+                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Latest 2025 news with instant post creation</div>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('twitter')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
                 >
-                  <div className="text-2xl mb-2">𝕏</div>
-                  <div className="font-semibold">X (Twitter) Automation</div>
-                  <div className="text-sm text-gray-300">ICAI-compliant Twitter posting</div>
+                  <div className="text-xl sm:text-2xl mb-2">𝕏</div>
+                  <div className="font-semibold text-sm sm:text-base">X (Twitter) Automation</div>
+                  <div className="text-xs sm:text-sm text-gray-300 mt-1">ICAI-compliant Twitter posting</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('linkedin')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
-                  <div className="text-2xl mb-2">�</div>
-                  <div className="font-semibold">LinkedIn Automation</div>
-                  <div className="text-sm text-gray-300">Professional network posting</div>
+                  <div className="text-xl sm:text-2xl mb-2">in</div>
+                  <div className="font-semibold text-sm sm:text-base">LinkedIn Automation</div>
+                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Professional network posting</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('compliance')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
                 >
-                  <div className="text-2xl mb-2">⚖️</div>
-                  <div className="font-semibold">ICAI Compliance Center</div>
-                  <div className="text-sm text-gray-300">Guidelines check + plagiarism detection</div>
+                  <div className="text-xl sm:text-2xl mb-2">⚖️</div>
+                  <div className="font-semibold text-sm sm:text-base">ICAI Compliance Center</div>
+                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Guidelines check + plagiarism detection</div>
                 </button>
                 
                 <button
                   onClick={() => setActiveTab('case-studies')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left"
                 >
-                  <div className="text-2xl mb-2 text-green-400">●</div>
-                  <div className="font-semibold">Case Study Generator</div>
-                  <div className="text-sm text-gray-300">Professional case studies</div>
+                  <div className="font-semibold text-sm sm:text-base">Case Study Generator</div>
+                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Professional case studies</div>
                 </button>
               </div>
             </div>
@@ -2994,10 +2992,10 @@ export default function Dashboard() {
 
       {/* Content Repurposing Tab */}
       {activeTab === 'repurposing' && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">🔄 Content Repurposing</h1>
-            <p className="text-xl text-blue-100">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Content Repurposing</h1>
+            <p className="text-sm sm:text-lg lg:text-xl text-blue-100">
               Transform your content into multiple formats for maximum reach and engagement.
             </p>
           </div>
@@ -3007,10 +3005,10 @@ export default function Dashboard() {
 
       {/* Case Study Generator Tab */}
       {activeTab === 'case-studies' && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white">
-            <h1 className="text-4xl font-bold mb-4">📊 Case Study Generator</h1>
-            <p className="text-xl text-blue-100">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Case Study Generator</h1>
+            <p className="text-sm sm:text-lg lg:text-xl text-blue-100">
               Create professional case studies that showcase your expertise while maintaining client confidentiality.
             </p>
           </div>
@@ -3096,13 +3094,13 @@ export default function Dashboard() {
       )}
 
       {/* Footer */}
-        <footer className="bg-black/20 backdrop-blur-sm border-t border-white/10 mt-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex justify-between items-center">
-              <p className="text-gray-300">
+        <footer className="bg-black/20 backdrop-blur-sm border-t border-white/10 mt-auto">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+              <p className="text-xs sm:text-sm text-gray-300 text-center sm:text-left">
                 © 2025 CA Law Portal - Powered by AI for Chartered Accountants
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-400">
                 Last updated: {dashboardData?.lastUpdated || new Date().toLocaleString()}
               </p>
             </div>

@@ -37,11 +37,14 @@ export default function GeminiContentGenerator({
   const { user } = useUser();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll to bottom if there's more than 1 message (i.e., user has interacted)
+    if (messages.length > 1) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const generateContent = async (prompt: string) => {

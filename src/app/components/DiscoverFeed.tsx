@@ -113,7 +113,7 @@ export default function DiscoverFeed({}: DiscoverFeedProps) {
   const categories = [
     { key: 'all', label: 'All News', icon: '📰' },
     { key: 'taxation', label: 'Taxation', icon: '💰' },
-    { key: 'auditing', label: 'Auditing', icon: '🔍' },
+    { key: 'auditing', label: 'Auditing', icon: '' },
     { key: 'compliance', label: 'Compliance', icon: '📋' },
     { key: 'regulations', label: 'Regulations', icon: '⚖️' },
     { key: 'technology', label: 'Technology', icon: '💻' },
@@ -302,7 +302,7 @@ How are you preparing for this shift? Share your experience below.
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
-          <h1 className="text-4xl font-bold mb-4">🔍 Discover Feed</h1>
+          <h1 className="text-4xl font-bold mb-4">Discover Feed</h1>
           <p className="text-xl text-green-100">
             Latest 2025 news affecting CAs with instant AI-powered post creation
           </p>
@@ -448,7 +448,6 @@ How are you preparing for this shift? Share your experience below.
 
         {filteredArticles.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-300 mb-2">No articles found</h3>
             <p className="text-gray-500">Try adjusting your search criteria or category filter</p>
           </div>

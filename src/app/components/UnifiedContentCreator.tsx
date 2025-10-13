@@ -252,7 +252,7 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-8">
-          <h1 className="text-4xl font-bold mb-4">🎯 Unified Content Creator</h1>
+          <h1 className="text-4xl font-bold mb-4">Unified Content Creator</h1>
           <p className="text-xl text-purple-100">
             Complete workflow: Voice profiling → AI research → Content generation → Visual creation
           </p>

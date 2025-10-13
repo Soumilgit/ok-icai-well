@@ -34,11 +34,14 @@ What would you like to tweet about today?`,
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll if user has interacted
+    if (messages.length > 1) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const generatePost = async (prompt: string) => {
@@ -208,12 +211,12 @@ If issues persist, our fallback system ensures you still get professional Twitte
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 rounded-2xl p-8 text-white">
-        <div className="flex items-center mb-4">
-          <Twitter className="w-10 h-10 mr-4" />
+      <div className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+        <div className="flex items-center mb-2 sm:mb-3">
+          <Twitter className="w-6 h-6 sm:w-8 sm:h-8 mr-3 sm:mr-4" />
           <div>
-            <h1 className="text-4xl font-bold">Twitter Post Generator</h1>
-            <p className="text-xl text-sky-100 mt-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Twitter Post Generator</h1>
+            <p className="text-sm sm:text-base lg:text-lg text-sky-100 mt-1">
               AI-powered Twitter content creation for CA professionals
             </p>
           </div>

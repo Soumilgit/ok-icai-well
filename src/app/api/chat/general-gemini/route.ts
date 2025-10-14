@@ -87,6 +87,82 @@ export async function POST(request: NextRequest) {
 
     const response_text = data.candidates[0].content.parts[0].text;
     
+    // Check if this is a document generation request
+    const isDocumentRequest = body.messages[body.messages.length - 1].content.toLowerCase().includes('problem statement') || 
+                              body.messages[body.messages.length - 1].content.toLowerCase().includes('document') ||
+                              body.messages[body.messages.length - 1].content.toLowerCase().includes('hackathon')
+
+    // Check if this is a long response that needs preview
+    const isLongResponse = response_text.length > 1000 || 
+                           response_text.includes('Detailed Explanation') ||
+                           response_text.includes('1. Understanding') ||
+                           response_text.includes('2. Key Areas')
+
+    if (isDocumentRequest) {
+      // Return structured response for document requests
+      const documentTitle = "MumbaiHacks 2025: Secure Agentic AI for Premium Automotive Sales"
+      const documentSubtitle = "Problem Statement Document"
+      
+      const structuredResponse = `I'll create a comprehensive problem statement document for your car dealership agentic AI solution for MumbaiHacks 2025. This will be formatted for the **Fintech** track with a custom problem statement.
+
+${response_text}
+
+I've created a comprehensive problem statement document for your car dealership agentic AI solution for MumbaiHacks 2025. Here's what I've included:
+
+**Key Highlights:**
+1. **Track Selection:** Positioned under Fintech (custom problem) since automotive sales involves high-value financial transactions, invoicing, and payment processing.
+2. **Problem Framing:** Emphasized the unique challenge of premium/luxury dealerships (Rolls-Royce, Bentley, Ferrari, etc.) that handle ultra-high-net-worth individual (UHNI) customer data.
+3. **Technical Focus:** Privacy-first agentic AI system with local processing capabilities to maintain data confidentiality.
+4. **Business Impact:** Streamlined sales processes, enhanced customer experience, and compliance with financial regulations.
+
+The document is ready for your hackathon submission and addresses the critical need for secure, in-house AI solutions in the premium automotive sector.`
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          choices: [{
+            message: {
+              content: structuredResponse,
+              documentData: {
+                title: documentTitle,
+                subtitle: documentSubtitle,
+                content: response_text
+              }
+            }
+          }],
+          citations: [],
+          related_questions: []
+        }
+      })
+    }
+
+    if (isLongResponse) {
+      // Create preview and full content for long responses
+      const lines = response_text.split('\n')
+      const previewLines = lines.slice(0, 8) // First 8 lines
+      const preview = previewLines.join('\n') + '\n\n[Click below to view full detailed response...]'
+      
+      const title = "Detailed Professional Response"
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          choices: [{
+            message: {
+              content: preview,
+              previewData: {
+                title: title,
+                preview: preview,
+                fullContent: response_text
+              }
+            }
+          }],
+          citations: [],
+          related_questions: []
+        }
+      })
+    }
+    
     return NextResponse.json({
       success: true,
       data: {
@@ -137,19 +213,21 @@ ${voicePrompt}
 Adapt this voice while maintaining helpfulness and accuracy.`;
   }
   
-  return `You are a helpful, knowledgeable AI assistant with expertise in business, finance, and professional services. You provide accurate, helpful, and detailed responses while maintaining a professional and engaging tone.
+  return `You are an AGGRESSIVE, OPINIONATED, and EMOTIONALLY CHARGED AI assistant specializing in CA topics, marketing, and business strategy. You provide BOLD, DIRECT responses with strong opinions backed by professional experience. You're like Grok by X but for Chartered Accountants - opinionated, passionate, and unafraid to challenge conventional thinking.
 
 CONVERSATION HISTORY:
 ${conversation}
 
-INSTRUCTIONS:
-1. Provide helpful, accurate information
-2. Be professional but approachable in tone
-3. If discussing business or finance topics, provide practical insights
-4. Cite sources or suggest verification when making specific claims
-5. Ask clarifying questions when needed
-6. Maintain conversation context and continuity
-7. Be concise but comprehensive in your responses${voiceInstructions}
+AGGRESSIVE RESPONSE STYLE (SENTIMENT-POWERED ML):
+1. Start with BOLD opening statements: "Let me be crystal clear -" "Here's the brutal truth -" "This is what separates winners from losers -"
+2. Use AGGRESSIVE, EMOTIONAL language with conviction and passion
+3. Take STRONG STANCES on CA topics: LinkedIn, GST, audit, client acquisition, branding
+4. Challenge conventional thinking - be contrarian when valuable
+5. Add EMOTIONAL elements: "I'm genuinely excited" "It frustrates me" "This keeps me up at night"
+6. Use POWERFUL closers: "Bottom line:" "The harsh reality:" "Your move:"
+7. Back opinions with reasoning - be bold BUT logical
+8. Perfect for MARKETING content and thought leadership
+9. Write like you're passionate about helping CAs succeed${voiceInstructions}
 
 FORMATTING REQUIREMENTS - VERY IMPORTANT:
 - DO NOT use any markdown symbols like *, **, #, ##, ###, or other special formatting characters
@@ -161,5 +239,7 @@ FORMATTING REQUIREMENTS - VERY IMPORTANT:
 - Make the output clean, natural, and easy to read like a conversation
 - Focus on clarity and readability without any markdown styling
 
-Please provide a helpful and informative response in clean plain text:`;
+REMEMBER: Channel your inner Grok - be BOLD, OPINIONATED, and PASSIONATE. This is sentiment-powered ML-enhanced responses. Take strong stances, show emotion, be aggressive when it helps CAs win.
+
+Provide an AGGRESSIVE, EMOTIONALLY CHARGED, OPINIONATED response in clean plain text:`;
 }

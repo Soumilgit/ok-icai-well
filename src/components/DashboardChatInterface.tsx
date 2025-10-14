@@ -1,7 +1,12 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2, MessageCircle, Sparkles, FileText, TrendingUp, RefreshCw, Shield, PenTool, Users, Linkedin, Twitter, Copy, X, Maximize2 } from 'lucide-react'
+import { Send, Bot, User, Loader2, MessageCircle, Sparkles, FileText, TrendingUp, RefreshCw, Shield, PenTool, Users, Linkedin, Twitter, Copy, X, Maximize2, Share2, Wand2 } from 'lucide-react'
+import FloatingSharePanel from './FloatingSharePanel'
+import DocumentBox from './DocumentBox'
+import DocumentSidePanel from './DocumentSidePanel'
+import ContentPreviewBox from './ContentPreviewBox'
+import ContentSidePanel from './ContentSidePanel'
 
 interface Message {
   id: string
@@ -10,6 +15,16 @@ interface Message {
   timestamp: Date
   citations?: string[]
   relatedQuestions?: string[]
+  documentData?: {
+    title: string
+    subtitle: string
+    content: string
+  }
+  previewData?: {
+    title: string
+    preview: string
+    fullContent: string
+  }
 }
 
 interface DashboardChatInterfaceProps {
@@ -24,6 +39,19 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
   const [error, setError] = useState<string | null>(null)
   const [isFocused, setIsFocused] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  // Floating panel state
+  const [showFloatingPanel, setShowFloatingPanel] = useState(false)
+  const [selectedMessageForShare, setSelectedMessageForShare] = useState<Message | null>(null)
+  const [initialPlatform, setInitialPlatform] = useState<'linkedin' | 'twitter'>('linkedin')
+  
+  // Document side panel state
+  const [showDocumentPanel, setShowDocumentPanel] = useState(false)
+  const [documentData, setDocumentData] = useState<{title: string, content: string} | null>(null)
+  
+  // Content preview side panel state
+  const [showContentPanel, setShowContentPanel] = useState(false)
+  const [contentData, setContentData] = useState<{title: string, content: string} | null>(null)
 
   // Helper function to extract shareable content
   const extractShareableContent = (content: string): string => {
@@ -235,13 +263,16 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
         throw new Error(data.error || 'Unknown error')
       }
 
+      const responseMessage = data.data.choices[0].message
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.data.choices[0].message.content,
+        content: responseMessage.content,
         timestamp: new Date(),
         citations: data.data.citations || [],
-        relatedQuestions: data.data.related_questions || []
+        relatedQuestions: data.data.related_questions || [],
+        documentData: responseMessage.documentData,
+        previewData: responseMessage.previewData
       }
 
       setMessages(prev => [...prev, assistantMessage])
@@ -273,6 +304,31 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
   const clearChat = () => {
     setMessages([])
     setError(null)
+  }
+
+  // Open floating panel for sharing/refining
+  const openFloatingPanel = (message: Message, platform: 'linkedin' | 'twitter' = 'linkedin') => {
+    setSelectedMessageForShare(message)
+    setInitialPlatform(platform)
+    setShowFloatingPanel(true)
+  }
+  
+  // Open document side panel
+  const openDocumentPanel = (documentData: {title: string, subtitle: string, content: string}) => {
+    setDocumentData({
+      title: documentData.title,
+      content: documentData.content
+    })
+    setShowDocumentPanel(true)
+  }
+  
+  // Open content preview side panel
+  const openContentPanel = (previewData: {title: string, preview: string, fullContent: string}) => {
+    setContentData({
+      title: previewData.title,
+      content: previewData.fullContent
+    })
+    setShowContentPanel(true)
   }
 
   const config = getModeConfig()
@@ -390,7 +446,52 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                     {message.timestamp.toLocaleTimeString()}
                   </span>
                 </div>
-                <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                <div className="text-sm text-black whitespace-pre-wrap leading-relaxed">
+                  {message.content.split('\n\n').map((paragraph, index) => {
+                    // Check if this is the document section
+                    if (paragraph.includes('I\'ll create a comprehensive problem statement document')) {
+                      const parts = paragraph.split('\n\n')
+                      const introPart = parts[0]
+                      const documentPart = parts[1]
+                      const conclusionPart = parts.slice(2).join('\n\n')
+                      
+                      return (
+                        <div key={index}>
+                          <p className="mb-4">{introPart}</p>
+                          
+                          {message.documentData && (
+                            <DocumentBox
+                              title={message.documentData.title}
+                              subtitle={message.documentData.subtitle}
+                              content={message.documentData.content}
+                              onOpenSidePanel={() => openDocumentPanel(message.documentData!)}
+                            />
+                          )}
+                          
+                          <p className="mb-4">{conclusionPart}</p>
+                        </div>
+                      )
+                    }
+                    
+                    // Check if this has preview data (long response)
+                    if (message.previewData && paragraph.includes('[Click below to view full detailed response...]')) {
+                      return (
+                        <div key={index}>
+                          <p className="mb-4">{paragraph.replace('[Click below to view full detailed response...]', '')}</p>
+                          
+                          <ContentPreviewBox
+                            title={message.previewData.title}
+                            preview={message.previewData.preview}
+                            fullContent={message.previewData.fullContent}
+                            onOpenSidePanel={() => openContentPanel(message.previewData!)}
+                          />
+                        </div>
+                      )
+                    }
+                    
+                    return <p key={index} className="mb-4">{paragraph}</p>
+                  })}
+                </div>
                 
                 {/* Citations */}
                 {message.citations && message.citations.length > 0 && (
@@ -417,6 +518,51 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                         • {question}
                       </button>
                     ))}
+                  </div>
+                )}
+                
+                {/* Floating Share Buttons - Only for Assistant Messages */}
+                {message.role !== 'user' && (
+                  <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={() => openFloatingPanel(message, 'linkedin')}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
+                      title="Share to LinkedIn"
+                    >
+                      <Linkedin className="w-4 h-4" />
+                      LinkedIn
+                    </button>
+                    
+                    <button
+                      onClick={() => openFloatingPanel(message, 'twitter')}
+                      className="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
+                      title="Share to X"
+                    >
+                      <Twitter className="w-4 h-4" />
+                      X
+                    </button>
+                    
+                    <button
+                      onClick={() => openFloatingPanel(message, 'linkedin')}
+                      className="px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
+                      title="Share & Refine"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Share & Refine
+                    </button>
+                  </div>
+                )}
+                
+                {/* Inline Share Panel - Opens within the message */}
+                {message.role !== 'user' && selectedMessageForShare?.id === message.id && (
+                  <div className="mt-4 border-t border-gray-200 pt-4">
+                    <FloatingSharePanel
+                      isOpen={showFloatingPanel}
+                      onClose={() => setShowFloatingPanel(false)}
+                      originalContent={selectedMessageForShare.content}
+                      messageId={selectedMessageForShare.id}
+                      initialPlatform={initialPlatform}
+                    />
                   </div>
                 )}
               </div>
@@ -609,6 +755,27 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
           )}
         </div>
       </div>
+      
+      {/* Document Side Panel */}
+      {documentData && (
+        <DocumentSidePanel
+          isOpen={showDocumentPanel}
+          onClose={() => setShowDocumentPanel(false)}
+          title={documentData.title}
+          content={documentData.content}
+        />
+      )}
+      
+      {/* Content Preview Side Panel */}
+      {contentData && (
+        <ContentSidePanel
+          isOpen={showContentPanel}
+          onClose={() => setShowContentPanel(false)}
+          title={contentData.title}
+          content={contentData.content}
+        />
+      )}
+      
     </>
   )
 }

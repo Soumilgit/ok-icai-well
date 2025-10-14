@@ -1,0 +1,107 @@
+config:
+  target: 'http://localhost'
+  phases:
+    - duration: 60
+      arrivalRate: 50   # 50 users per second - warm up
+      name: "Warm up phase"
+    - duration: 120
+      arrivalRate: 100  # 100 users per second - normal load
+      name: "Normal load phase"
+    - duration: 180
+      arrivalRate: 150  # 150 users per second - high load (5000 users/minute)
+      name: "High load phase (5000 users/minute)"
+    - duration: 60
+      arrivalRate: 200  # 200 users per second - stress test
+      name: "Stress test phase"
+    - duration: 60
+      arrivalRate: 50   # 50 users per second - cool down
+      name: "Cool down phase"
+  
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      User-Agent: 'Artillery Load Test'
+  
+  # Rate limiting and timeouts
+  http:
+    timeout: 30
+    pool: 10
+  
+  # Metrics collection
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+
+scenarios:
+  - name: "Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: 200
+
+  - name: "Chat API - OpenAI Homepage"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/chat/openai-homepage"
+          json:
+            message: "What are the latest trends in AI for accounting?"
+          expect:
+            - statusCode: 200
+            - hasProperty: "data"
+
+  - name: "Chat API - CA Assistant"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/chat/ca-assistant-gemini"
+          json:
+            message: "Help me with tax planning for my business"
+          expect:
+            - statusCode: 200
+            - hasProperty: "data"
+
+  - name: "SEO Content Generation"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/marketing/seo-content-gemini"
+          json:
+            prompt: "Create SEO content about digital transformation in accounting"
+          expect:
+            - statusCode: 200
+            - hasProperty: "data"
+
+  - name: "Marketing Strategy"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/marketing/strategy-gemini"
+          json:
+            prompt: "Develop a marketing strategy for a new accounting software"
+          expect:
+            - statusCode: 200
+            - hasProperty: "data"
+
+  - name: "Dashboard Access"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/dashboard"
+          expect:
+            - statusCode: 200
+
+  - name: "Content Pipeline"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/content/pipeline"
+          expect:
+            - statusCode: 200
+
+# Custom metrics
+plugins:
+  metrics-by-endpoint:
+    useOnlyRequestNames: true

@@ -30,9 +30,17 @@ interface Message {
   }
   artifacts?: {
     title: string
+    subtitle?: string
     preview: string
     fullContent: string
     type: string
+    metadata?: {
+      author?: string
+      date?: string
+      version?: string
+      generatedAt?: string
+    }
+    downloadUrl?: string | null
   }
 }
 
@@ -68,6 +76,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
   // Artifacts side panel state
   const [showArtifactsPanel, setShowArtifactsPanel] = useState(false)
   const [artifactsData, setArtifactsData] = useState<{title: string, content: string, type: string} | null>(null)
+  
+  // Artifact generation state
+  const [isGeneratingArtifact, setIsGeneratingArtifact] = useState(false)
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -284,6 +295,48 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
       console.log('🟢 Response message received:', responseMessage)
       console.log('🟢 Artifacts data:', responseMessage.artifacts)
       
+      // Check if response is long and should have an artifact box
+      const isLongResponse = responseMessage.content && responseMessage.content.length > 800
+      let artifactsData = responseMessage.artifacts
+      
+      // Auto-generate artifact for long responses if not already present
+      if (isLongResponse && !artifactsData) {
+        try {
+          // Determine document type based on chat mode
+          let documentType = 'summary'
+          if (mode === 'ca-assistant') documentType = 'report'
+          else if (mode === 'seo-content') documentType = 'analysis'
+          else if (mode === 'marketing-strategy') documentType = 'plan'
+          
+          const artifactResponse = await fetch('/api/chat/generate-artifact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: userMessage.content,
+              documentType: documentType,
+              context: responseMessage.content
+            })
+          })
+          
+          if (artifactResponse.ok) {
+            const artifactData = await artifactResponse.json()
+            if (artifactData.success && artifactData.artifact) {
+              artifactsData = {
+                title: artifactData.artifact.title,
+                subtitle: artifactData.artifact.subtitle,
+                preview: artifactData.artifact.summary,
+                fullContent: responseMessage.content,
+                type: artifactData.artifact.documentType,
+                metadata: artifactData.artifact.metadata,
+                downloadUrl: artifactData.artifact.downloadUrl
+              }
+            }
+          }
+        } catch (artifactError) {
+          console.log('Artifact generation failed, continuing with regular response:', artifactError)
+        }
+      }
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -293,7 +346,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
         relatedQuestions: data.data.related_questions || [],
         documentData: responseMessage.documentData,
         previewData: responseMessage.previewData,
-        artifacts: responseMessage.artifacts
+        artifacts: artifactsData
       }
 
       console.log('🟢 Assistant message with artifacts:', assistantMessage)
@@ -326,6 +379,61 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
   const clearChat = () => {
     setMessages([])
     setError(null)
+  }
+
+  // Generate artifact from current conversation or specific prompt
+  const generateArtifact = async (prompt?: string, documentType?: string) => {
+    setIsGeneratingArtifact(true)
+    setError(null)
+
+    try {
+      // Use the provided prompt or create one from recent conversation
+      const artifactPrompt = prompt || `Generate a comprehensive document based on our conversation. Focus on the key topics discussed and provide actionable insights.`
+      
+      const response = await fetch('/api/chat/generate-artifact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: artifactPrompt,
+          documentType: documentType || 'report',
+          context: messages.slice(-5).map(m => `${m.role}: ${m.content}`).join('\n\n')
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate artifact')
+      }
+
+      const artifact = data.artifact
+      
+      // Create an artifact message
+      const artifactMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `I've generated a ${artifact.documentType} document for you:`,
+        timestamp: new Date(),
+        artifacts: {
+          title: artifact.title,
+          preview: artifact.summary,
+          fullContent: artifact.content,
+          type: artifact.documentType
+        }
+      }
+
+      setMessages(prev => [...prev, artifactMessage])
+
+    } catch (error: any) {
+      console.error('Artifact generation error:', error)
+      setError(error.message || 'Failed to generate artifact')
+    } finally {
+      setIsGeneratingArtifact(false)
+    }
   }
 
   // Open floating panel for sharing/refining
@@ -532,16 +640,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
         )}
 
         {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-              variant === 'dashboard' 
-                ? message.role === 'user' 
-                  ? 'bg-gray-200 text-black border border-gray-300' 
-                  : 'bg-gray-200 text-black border border-gray-300'
-                : message.role === 'user' 
-                  ? 'bg-gray-900 text-white border border-gray-600' 
-                  : 'bg-gray-50 text-gray-900 border border-gray-200'
-            }`}>
+        <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-center'}`}>
+          <div className={`${message.role === 'user' ? 'max-w-xs lg:max-w-md' : 'w-full max-w-xl'} ${message.role === 'assistant' ? 'px-5 py-5' : 'px-4 py-2'} rounded-lg ${
+            variant === 'dashboard'
+              ? message.role === 'user'
+                ? 'bg-gray-200 text-black border border-gray-300'
+                : 'bg-gray-200 text-black border border-gray-300'
+              : message.role === 'user'
+                ? 'bg-gray-900 text-white border border-gray-600'
+                : 'bg-gray-50 text-gray-900 border border-gray-200'
+          }`}>
               <div className="flex items-center space-x-2 mb-1">
                 {message.role === 'user' ? (
                   <User className="w-4 h-4" />
@@ -552,19 +660,44 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
                   {message.timestamp.toLocaleTimeString()}
                 </span>
               </div>
-              {/* Show artifacts box if present (OpenAI responses) */}
+              {/* Show artifacts box if present (long responses) */}
               {message.artifacts ? (
-                <div className="text-sm text-white leading-relaxed">
+                <div className="mb-4">
                   <ArtifactsBox
                     title={message.artifacts.title}
+                    subtitle={message.artifacts.subtitle}
                     preview={message.artifacts.preview}
                     fullContent={message.artifacts.fullContent}
                     type={message.artifacts.type}
                     onOpenArtifact={() => openArtifactsPanel(message.artifacts!)}
+                    metadata={message.artifacts.metadata}
+                    downloadUrl={message.artifacts.downloadUrl}
                   />
                 </div>
+              ) : null}
+              
+              {/* Show regular content (shortened if artifact exists) */}
+              {message.artifacts ? (
+                <div className={`${message.role === 'user' ? 'text-sm' : 'text-base'} whitespace-pre-wrap ${message.role === 'assistant' ? 'leading-relaxed' : 'leading-relaxed'} ${
+                  message.role === 'user' ? 'text-white' : 'text-black'
+                }`}>
+                  <p className="mb-4 text-gray-600 italic">
+                    💡 Full response available in the artifact box above. Key points:
+                  </p>
+                  <p className="mb-4">
+                    {message.content.length > 300 
+                      ? message.content.substring(0, 300) + '...' 
+                      : message.content
+                    }
+                  </p>
+                  {message.content.length > 300 && (
+                    <p className="text-sm text-gray-500 italic">
+                      📖 Click "Show More" in the artifact box above to read the complete response.
+                    </p>
+                  )}
+                </div>
               ) : (
-                <div className={`text-sm whitespace-pre-wrap leading-relaxed ${
+                <div className={`${message.role === 'user' ? 'text-sm' : 'text-base'} whitespace-pre-wrap ${message.role === 'assistant' ? 'leading-relaxed' : 'leading-relaxed'} ${
                   message.role === 'user' ? 'text-white' : 'text-black'
                 }`}>
                   {message.content.split('\n\n').map((paragraph, index) => {
@@ -609,7 +742,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
                       )
                     }
                     
-                    return <p key={index} className="mb-4">{paragraph}</p>
+                    return <p key={index} className={`${message.role === 'assistant' ? 'mb-8 text-justify' : 'mb-4'}`}>{paragraph}</p>
                   })}
                 </div>
               )}
@@ -646,7 +779,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
               {message.role !== 'user' && (
                 <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-200">
                   <button
-                    onClick={() => openFloatingPanel(message, 'linkedin')}
+                    onClick={() => {
+                      // Get content for sharing with proper length limits
+                      let content = message.content;
+                      if (message.artifacts) {
+                        content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
+                      } else {
+                        content = extractShareableContent(message.content, 200);
+                      }
+                      
+                      // LinkedIn sharing with short content to avoid URL length issues
+                      const shareText = content.length > 200 ? content.substring(0, 197) + '...' : content;
+                      const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
+                      window.open(linkedinUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+                    }}
                     className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
                     title="Share to LinkedIn"
                   >
@@ -655,7 +801,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
                   </button>
                   
                   <button
-                    onClick={() => openFloatingPanel(message, 'twitter')}
+                    onClick={() => {
+                      // Get content for sharing with proper length limits
+                      let content = message.content;
+                      if (message.artifacts) {
+                        content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
+                      } else {
+                        content = extractShareableContent(message.content, 150);
+                      }
+                      
+                      // X (Twitter) sharing with short content to avoid URL length issues
+                      const shareText = content.length > 150 ? content.substring(0, 147) + '...' : content;
+                      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+                      window.open(twitterUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+                    }}
                     className="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
                     title="Share to X"
                   >
@@ -700,6 +859,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
             </div>
           </div>
         )}
+
 
         <div ref={messagesEndRef} />
       </div>
@@ -758,33 +918,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
             <Shield className="w-5 h-5" />
           </button>
           
-          <button
-            onClick={() => {
-              // Get the latest assistant message that comes after a user message (skip initial welcome message)
-              const userMessages = messages.filter(msg => msg.role === 'user');
-              if (userMessages.length > 0) {
-                const lastUserMessageIndex = messages.findLastIndex(msg => msg.role === 'user');
-                const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.role === 'assistant');
-                const rawContent = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
-                const content = extractShareableContent(rawContent);
-                
-                // LinkedIn sharing with proper URL format
-                const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
-                window.open(linkedinUrl, '_blank');
-              } else {
-                // Fallback if no user messages yet
-                const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent('Check out this AI-powered content creation tool for CAs!')}`;
-                window.open(linkedinUrl, '_blank');
+            <button
+              onClick={() => {
+                // Get the latest assistant message that comes after a user message (skip initial welcome message)
+                const userMessages = messages.filter(msg => msg.role === 'user');
+                if (userMessages.length > 0) {
+                  const lastUserMessageIndex = messages.findLastIndex(msg => msg.role === 'user');
+                  const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.role === 'assistant');
+                  const rawContent = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
+                  const content = extractShareableContent(rawContent);
+                  
+                  // LinkedIn sharing with proper URL format
+                  const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
+                  window.open(linkedinUrl, '_blank');
+                } else {
+                  // Fallback if no user messages yet
+                  const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent('Check out this AI-powered content creation tool for CAs!')}`;
+                  window.open(linkedinUrl, '_blank');
+                }
+              }}
+              className={variant === 'dashboard' 
+                ? "p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg border border-gray-600" 
+                : "p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               }
-            }}
-            className={variant === 'dashboard' 
-              ? "p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg border border-gray-600" 
-              : "p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            }
-            title="Post on LinkedIn"
-          >
-            <Linkedin className="w-5 h-5" />
-          </button>
+              title="Post on LinkedIn"
+            >
+              <Linkedin className="w-5 h-5" />
+            </button>
           
           <button
             onClick={() => {
@@ -824,6 +984,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
           >
             <Users className="w-5 h-5" />
           </button>
+          
           
           <button
             onClick={() => {
@@ -882,6 +1043,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
             </button>
           </div>
         )}
+
 
         {mode === 'marketing-strategy' && (
           <div className="mt-2 flex flex-wrap gap-1">

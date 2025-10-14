@@ -430,12 +430,12 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
           )}
 
           {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.role === 'user' 
-                  ? 'bg-gray-200 text-black border border-gray-300' 
-                  : 'bg-gray-100 text-black border border-gray-200'
-              }`}>
+              <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-center'}`}>
+                <div className={`${message.role === 'user' ? 'max-w-xs lg:max-w-md' : 'w-full max-w-xl'} ${message.role === 'assistant' ? 'px-5 py-5' : 'px-4 py-2'} rounded-lg ${
+                  message.role === 'user'
+                    ? 'bg-gray-200 text-black border border-gray-300'
+                    : 'bg-gray-100 text-black border border-gray-200'
+                }`}>
                 <div className="flex items-center space-x-2 mb-1">
                   {message.role === 'user' ? (
                     <User className="w-4 h-4" />
@@ -446,7 +446,7 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                     {message.timestamp.toLocaleTimeString()}
                   </span>
                 </div>
-                <div className="text-sm text-black whitespace-pre-wrap leading-relaxed">
+                <div className="text-base text-black whitespace-pre-wrap leading-relaxed">
                   {message.content.split('\n\n').map((paragraph, index) => {
                     // Check if this is the document section
                     if (paragraph.includes('I\'ll create a comprehensive problem statement document')) {
@@ -489,7 +489,7 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                       )
                     }
                     
-                    return <p key={index} className="mb-4">{paragraph}</p>
+                    return <p key={index} className={`${message.role === 'assistant' ? 'mb-8 text-justify' : 'mb-4'}`}>{paragraph}</p>
                   })}
                 </div>
                 
@@ -525,7 +525,20 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                 {message.role !== 'user' && (
                   <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-200">
                     <button
-                      onClick={() => openFloatingPanel(message, 'linkedin')}
+                      onClick={() => {
+                        // Get content for sharing with proper length limits
+                        let content = message.content;
+                        if (message.artifacts) {
+                          content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
+                        } else {
+                          content = extractShareableContent(message.content, 200);
+                        }
+                        
+                        // LinkedIn sharing with short content to avoid URL length issues
+                        const shareText = content.length > 200 ? content.substring(0, 197) + '...' : content;
+                        const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
+                        window.open(linkedinUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+                      }}
                       className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
                       title="Share to LinkedIn"
                     >
@@ -534,7 +547,20 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                     </button>
                     
                     <button
-                      onClick={() => openFloatingPanel(message, 'twitter')}
+                      onClick={() => {
+                        // Get content for sharing with proper length limits
+                        let content = message.content;
+                        if (message.artifacts) {
+                          content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
+                        } else {
+                          content = extractShareableContent(message.content, 150);
+                        }
+                        
+                        // X (Twitter) sharing with short content to avoid URL length issues
+                        const shareText = content.length > 150 ? content.substring(0, 147) + '...' : content;
+                        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+                        window.open(twitterUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+                      }}
                       className="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
                       title="Share to X"
                     >

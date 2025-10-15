@@ -9,7 +9,8 @@ interface ArtifactsBoxProps {
   preview: string
   fullContent: string
   type: string
-  onOpenArtifact: () => void
+  onOpenArtifact?: () => void
+  onViewArtifact?: (artifactId: string) => void
   metadata?: {
     author?: string
     date?: string
@@ -17,6 +18,7 @@ interface ArtifactsBoxProps {
     generatedAt?: string
   }
   downloadUrl?: string | null
+  artifactId?: string
 }
 
 const ArtifactsBox: React.FC<ArtifactsBoxProps> = ({
@@ -26,8 +28,10 @@ const ArtifactsBox: React.FC<ArtifactsBoxProps> = ({
   fullContent,
   type,
   onOpenArtifact,
+  onViewArtifact,
   metadata,
-  downloadUrl
+  downloadUrl,
+  artifactId
 }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -96,13 +100,48 @@ const ArtifactsBox: React.FC<ArtifactsBoxProps> = ({
   const handleDownload = () => {
     if (downloadUrl) {
       window.open(downloadUrl, '_blank')
+    } else if (artifactId) {
+      // Create a downloadable text file with the full content
+      const blob = new Blob([fullContent], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     }
   }
 
   const handleCopy = () => {
     navigator.clipboard.writeText(fullContent).then(() => {
-      // Show success feedback
+      // Show success feedback - you could add a toast notification here
+      console.log('Content copied to clipboard')
+    }).catch(err => {
+      console.error('Failed to copy content:', err)
     })
+  }
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: fullContent.substring(0, 200) + '...',
+        url: window.location.href
+      })
+    } else {
+      // Fallback: copy to clipboard
+      handleCopy()
+    }
+  }
+
+  const handleOpenFullView = () => {
+    if (onViewArtifact && artifactId) {
+      onViewArtifact(artifactId)
+    } else if (onOpenArtifact) {
+      onOpenArtifact()
+    }
   }
 
   const toggleExpanded = () => {
@@ -179,7 +218,7 @@ const ArtifactsBox: React.FC<ArtifactsBoxProps> = ({
               </button>
               
               <button
-                onClick={onOpenArtifact}
+                onClick={handleOpenFullView}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -188,15 +227,13 @@ const ArtifactsBox: React.FC<ArtifactsBoxProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {downloadUrl && (
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors text-sm font-medium"
-                  title="Download Document"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
-              )}
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors text-sm font-medium"
+                title="Download Document"
+              >
+                <Download className="w-4 h-4" />
+              </button>
               
               <button
                 onClick={handleCopy}
@@ -207,6 +244,7 @@ const ArtifactsBox: React.FC<ArtifactsBoxProps> = ({
               </button>
               
               <button
+                onClick={handleShare}
                 className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
                 title="Share"
               >

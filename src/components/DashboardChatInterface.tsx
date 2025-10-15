@@ -7,6 +7,8 @@ import DocumentBox from './DocumentBox'
 import DocumentSidePanel from './DocumentSidePanel'
 import ContentPreviewBox from './ContentPreviewBox'
 import ContentSidePanel from './ContentSidePanel'
+import ArtifactsBox from './ArtifactsBox'
+import ArtifactsSidePanel from './ArtifactsSidePanel'
 
 interface Message {
   id: string
@@ -67,6 +69,10 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
   // Content preview side panel state
   const [showContentPanel, setShowContentPanel] = useState(false)
   const [contentData, setContentData] = useState<{title: string, content: string} | null>(null)
+  
+  // Artifacts side panel state
+  const [showArtifactsPanel, setShowArtifactsPanel] = useState(false)
+  const [artifactsData, setArtifactsData] = useState<Message['artifacts'] | null>(null)
 
   // Helper function to extract shareable content
   const extractShareableContent = (content: string): string => {
@@ -360,6 +366,12 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
     })
     setShowContentPanel(true)
   }
+  
+  // Open artifacts side panel
+  const openArtifactsPanel = (artifacts: Message['artifacts']) => {
+    setArtifactsData(artifacts)
+    setShowArtifactsPanel(true)
+  }
 
   const config = getModeConfig()
 
@@ -477,8 +489,24 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                   </span>
                 </div>
                 <div className="text-base text-black whitespace-pre-wrap leading-relaxed">
-                  {/* Add document link for long responses */}
-                  {message.role === 'assistant' && message.content.length > 1000 && (
+                  {/* Show artifacts box if present */}
+                  {message.artifacts && (
+                    <div className="mb-4">
+                      <ArtifactsBox
+                        title={message.artifacts.title}
+                        subtitle={message.artifacts.subtitle}
+                        preview={message.artifacts.preview}
+                        fullContent={message.artifacts.fullContent}
+                        type={message.artifacts.type}
+                        onOpenArtifact={() => openArtifactsPanel(message.artifacts!)}
+                        metadata={message.artifacts.metadata}
+                        downloadUrl={message.artifacts.downloadUrl}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Show artifact link for long responses without artifacts */}
+                  {message.role === 'assistant' && !message.artifacts && message.content.length > 1000 && (
                     <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-sm text-green-800 mb-2">
                         📄 <strong>Long Response Detected:</strong>
@@ -848,6 +876,20 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
           onClose={() => setShowContentPanel(false)}
           title={contentData.title}
           content={contentData.content}
+        />
+      )}
+      
+      {/* Artifacts Side Panel */}
+      {artifactsData && (
+        <ArtifactsSidePanel
+          isOpen={showArtifactsPanel}
+          onClose={() => setShowArtifactsPanel(false)}
+          title={artifactsData.title}
+          subtitle={artifactsData.subtitle}
+          content={artifactsData.fullContent}
+          type={artifactsData.type}
+          metadata={artifactsData.metadata}
+          downloadUrl={artifactsData.downloadUrl}
         />
       )}
       

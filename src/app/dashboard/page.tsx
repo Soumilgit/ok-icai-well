@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUser, SignOutButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import ChatInterface from '@/components/ChatInterface';
-import DashboardChatInterface from '@/components/DashboardChatInterface';
+import DashboardChatInterfaceNew from '@/components/DashboardChatInterfaceNew';
 import WritingVoiceQuestionnaire from '@/components/WritingVoiceQuestionnaire';
 import LinkedInAutomation from '@/components/LinkedInAutomation';
 import ContentRepurposing from '@/components/ContentRepurposing';
@@ -30,7 +29,7 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen' | 'workflow' | 'chat' | 'marketing' | 'questionnaire' | 'linkedin' | 'repurposing' | 'case-studies' | 'compliance' | 'network' | 'images' | 'unified-creator' | 'discover' | 'twitter' | 'enhanced-hub'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'news' | 'content' | 'automation' | 'exam-gen' | 'workflow' | 'chat' | 'marketing' | 'questionnaire' | 'linkedin' | 'repurposing' | 'case-studies' | 'compliance' | 'network' | 'images' | 'unified-creator' | 'discover' | 'twitter' | 'enhanced-hub'>('chat');
   
   // Domain-based access control (aminutemantechnologies.com only)
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || '';
@@ -42,7 +41,6 @@ export default function Dashboard() {
   const [examResults, setExamResults] = useState<any[]>([]);
   const [currentTopic, setCurrentTopic] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [chatMode, setChatMode] = useState<'general' | 'ca-assistant' | 'seo-content' | 'marketing-strategy'>('general');
   
   // User preferences state
   const [userPreferences, setUserPreferences] = useState<any>(null);
@@ -1680,72 +1678,418 @@ export default function Dashboard() {
 
         {/* AI Chat Tab */}
         {activeTab === 'chat' && (
-          <div className="space-y-6">
-            <div className="bg-black border border-gray-700 rounded-2xl p-8 text-white">
-              <h1 className="text-4xl font-bold mb-4">🤖 AI Chat Assistant</h1>
-              <p className="text-xl text-gray-300 mb-4">
-                Powered by Perplexity AI - Get instant answers, CA guidance, and expert assistance with real-time information.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <button
-                  onClick={() => setChatMode('general')}
-                  className={`p-3 rounded-lg transition-all ${chatMode === 'general' 
-                    ? 'bg-white text-black shadow-lg' 
-                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
+          <div className="space-y-8">
+            {/* Top News Section */}
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center">
+                  <span className="mr-2">📰</span>
+                  Top CA & Finance News
+                </h2>
+                <button 
+                  onClick={() => setActiveTab('news')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
                 >
-                  <div className="text-sm font-medium">General Chat</div>
+                  View All →
                 </button>
+              </div>
+              
+              {newsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse bg-white/10 rounded-lg p-4 h-32"></div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {topNews.map((news, index) => (
+                    <div 
+                      key={news.id} 
+                      onClick={() => handleNewsClick(news)}
+                      className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group hover:bg-white/20"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-xs text-gray-400">{news.source}</span>
+                      </div>
+                      
+                      <h3 className="text-sm font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
+                        {news.title}
+                      </h3>
+                      
+                      <p className="text-xs text-gray-300 line-clamp-3 mb-3">
+                        {news.content}
+                      </p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-gray-400">
+                              {new Date(news.publishedAt).toLocaleTimeString('en-IN', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </span>
+                            {news.relevanceScore > 0.7 && (
+                              <span className="bg-orange-600/20 text-orange-400 px-2 py-0.5 rounded-full text-xs">
+                                High Relevance
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            {news.categories?.slice(0, 2).map((cat) => (
+                              <span key={cat} className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs">
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Relevant Web Links */}
+                        {news.relevantLinks && news.relevantLinks.length > 0 && (
+                          <div className="border-t border-white/10 pt-2">
+                            <p className="text-xs text-gray-400 mb-1">Related Links:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {news.relevantLinks.slice(0, 2).map((link, linkIndex) => (
+                                <a
+                                  key={linkIndex}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center px-2 py-1 text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-full transition-colors"
+                                  title={link.source}
+                                >
+                                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"/>
+                                  </svg>
+                                  {link.title.length > 15 ? link.title.substring(0, 15) + '...' : link.title}
+                                </a>
+                              ))}
+                              {news.relevantLinks.length > 2 && (
                 <button
-                  onClick={() => setChatMode('ca-assistant')}
-                  className={`p-3 rounded-lg transition-all ${chatMode === 'ca-assistant' 
-                    ? 'bg-white text-black shadow-lg' 
-                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
-                >
-                  <div className="text-sm font-medium">🧮 CA Assistant</div>
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    alert(`All links:\n${news.relevantLinks.map(l => `• ${l.title}: ${l.url}`).join('\n')}`);
+                                  }}
+                                  className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1 rounded-full bg-blue-600/10 hover:bg-blue-600/20 transition-colors"
+                                >
+                                  +{news.relevantLinks.length - 2} more
                 </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Features Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="flex items-center mb-4">
+                  <div className="p-3 bg-blue-600/20 rounded-lg mr-4">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">CA Compliance</h3>
+                </div>
+                <p className="text-gray-300 text-sm mb-4">Stay updated with latest ICAI regulations and compliance requirements.</p>
                 <button
-                  onClick={() => setChatMode('seo-content')}
-                  className={`p-3 rounded-lg transition-all ${chatMode === 'seo-content' 
-                    ? 'bg-white text-black shadow-lg' 
-                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
+                  onClick={() => setActiveTab('compliance')}
+                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
                 >
-                  <div className="text-sm font-medium">SEO Content</div>
+                  Explore →
                 </button>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-900/30 to-green-800/30 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="flex items-center mb-4">
+                  <div className="p-3 bg-green-600/20 rounded-lg mr-4">
+                    <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Content Creation</h3>
+                </div>
+                <p className="text-gray-300 text-sm mb-4">Generate professional content for your practice and clients.</p>
                 <button
-                  onClick={() => setChatMode('marketing-strategy')}
-                  className={`p-3 rounded-lg transition-all ${chatMode === 'marketing-strategy' 
-                    ? 'bg-white text-black shadow-lg' 
-                    : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'}`}
+                  onClick={() => setActiveTab('content')}
+                  className="text-green-400 hover:text-green-300 text-sm font-medium"
                 >
-                  <div className="text-sm font-medium">Marketing</div>
+                  Create →
+                </button>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="flex items-center mb-4">
+                  <div className="p-3 bg-purple-600/20 rounded-lg mr-4">
+                    <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Automation</h3>
+                </div>
+                <p className="text-gray-300 text-sm mb-4">Automate your workflows and save time on repetitive tasks.</p>
+                <button
+                  onClick={() => setActiveTab('automation')}
+                  className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+                >
+                  Automate →
                 </button>
               </div>
             </div>
 
-            {/* Chat Interface */}
-            <DashboardChatInterface mode={chatMode} onModeChange={setChatMode} />
-
-            {/* Usage Guidelines */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-                <h3 className="font-semibold text-white mb-2">CA Assistant Tips</h3>
-                <ul className="text-sm text-gray-300 space-y-1">
-                  <li>• Ask about latest tax regulations and GST updates</li>
-                  <li>• Get audit procedures and compliance guidance</li>
-                  <li>• Request calculation examples and case studies</li>
-                  <li>• Inquire about recent circulars and notifications</li>
-                </ul>
+            {/* Gemini Content Generator Section */}
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 mb-8">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  AI Content Creation Assistant
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  Generate professional content for LinkedIn, Twitter, and other platforms
+                </p>
               </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-semibold text-green-900 mb-2">SEO Content Tips</h3>
-                <ul className="text-sm text-green-800 space-y-1">
-                  <li>• Use format: "topic: [title], keywords: [keyword1, keyword2]"</li>
-                  <li>• Specify content type: blog, landing-page, meta-tags</li>
-                  <li>• Include target audience for better optimization</li>
-                  <li>• Request competitor analysis and keyword research</li>
-                </ul>
+              <GeminiContentGenerator />
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">Daily News</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.newsArticles || 12}</p>
+                  </div>
+                  <div className="text-2xl">📰</div>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">Generated Content</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.generatedContent || 8}</p>
+                  </div>
+                  <div className="text-2xl">
+                    <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">LinkedIn Posts</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.linkedinPosts || 4}</p>
+                  </div>
+                  <div className="text-2xl">
+                    <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">Repurposed Content</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.repurposedContent || 6}</p>
+                  </div>
+                  <div className="text-2xl">♻️</div>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">AI Images</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.aiImages || 12}</p>
+                  </div>
+                  <div className="text-2xl text-purple-400">●</div>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-300">Compliance Checks</p>
+                    <p className="text-2xl font-bold">{dashboardData?.overview?.today?.complianceChecks || 6}</p>
+                  </div>
+                  <div className="text-2xl text-green-400">●</div>
+                </div>
               </div>
             </div>
+
+            {/* New Features Overview */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-4">🆕 Enhanced AI-Powered Features</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={() => setActiveTab('unified-creator')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                >
+                  <div className="text-2xl mb-2 text-blue-400">●</div>
+                  <div className="font-semibold">Unified Content Creator</div>
+                  <div className="text-sm text-gray-300">Quiz + AI Research + Images in one place</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('discover')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                >
+                  <div className="text-2xl mb-2">📰</div>
+                  <div className="font-semibold">Discover Feed</div>
+                  <div className="text-sm text-gray-300">Latest 2025 news with instant post creation</div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('twitter')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                >
+                  <div className="text-2xl mb-2">𝕏</div>
+                  <div className="font-semibold">X (Twitter) Automation</div>
+                  <div className="text-sm text-gray-300">ICAI-compliant Twitter posting</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('linkedin')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2">💼</div>
+                  <div className="font-semibold">LinkedIn Automation</div>
+                  <div className="text-sm text-gray-300">Professional network posting</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('compliance')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                >
+                  <div className="text-2xl mb-2">⚖️</div>
+                  <div className="font-semibold">ICAI Compliance Center</div>
+                  <div className="text-sm text-gray-300">Guidelines check + plagiarism detection</div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('case-studies')}
+                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 rounded-lg transition-all hover:scale-105 text-left"
+                >
+                  <div className="text-2xl mb-2 text-green-400">●</div>
+                  <div className="font-semibold">Case Study Generator</div>
+                  <div className="text-sm text-gray-300">Professional case studies</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Platform Capabilities Overview */}
+            <div className="bg-black rounded-xl p-6 border border-gray-600">
+              <h2 className="text-xl font-bold mb-6 text-white">Complete AI-Powered CA Platform</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* Content Creation & Personalization */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Content Creation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Personalized Writing Voices (5 types)</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>100+ Swipe File Templates</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Content Repurposing (6+ formats)</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Case Study Generator</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>AI Image Generation</li>
+                </ul>
+              </div>
+
+                {/* LinkedIn & Social Media */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">LinkedIn Automation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Custom & Full Automation</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Direct Publishing</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Post Scheduling</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Network Analysis</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Engagement Tracking</li>
+                </ul>
+              </div>
+
+                {/* Compliance & News */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Compliance & News</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>ICAI Compliance Checking</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Daily News Scraping (8 sources)</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Regulatory Updates</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Violation Detection</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Improvement Suggestions</li>
+                  </ul>
+            </div>
+
+                {/* AI & Automation */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">AI & Automation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Perplexity AI Integration</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Smart Content Analysis</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Automated Workflows</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Real-time Processing</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Intelligent Categorization</li>
+                  </ul>
+                </div>
+
+                {/* Analytics & Insights */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Analytics & Insights</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Network Growth Analysis</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Content Performance</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Engagement Metrics</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Opportunity Identification</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Professional Scoring</li>
+                  </ul>
+                </div>
+
+                {/* Education & Learning */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold mb-3 text-white">Education & Learning</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Exam Question Generation</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Topic-based Learning</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Knowledge Base Access</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>CA-specific Guidance</li>
+                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Professional Development</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Getting Started Guide */}
+              <div className="mt-6 bg-black rounded-lg p-6 border border-gray-600">
+                <h3 className="text-lg font-semibold mb-4 text-white">Quick Start Guide</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                    <div className="font-semibold text-white mb-1">Setup Your Voice</div>
+                    <div className="text-sm text-gray-300">Complete the writing voice questionnaire to personalize your content</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                    <div className="font-semibold text-white mb-1">Connect LinkedIn</div>
+                    <div className="text-sm text-gray-300">Authorize LinkedIn integration for automated posting and analytics</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                    <div className="font-semibold text-white mb-1">Create Content</div>
+                    <div className="text-sm text-gray-300">Generate personalized content and repurpose across platforms</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                    <div className="font-semibold text-white mb-1">Monitor & Optimize</div>
+                    <div className="text-sm text-gray-300">Track performance and optimize your professional network</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
           </div>
         )}
 

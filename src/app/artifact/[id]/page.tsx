@@ -620,28 +620,51 @@ This document serves as a comprehensive guide based on your conversation with ou
                   .replace(/^executive-summary/, 'executive-summary')
                 
                 const handleSectionClick = () => {
+                  console.log('Clicking section:', section.heading, 'Looking for ID:', sectionId)
                   const element = document.getElementById(sectionId)
+                  console.log('Found element:', element)
                   if (element) {
                     element.scrollIntoView({ 
                       behavior: 'smooth',
-                      block: 'start'
+                      block: 'start',
+                      inline: 'nearest'
                     })
+                  } else {
+                    // Try alternative IDs if the first one doesn't work
+                    const altIds = [
+                      section.heading.toLowerCase().replace(/\s+/g, '-'),
+                      section.heading.toLowerCase().replace(/[^a-z0-9]/g, ''),
+                      `section-${index}`
+                    ]
+                    
+                    for (const altId of altIds) {
+                      const altElement = document.getElementById(altId)
+                      if (altElement) {
+                        console.log('Found element with alt ID:', altId)
+                        altElement.scrollIntoView({ 
+                          behavior: 'smooth',
+                          block: 'start',
+                          inline: 'nearest'
+                        })
+                        break
+                      }
+                    }
                   }
                 }
                 
                 return (
                   <div 
                     key={index} 
-                    className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer"
+                    className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 cursor-pointer group"
                     onClick={handleSectionClick}
                   >
-                    <h3 className="font-medium text-gray-900 text-lg flex items-center">
+                    <h3 className="font-medium text-gray-900 text-lg flex items-center justify-between">
                       {section.heading}
-                      <svg className="ml-2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-gray-500 group-hover:text-gray-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                       </svg>
                     </h3>
-                    <p className="text-gray-600 text-sm mt-1">Click to scroll to section above</p>
+                    <p className="text-gray-600 text-sm mt-1 group-hover:text-gray-700 transition-colors">Click to scroll to section above</p>
                   </div>
                 )
               })}

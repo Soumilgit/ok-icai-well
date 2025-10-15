@@ -352,6 +352,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
       console.log('🟢 Assistant message with artifacts:', assistantMessage)
       setMessages(prev => [...prev, assistantMessage])
 
+      // Store the message for document generation
+      try {
+        await fetch(`/api/messages/${assistantMessage.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: assistantMessage.content,
+            role: assistantMessage.role,
+            mode: mode
+          })
+        })
+      } catch (storeError) {
+        console.log('Failed to store message:', storeError)
+      }
+
     } catch (error: any) {
       console.error('Chat error:', error)
       setError(error.message || 'Failed to send message')
@@ -691,15 +706,42 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, varia
                     }
                   </p>
                   {message.content.length > 300 && (
-                    <p className="text-sm text-gray-500 italic">
-                      📖 Click "Show More" in the artifact box above to read the complete response.
-                    </p>
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800 mb-2">
+                        📖 <strong>Complete Document Available:</strong>
+                      </p>
+                      <a
+                        href={`/artifact/${message.artifacts.metadata?.id || `doc_${message.id}`}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        📄 Open Full Document in New Tab
+                      </a>
+                    </div>
                   )}
                 </div>
               ) : (
                 <div className={`${message.role === 'user' ? 'text-sm' : 'text-base'} whitespace-pre-wrap ${message.role === 'assistant' ? 'leading-relaxed' : 'leading-relaxed'} ${
                   message.role === 'user' ? 'text-white' : 'text-black'
                 }`}>
+                  {/* Add document link for long responses without artifacts */}
+                  {message.role === 'assistant' && message.content.length > 1000 && !message.artifacts && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800 mb-2">
+                        📄 <strong>Long Response Detected:</strong>
+                      </p>
+                      <a
+                        href={`/artifact/doc_${message.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      >
+                        📖 View Full Response in New Tab
+                      </a>
+                    </div>
+                  )}
+                  
                   {message.content.split('\n\n').map((paragraph, index) => {
                     // Check if this is the document section
                     if (paragraph.includes('I\'ll create a comprehensive problem statement document')) {

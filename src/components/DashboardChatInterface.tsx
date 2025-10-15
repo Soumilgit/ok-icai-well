@@ -25,6 +25,21 @@ interface Message {
     preview: string
     fullContent: string
   }
+  artifacts?: {
+    title: string
+    subtitle?: string
+    preview: string
+    fullContent: string
+    type: string
+    metadata?: {
+      author?: string
+      date?: string
+      version?: string
+      generatedAt?: string
+      id?: string
+    }
+    downloadUrl?: string | null
+  }
 }
 
 interface DashboardChatInterfaceProps {
@@ -277,6 +292,21 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
 
       setMessages(prev => [...prev, assistantMessage])
 
+      // Store the message for document generation
+      try {
+        await fetch(`/api/messages/${assistantMessage.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: assistantMessage.content,
+            role: assistantMessage.role,
+            mode: mode
+          })
+        })
+      } catch (storeError) {
+        console.log('Failed to store message:', storeError)
+      }
+
     } catch (error: any) {
       console.error('Chat error:', error)
       setError(error.message || 'Failed to send message')
@@ -447,6 +477,23 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                   </span>
                 </div>
                 <div className="text-base text-black whitespace-pre-wrap leading-relaxed">
+                  {/* Add document link for long responses */}
+                  {message.role === 'assistant' && message.content.length > 1000 && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800 mb-2">
+                        📄 <strong>Long Response Detected:</strong>
+                      </p>
+                      <a
+                        href={`/artifact/doc_${message.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      >
+                        📖 View Full Response in New Tab
+                      </a>
+                    </div>
+                  )}
+                  
                   {message.content.split('\n\n').map((paragraph, index) => {
                     // Check if this is the document section
                     if (paragraph.includes('I\'ll create a comprehensive problem statement document')) {
@@ -531,7 +578,7 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                         if (message.artifacts) {
                           content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
                         } else {
-                          content = extractShareableContent(message.content, 200);
+                          content = extractShareableContent(message.content);
                         }
                         
                         // LinkedIn sharing with short content to avoid URL length issues
@@ -553,7 +600,7 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                         if (message.artifacts) {
                           content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
                         } else {
-                          content = extractShareableContent(message.content, 150);
+                          content = extractShareableContent(message.content);
                         }
                         
                         // X (Twitter) sharing with short content to avoid URL length issues
@@ -727,12 +774,14 @@ const DashboardChatInterface: React.FC<DashboardChatInterfaceProps> = ({ mode, o
                   
                   navigator.clipboard.writeText(content).then(() => {
                     // Show a brief success indicator
-                    const button = event.target as HTMLElement;
-                    const originalTitle = button.title;
-                    button.title = 'Copied!';
-                    setTimeout(() => {
-                      button.title = originalTitle;
-                    }, 2000);
+                    const button = event?.target as HTMLElement;
+                    if (button) {
+                      const originalTitle = button.title;
+                      button.title = 'Copied!';
+                      setTimeout(() => {
+                        button.title = originalTitle;
+                      }, 2000);
+                    }
                   }).catch(err => {
                     console.error('Failed to copy content:', err);
                   });

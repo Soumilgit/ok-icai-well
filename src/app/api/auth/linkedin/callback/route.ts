@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LinkedInService } from '@/lib/linkedin-service';
-import fs from 'fs';
-import path from 'path';
 
 // Function to update .env.local file with access token
 async function updateEnvFile(accessToken: string): Promise<void> {
   try {
+    // Dynamic imports to avoid issues with server-side rendering
+    const fs = await import('fs');
+    const path = await import('path');
+    
     const envPath = path.join(process.cwd(), '.env.local');
     const envContent = fs.readFileSync(envPath, 'utf8');
     

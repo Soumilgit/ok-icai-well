@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 import Parser from 'rss-parser';
 import { INewsArticle } from '@/models/NewsArticle';
 import { connectToDatabase } from './database';
@@ -205,7 +205,7 @@ async function fetchArticleContent(url: string, source: NewsSource): Promise<str
       }
     });
 
-    const $ = cheerio.load(response.data);
+    const $ = load(response.data);
     
     // Try different content selectors
     const contentSelectors = [

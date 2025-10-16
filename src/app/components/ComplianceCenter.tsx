@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import { ICAIComplianceChecker, ComplianceResult, ICAI_GUIDELINES } from '@/lib/icai-guidelines';
 
+// Define File type for browser compatibility - only available in browser context
+type FileType = any;
+
 interface PlagiarismResult {
   overallScore: number;
   sources: {
@@ -20,7 +23,7 @@ interface ComplianceCenterProps {}
 export default function ComplianceCenter({}: ComplianceCenterProps) {
   const [activeMode, setActiveMode] = useState<'content' | 'document'>('content');
   const [contentToCheck, setContentToCheck] = useState('');
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentFile, setDocumentFile] = useState<FileType>(null);
   const [complianceResult, setComplianceResult] = useState<ComplianceResult | null>(null);
   const [plagiarismResult, setPlagiarismResult] = useState<PlagiarismResult | null>(null);
   const [isChecking, setIsChecking] = useState(false);

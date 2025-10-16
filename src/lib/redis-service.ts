@@ -53,14 +53,14 @@ export class RedisService {
         rejectUnauthorized: process.env.NODE_ENV === 'production',
       };
       
-      // Add certificate paths if provided
-      if (process.env.REDIS_TLS_CERT_PATH) {
+      // Add certificate paths if provided (only in server environment)
+      if (process.env.REDIS_TLS_CERT_PATH && typeof window === 'undefined') {
         redisOptions.tls.cert = require('fs').readFileSync(process.env.REDIS_TLS_CERT_PATH);
       }
-      if (process.env.REDIS_TLS_KEY_PATH) {
+      if (process.env.REDIS_TLS_KEY_PATH && typeof window === 'undefined') {
         redisOptions.tls.key = require('fs').readFileSync(process.env.REDIS_TLS_KEY_PATH);
       }
-      if (process.env.REDIS_TLS_CA_PATH) {
+      if (process.env.REDIS_TLS_CA_PATH && typeof window === 'undefined') {
         redisOptions.tls.ca = require('fs').readFileSync(process.env.REDIS_TLS_CA_PATH);
       }
     }

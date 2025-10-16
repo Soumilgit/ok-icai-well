@@ -88,14 +88,14 @@ export class KafkaClusterService {
       ...(process.env.KAFKA_SSL === 'true' && {
         ssl: {
           rejectUnauthorized: process.env.NODE_ENV === 'production',
-          // Add SSL certificate paths if needed
-          ...(process.env.KAFKA_SSL_CA_PATH && {
+          // Add SSL certificate paths if needed (only in server environment)
+          ...(process.env.KAFKA_SSL_CA_PATH && typeof window === 'undefined' && {
             ca: require('fs').readFileSync(process.env.KAFKA_SSL_CA_PATH)
           }),
-          ...(process.env.KAFKA_SSL_CERT_PATH && {
+          ...(process.env.KAFKA_SSL_CERT_PATH && typeof window === 'undefined' && {
             cert: require('fs').readFileSync(process.env.KAFKA_SSL_CERT_PATH)
           }),
-          ...(process.env.KAFKA_SSL_KEY_PATH && {
+          ...(process.env.KAFKA_SSL_KEY_PATH && typeof window === 'undefined' && {
             key: require('fs').readFileSync(process.env.KAFKA_SSL_KEY_PATH)
           })
         }

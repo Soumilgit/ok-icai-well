@@ -12,6 +12,25 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'cheerio'];
+    }
+    
+    // Handle Node.js modules for browser compatibility
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      path: false,
+      os: false,
+      crypto: false,
+      stream: false,
+      util: false,
+    };
+    
+    return config;
+  },
+  serverExternalPackages: ['cheerio', 'rss-parser', 'puppeteer', 'jsdom'],
   /* config options here */
 };
 

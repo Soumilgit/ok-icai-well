@@ -26,66 +26,46 @@ import { qwenImageService, QwenImageService } from './qwen-image-service';
 
 export class ImageGenerationService {
   private apiKey: string | null = null;
+  private huggingFaceApiKey: string | null = null;
   private qwenService: QwenImageService;
 
   constructor() {
     this.apiKey = process.env.OPENAI_API_KEY || process.env.DALL_E_API_KEY || null;
+    this.huggingFaceApiKey = process.env.HUGGINGFACE_API_KEY || null;
     this.qwenService = qwenImageService;
   }
 
   async generateImage(request: ImageGenerationRequest): Promise<GeneratedImage> {
     try {
-      // Try Qwen-Image API first
-      try {
-        console.log('🎨 Attempting Qwen-Image generation...');
-        const response = await fetch('/api/generate-image', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: request.prompt,
-            style: request.style,
-            size: request.size,
-            theme: request.theme,
-            language: request.language || 'en',
-            branding: request.branding
-          })
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log('✅ Qwen-Image generation successful:', result.id);
-          return {
-            id: result.id,
-            url: result.url,
-            prompt: result.prompt,
-            style: result.style,
-            size: result.size,
-            createdAt: new Date(result.createdAt),
-            downloadUrl: result.downloadUrl
-          };
-        } else {
-          const errorData = await response.json();
-          console.warn('Qwen-Image API failed:', errorData);
+      const enhancedPrompt = this.enhancePrompt(request.prompt, request.style);
+      
+      // Try HuggingFace models first, then fallback to OpenAI/Replicate
+      if (this.huggingFaceApiKey) {
+        // Try Tencent HunyuanImage first
+        const hunyuanResult = await this.generateWithHunyuan(enhancedPrompt, request);
+        if (hunyuanResult) {
+          return hunyuanResult;
         }
-      } catch (qwenError) {
-        console.warn('Qwen-Image API failed, falling back to DALL-E:', qwenError);
+
+        // Fallback to Janus-Pro-7B
+        console.log('HunyuanImage failed, trying Janus-Pro-7B...');
+        const janusResult = await this.generateWithJanus(enhancedPrompt, request);
+        if (janusResult) {
+          return janusResult;
+        }
       }
-      
-      // Fallback to DALL-E or mock generation
-      const enhancedPrompt = this.enhancePromptForCA(request.prompt, request.style, request.theme);
-      
-      if (this.apiKey) {
-        // Use DALL-E API if available
+
+      // Final fallback to original models
+      try {
+        console.log('HuggingFace models failed, trying DALL-E...');
         return await this.generateWithDALLE(enhancedPrompt, request);
-      } else {
-        // Fallback to mock generation or free alternatives
-        return await this.generateMockImage(enhancedPrompt, request);
+      } catch (dalleError) {
+        console.error('DALL-E failed, trying Replicate:', dalleError);
+        return await this.generateWithReplicate(enhancedPrompt, request);
       }
     } catch (error) {
-      console.error('Error generating image:', error);
-      throw new Error('Failed to generate image');
+      console.error('Image generation failed:', error);
+      throw error;
     }
   }
 
@@ -113,6 +93,96 @@ High quality, sharp, suitable for social media and professional use
 `;
 
     return enhancedPrompt;
+  }
+
+  private async generateWithHunyuan(prompt: string, request: ImageGenerationRequest): Promise<GeneratedImage | null> {
+    try {
+      const response = await fetch('https://api-inference.huggingface.co/models/Tencent/HunyuanDiT-v1.2-Diffusers', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.huggingFaceApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            num_inference_steps: 30,
+            guidance_scale: 7.5,
+            width: parseInt(request.size.split('x')[0]),
+            height: parseInt(request.size.split('x')[1])
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HunyuanImage API error: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+
+      return {
+        id: `hunyuan_${Date.now()}`,
+        url: imageUrl,
+        prompt: request.prompt,
+        style: request.style,
+        size: request.size,
+        createdAt: new Date(),
+        downloadUrl: imageUrl
+      };
+    } catch (error) {
+      console.error('HunyuanImage generation failed:', error);
+      return null;
+    }
+  }
+
+  private async generateWithJanus(prompt: string, request: ImageGenerationRequest): Promise<GeneratedImage | null> {
+    try {
+      const response = await fetch('https://api-inference.huggingface.co/models/deepseek-ai/Janus-Pro-7B', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.huggingFaceApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: 512,
+            temperature: 0.7,
+            do_sample: true,
+            return_full_text: false
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Janus-Pro API error: ${response.status}`);
+      }
+
+      // Note: Janus-Pro-7B might return text or need different handling
+      const blob = await response.blob();
+      
+      // Check if it's an image or text response
+      if (blob.type.startsWith('image/')) {
+        const imageUrl = URL.createObjectURL(blob);
+
+        return {
+          id: `janus_${Date.now()}`,
+          url: imageUrl,
+          prompt: request.prompt,
+          style: request.style,
+          size: request.size,
+          createdAt: new Date(),
+          downloadUrl: imageUrl
+        };
+      } else {
+        console.warn('Janus-Pro-7B returned non-image response');
+        return null;
+      }
+    } catch (error) {
+      console.error('Janus-Pro generation failed:', error);
+      return null;
+    }
   }
 
   private async generateWithDALLE(prompt: string, request: ImageGenerationRequest): Promise<GeneratedImage> {

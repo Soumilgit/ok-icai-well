@@ -18,7 +18,7 @@ export default function Home() {
   const [benefitText, setBenefitText] = useState('');
   const [isDeletingBenefit, setIsDeletingBenefit] = useState(false);
   const [benefitIndex, setBenefitIndex] = useState(0);
-
+  
   const benefits = [
     'Automated Content Generation',
     'LinkedIn Post Automation',
@@ -31,20 +31,20 @@ export default function Home() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
+  
   // Typewriter effect for main title
   useEffect(() => {
     if (!isClient) return;
-
+    
     const timeout = setTimeout(() => {
       if (!isDeleting && displayText.length < fullText.length) {
-        setDisplayText(fullText.slice(0, displayText.length + 1));
+          setDisplayText(fullText.slice(0, displayText.length + 1));
       } else if (isDeleting && displayText.length > 0) {
         setDisplayText(displayText.slice(0, -1));
       } else if (displayText.length === fullText.length && !isDeleting) {
-        setTimeout(() => setIsDeleting(true), 2000);
+          setTimeout(() => setIsDeleting(true), 2000);
       } else if (displayText.length === 0 && isDeleting) {
-        setIsDeleting(false);
+          setIsDeleting(false);
       }
     }, isDeleting ? 100 : 200);
 
@@ -54,17 +54,17 @@ export default function Home() {
   // Typewriter effect for benefits
   useEffect(() => {
     if (!isClient) return;
-
+    
     const timeout = setTimeout(() => {
       const currentBenefit = benefits[benefitIndex];
       if (!isDeletingBenefit && benefitText.length < currentBenefit.length) {
-        setBenefitText(currentBenefit.slice(0, benefitText.length + 1));
+          setBenefitText(currentBenefit.slice(0, benefitText.length + 1));
       } else if (isDeletingBenefit && benefitText.length > 0) {
         setBenefitText(benefitText.slice(0, -1));
       } else if (benefitText.length === currentBenefit.length && !isDeletingBenefit) {
-        setTimeout(() => setIsDeletingBenefit(true), 2000);
+          setTimeout(() => setIsDeletingBenefit(true), 2000);
       } else if (benefitText.length === 0 && isDeletingBenefit) {
-        setIsDeletingBenefit(false);
+          setIsDeletingBenefit(false);
         setBenefitIndex((prev) => (prev + 1) % benefits.length);
       }
     }, isDeletingBenefit ? 50 : 100);
@@ -85,7 +85,7 @@ export default function Home() {
       <Navigation />
       
       <main className="pt-20">
-        {/* Hero Section */}
+      {/* Hero Section */}
         <section className="container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-6xl md:text-8xl font-bold text-white mb-8">
@@ -101,7 +101,7 @@ export default function Home() {
               {benefitText}
               <span className="animate-pulse">|</span>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors">
                 Get Started
@@ -109,9 +109,9 @@ export default function Home() {
               <button className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-8 py-4 rounded-lg text-lg font-semibold transition-colors">
                 Learn More
               </button>
-            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* Features Section */}
         <section className="container mx-auto px-4 py-20">
@@ -137,11 +137,11 @@ export default function Home() {
               <div className="text-4xl mb-4">🔒</div>
               <h3 className="text-2xl font-bold text-white mb-4">Secure & Compliant</h3>
               <p className="text-blue-100">Built with security and compliance in mind</p>
-            </div>
           </div>
-        </section>
+        </div>
+      </section>
       </main>
-      
+
       <Footer />
     </div>
   );

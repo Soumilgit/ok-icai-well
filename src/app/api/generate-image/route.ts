@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert size to Qwen dimensions
+    // Convert size to Stable Diffusion dimensions
     const qwenDimensions = QwenImageService.convertSizeToQwenDimensions(size);
     if (!qwenDimensions) {
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate image using Qwen-Image
+    // Generate image using Stable Diffusion XL
     const result = await qwenImageService.generateCAImage(
       prompt,
       style || 'professional',

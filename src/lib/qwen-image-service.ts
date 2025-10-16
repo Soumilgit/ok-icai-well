@@ -24,8 +24,8 @@ export interface QwenImageResponse {
 }
 
 export class QwenImageService {
-  private primaryModel = 'Qwen/Qwen-Image';
-  private fallbackModel = 'deepseek-ai/Janus-Pro-7B';
+  private primaryModel = 'stabilityai/stable-diffusion-xl-base-1.0';
+  private fallbackModel = 'runwayml/stable-diffusion-v1-5';
   private isConnected: boolean = false;
   private apiKey: string | null = null;
   private inferenceClient: InferenceClient | null = null;
@@ -66,29 +66,29 @@ export class QwenImageService {
       console.warn('⚠️ Failed to initialize InferenceClient:', error);
     }
     
-    console.log('✅ Image generation service initialized with Hugging Face API (Qwen-Image + DeepSeek fallback)');
+    console.log('✅ Image generation service initialized with Hugging Face API (Stable Diffusion XL + SD v1.5 fallback)');
   }
 
   /**
-   * Generate image using Qwen-Image model with DeepSeek fallback
+   * Generate image using Stable Diffusion XL with SD v1.5 fallback
    */
   async generateImage(request: QwenImageRequest): Promise<QwenImageResponse> {
     if (!this.isConnected) {
       throw new Error('Image generation service not connected. Please check HUGGING_FACE_API_KEY.');
     }
 
-    // Try Qwen-Image first
+    // Try Stable Diffusion XL first
     try {
-      return await this.generateWithModel(this.primaryModel, request, 'Qwen-Image');
-    } catch (qwenError) {
-      console.warn('⚠️ Qwen-Image failed, trying DeepSeek fallback:', qwenError);
+      return await this.generateWithModel(this.primaryModel, request, 'Stable Diffusion XL');
+    } catch (sdxlError) {
+      console.warn('⚠️ Stable Diffusion XL failed, trying SD v1.5 fallback:', sdxlError);
       
-      // Fallback to DeepSeek
+      // Fallback to SD v1.5
       try {
-        return await this.generateWithModel(this.fallbackModel, request, 'DeepSeek');
-      } catch (deepseekError) {
-        console.error('❌ Both models failed:', { qwenError, deepseekError });
-        throw new Error(`Failed to generate image with both Qwen-Image and DeepSeek: ${deepseekError instanceof Error ? deepseekError.message : 'Unknown error'}`);
+        return await this.generateWithModel(this.fallbackModel, request, 'SD v1.5');
+      } catch (sdError) {
+        console.error('❌ Both models failed:', { sdxlError, sdError });
+        throw new Error(`Failed to generate image with both Stable Diffusion XL and SD v1.5: ${sdError instanceof Error ? sdError.message : 'Unknown error'}`);
       }
     }
   }
@@ -113,85 +113,27 @@ export class QwenImageService {
     const apiKey = this.apiKey;
     let response: Response;
 
-    if (modelType === 'Qwen-Image') {
-      // Try InferenceClient first for Qwen-Image
-      if (this.inferenceClient) {
-        try {
-          console.log('🎨 Using InferenceClient for Qwen-Image...');
-          const imageBlob = await this.inferenceClient.textToImage({
-            provider: "fal-ai",
-            model: this.primaryModel,
-            inputs: enhancedPrompt,
-            parameters: { 
-              num_inference_steps: request.numInferenceSteps || 50,
-              width: request.width,
-              height: request.height
-            },
-          });
-          
-          const imageUrl = await this.blobToDataUrl(imageBlob);
-          const result: QwenImageResponse = {
-            id: `qwen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            url: imageUrl,
-            prompt: request.prompt,
+    // Use standard Hugging Face API for both HunyuanImage-3.0 and DeepSeek
+    response = await fetch(
+      `https://api-inference.huggingface.co/models/${modelName}`,
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({
+          inputs: enhancedPrompt,
+          parameters: {
+            negative_prompt: request.negativePrompt || 'blurry, low quality, distorted',
             width: request.width,
             height: request.height,
-            createdAt: new Date(),
-            downloadUrl: imageUrl
-          };
-          
-          console.log('✅ Qwen-Image generation successful with InferenceClient:', result.id);
-          return result;
-        } catch (inferenceError) {
-          console.warn('⚠️ InferenceClient failed, trying direct API:', inferenceError);
-        }
+            num_inference_steps: request.numInferenceSteps || 20,
+            guidance_scale: 7.5
+          }
+        }),
       }
-      
-      // Fallback to direct API call
-      response = await fetch(
-        "https://router.huggingface.co/fal-ai/fal-ai/qwen-image",
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-          body: JSON.stringify({
-            sync_mode: true,
-            prompt: `"${enhancedPrompt}"`,
-            parameters: {
-              width: request.width,
-              height: request.height,
-              num_inference_steps: request.numInferenceSteps || 50,
-              true_cfg_scale: request.trueCfgScale || 4.0,
-              seed: request.seed || Math.floor(Math.random() * 1000000)
-            }
-          }),
-        }
-      );
-    } else {
-      // Use standard Hugging Face API for DeepSeek
-      response = await fetch(
-        `https://api-inference.huggingface.co/models/${modelName}`,
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-          body: JSON.stringify({
-            inputs: enhancedPrompt,
-            parameters: {
-              negative_prompt: request.negativePrompt || 'blurry, low quality, distorted',
-              width: request.width,
-              height: request.height,
-              num_inference_steps: request.numInferenceSteps || 20,
-              guidance_scale: 7.5
-            }
-          }),
-        }
-      );
-    }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -261,23 +203,23 @@ export class QwenImageService {
       throw new Error('Image generation service not connected. Please check HUGGING_FACE_API_KEY.');
     }
 
-    console.log('🎨 Generating CA-specific image:', { prompt, style, aspectRatio, theme });
+    console.log('🎨 Generating CA-specific image with Stable Diffusion XL:', { prompt, style, aspectRatio, theme });
     
     // Enhance prompt for CA context
     const caEnhancedPrompt = this.enhancePromptForCA(prompt, style, theme);
     
     const { width, height } = QwenImageService.ASPECT_RATIOS[aspectRatio];
     
-    // Try Qwen-Image first, then fallback to DeepSeek
+    // Try Stable Diffusion XL first, then fallback to SD v1.5
     try {
       return await this.generateWithModel(this.primaryModel, {
         prompt: caEnhancedPrompt,
         width,
         height,
         language: 'en'
-      }, 'Qwen-Image');
-    } catch (qwenError) {
-      console.warn('⚠️ Qwen-Image failed for CA image, trying DeepSeek fallback:', qwenError);
+      }, 'Stable Diffusion XL');
+    } catch (sdxlError) {
+      console.warn('⚠️ Stable Diffusion XL failed for CA image, trying SD v1.5 fallback:', sdxlError);
       
       try {
         return await this.generateWithModel(this.fallbackModel, {
@@ -285,10 +227,10 @@ export class QwenImageService {
           width,
           height,
           language: 'en'
-        }, 'DeepSeek');
-      } catch (deepseekError) {
-        console.error('❌ Both models failed for CA image:', { qwenError, deepseekError });
-        throw new Error(`Failed to generate CA image with both Qwen-Image and DeepSeek: ${deepseekError instanceof Error ? deepseekError.message : 'Unknown error'}`);
+        }, 'SD v1.5');
+      } catch (sdError) {
+        console.error('❌ Both models failed for CA image:', { sdxlError, sdError });
+        throw new Error(`Failed to generate CA image with both Stable Diffusion XL and SD v1.5: ${sdError instanceof Error ? sdError.message : 'Unknown error'}`);
       }
     }
   }

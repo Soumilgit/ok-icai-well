@@ -111,13 +111,13 @@ export default function DiscoverFeed({}: DiscoverFeedProps) {
   }, []);
 
   const categories = [
-    { key: 'all', label: 'All News', icon: '📰' },
-    { key: 'taxation', label: 'Taxation', icon: '💰' },
-    { key: 'auditing', label: 'Auditing', icon: '🔍' },
-    { key: 'compliance', label: 'Compliance', icon: '📋' },
-    { key: 'regulations', label: 'Regulations', icon: '⚖️' },
-    { key: 'technology', label: 'Technology', icon: '💻' },
-    { key: 'industry', label: 'Industry', icon: '🏢' }
+    { key: 'all', label: 'All News', icon: '' },
+    { key: 'taxation', label: 'Taxation', icon: '' },
+    { key: 'auditing', label: 'Auditing', icon: '' },
+    { key: 'compliance', label: 'Compliance', icon: '' },
+    { key: 'regulations', label: 'Regulations', icon: '' },
+    { key: 'technology', label: 'Technology', icon: '' },
+    { key: 'industry', label: 'Industry', icon: '' }
   ];
 
   const filteredArticles = newsArticles.filter(article => {
@@ -300,13 +300,6 @@ How are you preparing for this shift? Share your experience below.
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
-          <h1 className="text-4xl font-bold mb-4">🔍 Discover Feed</h1>
-          <p className="text-xl text-green-100">
-            Latest 2025 news affecting CAs with instant AI-powered post creation
-          </p>
-        </div>
 
         {/* Search and Filters */}
         <div className="bg-gray-800 rounded-2xl p-6 border border-gray-600 mb-8">
@@ -406,9 +399,9 @@ How are you preparing for this shift? Share your experience below.
                       e.stopPropagation();
                       handleNewsClick(article);
                     }}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors text-sm font-medium"
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-full transition-colors text-sm font-medium"
                   >
-                    🤖 AI Summary
+                    AI Summary
                   </button>
                   
                   <button
@@ -416,9 +409,9 @@ How are you preparing for this shift? Share your experience below.
                       e.stopPropagation();
                       window.open(article.url, '_blank');
                     }}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm font-medium"
+                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-full transition-colors text-sm font-medium"
                   >
-                    📄 Read Full Article
+                    Read Full Article
                   </button>
                   
                   <button
@@ -427,7 +420,7 @@ How are you preparing for this shift? Share your experience below.
                       handleCreatePost(article);
                     }}
                     disabled={creatingPost === article.id}
-                    className="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-600 rounded-lg transition-all font-medium flex items-center"
+                    className="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-600 rounded-full transition-all font-medium flex items-center"
                   >
                     {creatingPost === article.id ? (
                       <>
@@ -436,7 +429,7 @@ How are you preparing for this shift? Share your experience below.
                       </>
                     ) : (
                       <>
-                        ✨ Create Post
+                        Create Post
                       </>
                     )}
                   </button>
@@ -448,7 +441,6 @@ How are you preparing for this shift? Share your experience below.
 
         {filteredArticles.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-300 mb-2">No articles found</h3>
             <p className="text-gray-500">Try adjusting your search criteria or category filter</p>
           </div>

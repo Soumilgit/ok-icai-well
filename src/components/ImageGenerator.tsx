@@ -2,8 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { ImageGenerationService, ImageGenerationRequest, GeneratedImage } from '@/lib/image-generation';
+import { Linkedin } from 'lucide-react';
+
+// Version: 2.0 - Added LinkedIn share functionality
 
 const ImageGenerator: React.FC = () => {
+  console.log('ImageGenerator component rendered with LinkedIn share functionality');
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState<'professional' | 'modern' | 'minimalist' | 'infographic' | 'social-media'>('professional');
   const [size, setSize] = useState<'1080x1080' | '1200x630' | '800x600' | '1920x1080' | '1328x1328' | '1664x928' | '928x1664' | '1472x1140' | '1140x1472' | '1584x1056' | '1056x1584'>('1080x1080');
@@ -121,6 +125,61 @@ const ImageGenerator: React.FC = () => {
     } catch (error) {
       console.error('Error downloading image:', error);
       alert('Failed to download image. Please try again.');
+    }
+  };
+
+  const handleShareToLinkedIn = async (image: GeneratedImage) => {
+    try {
+      // Check if Web Share API is available and supports files
+      if (navigator.share && navigator.canShare) {
+        // Convert image to blob for sharing
+        const response = await fetch(image.url);
+        const blob = await response.blob();
+        const file = new File([blob], `ai-generated-image-${image.id}.png`, { type: 'image/png' });
+        
+        // Check if we can share this file
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'AI Generated Image',
+            text: `Check out this AI-generated image: ${image.prompt}`,
+            files: [file]
+          });
+          return;
+        }
+      }
+      
+      // Fallback: Download image and open LinkedIn
+      const link = document.createElement('a');
+      link.href = image.url;
+      link.download = `ai-generated-image-${image.id}.png`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Open LinkedIn
+      const linkedinUrl = 'https://www.linkedin.com/feed/?shareActive=true';
+      window.open(linkedinUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      
+      alert('📥 Image downloaded! LinkedIn opened - please upload the downloaded image to your post');
+      
+    } catch (error) {
+      console.error('Error sharing to LinkedIn:', error);
+      
+      // Final fallback: Just download and open LinkedIn
+      const link = document.createElement('a');
+      link.href = image.url;
+      link.download = `ai-generated-image-${image.id}.png`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Open LinkedIn
+      const linkedinUrl = 'https://www.linkedin.com/feed/?shareActive=true';
+      window.open(linkedinUrl, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      
+      alert('📥 Image downloaded! LinkedIn opened - please upload the downloaded image to your post');
     }
   };
 
@@ -393,6 +452,7 @@ const ImageGenerator: React.FC = () => {
                       Clear All
                     </button>
                   </div>
+                  {/* Debug: LinkedIn buttons should be visible below each image */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {generatedImages.map((image) => (
                       <div key={image.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -409,15 +469,28 @@ const ImageGenerator: React.FC = () => {
                             <span>{image.style}</span>
                             <span>{image.size}</span>
                           </div>
-                          <div className="flex space-x-2">
+                          <div className="space-y-2">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleDownload(image)}
+                                className="flex-1 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                              >
+                                Download
+                              </button>
+                              <button className="flex-1 border border-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-50">
+                                Edit
+                              </button>
+                            </div>
                             <button
-                              onClick={() => handleDownload(image)}
-                              className="flex-1 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                              onClick={() => {
+                                console.log('LinkedIn share button clicked for image:', image.id);
+                                handleShareToLinkedIn(image);
+                              }}
+                              className="w-20 bg-[#0077B5] hover:bg-[#005885] text-white px-2 py-1 rounded text-base font-medium transition-colors flex items-center justify-center"
+                              title="Share to LinkedIn"
+                              style={{ display: 'block' }}
                             >
-                              Download
-                            </button>
-                            <button className="flex-1 border border-gray-300 px-3 py-1 rounded text-sm hover:bg-gray-50">
-                              Edit
+                              Share
                             </button>
                           </div>
                         </div>
@@ -465,15 +538,24 @@ const ImageGenerator: React.FC = () => {
                           <span>{image.style}</span>
                           <span>{image.createdAt.toLocaleDateString()}</span>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="space-y-2">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleDownload(image)}
+                              className="flex-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
+                            >
+                              Download
+                            </button>
+                            <button className="flex-1 border border-gray-300 px-2 py-1 rounded text-xs hover:bg-gray-50">
+                              Use
+                            </button>
+                          </div>
                           <button
-                            onClick={() => handleDownload(image)}
-                            className="flex-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
+                            onClick={() => handleShareToLinkedIn(image)}
+                            className="w-16 bg-[#0077B5] hover:bg-[#005885] text-white px-2 py-1 rounded text-sm font-medium transition-colors flex items-center justify-center"
+                            title="Share to LinkedIn"
                           >
-                            Download
-                          </button>
-                          <button className="flex-1 border border-gray-300 px-2 py-1 rounded text-xs hover:bg-gray-50">
-                            Use
+                            Share
                           </button>
                         </div>
                       </div>

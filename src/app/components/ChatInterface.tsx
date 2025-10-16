@@ -1,0 +1,1179 @@
+'use client'
+
+import React, { useState, useRef, useEffect } from 'react'
+import { Send, Bot, User, Loader2, MessageCircle, Sparkles, FileText, TrendingUp, RefreshCw, Shield, PenTool, Users, Linkedin, Twitter, Copy, X, Maximize2, Settings, Share2, Wand2 } from 'lucide-react'
+import SocialAutomationSidebar from '../../components/SocialAutomationSidebar'
+import FloatingSharePanel from '../../components/FloatingSharePanel'
+import DocumentBox from '../../components/DocumentBox'
+import DocumentSidePanel from '../../components/DocumentSidePanel'
+import ContentPreviewBox from '../../components/ContentPreviewBox'
+import ContentSidePanel from '../../components/ContentSidePanel'
+import ArtifactsBox from '../../components/ArtifactsBox'
+import ArtifactsSidePanel from '../../components/ArtifactsSidePanel'
+
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  citations?: string[]
+  relatedQuestions?: string[]
+  documentData?: {
+    title: string
+    subtitle: string
+    content: string
+  }
+  previewData?: {
+    title: string
+    preview: string
+    fullContent: string
+  }
+  artifacts?: {
+    title: string
+    subtitle?: string
+    preview: string
+    fullContent: string
+    type: string
+    metadata?: {
+      author?: string
+      date?: string
+      version?: string
+      generatedAt?: string
+    }
+    downloadUrl?: string | null
+  }
+}
+
+interface ChatInterfaceProps {
+  mode: 'general' | 'ca-assistant' | 'seo-content' | 'marketing-strategy'
+  onModeChange?: (mode: string) => void
+  variant?: 'homepage' | 'dashboard'
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ mode, onModeChange, variant = 'homepage' }) => {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isFocused, setIsFocused] = useState(false)
+  const [writingVoice, setWritingVoice] = useState('fact-presenter')
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false)
+  const [showSocialAutomation, setShowSocialAutomation] = useState(false)
+  
+  // Floating panel state
+  const [showFloatingPanel, setShowFloatingPanel] = useState(false)
+  const [selectedMessageForShare, setSelectedMessageForShare] = useState<Message | null>(null)
+  const [initialPlatform, setInitialPlatform] = useState<'linkedin' | 'twitter'>('linkedin')
+  
+  // Document side panel state
+  const [showDocumentPanel, setShowDocumentPanel] = useState(false)
+  const [documentData, setDocumentData] = useState<{title: string, content: string} | null>(null)
+  
+  // Content preview side panel state
+  const [showContentPanel, setShowContentPanel] = useState(false)
+  const [contentData, setContentData] = useState<{title: string, content: string} | null>(null)
+  
+  // Artifacts side panel state
+  const [showArtifactsPanel, setShowArtifactsPanel] = useState(false)
+  const [artifactsData, setArtifactsData] = useState<{title: string, content: string, type: string} | null>(null)
+  
+  // Artifact generation state
+  const [isGeneratingArtifact, setIsGeneratingArtifact] = useState(false)
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const writingVoices = [
+    { id: 'storyteller', name: 'Storyteller', icon: '📖' },
+    { id: 'opinionator', name: 'Opinionator', icon: '💬' },
+    { id: 'fact-presenter', name: 'Fact Presenter', icon: '📊' },
+    { id: 'frameworker', name: 'Frameworker', icon: '🔧' },
+    { id: 'f-bomber', name: 'F-Bomber', icon: '⚡' }
+  ]
+
+  // Helper function to extract shareable content
+  const extractShareableContent = (content: string, maxLength?: number): string => {
+    // Remove markdown formatting
+    let cleanContent = content
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic
+      .replace(/#{1,6}\s*/g, '') // Remove headers
+      .replace(/^\s*[-*+]\s*/gm, '• ') // Convert list items to bullets
+      .replace(/\n{2,}/g, '\n') // Reduce multiple newlines
+      .trim()
+
+    // If content is too long, try to extract the most important parts
+    const limit = maxLength || 280
+    if (cleanContent.length > limit) {
+      // Look for key sections or the first few sentences
+      const sentences = cleanContent.split(/[.!?]+/).filter(s => s.trim().length > 10)
+      if (sentences.length > 0) {
+        // Take first 2-3 sentences that fit within limit
+        let result = ''
+        for (let i = 0; i < Math.min(3, sentences.length); i++) {
+          const candidate = result + (result ? '. ' : '') + sentences[i].trim() + '.'
+          if (candidate.length <= limit) {
+            result = candidate
+          } else {
+            break
+          }
+        }
+        return result || cleanContent.substring(0, limit - 3) + '...'
+      }
+    }
+
+    return cleanContent
+  }
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // Handle ESC key to exit focus mode
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isFocused) {
+        setIsFocused(false)
+      }
+    }
+
+    if (isFocused) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isFocused])
+
+  const getModeConfig = () => {
+    switch (mode) {
+      case 'ca-assistant':
+        return {
+          title: '🧮 CA Assistant',
+          placeholder: 'Ask about Indian tax laws, GST, compliance, audit procedures...',
+          icon: <FileText className="w-5 h-5" />,
+          color: 'from-blue-500 to-indigo-600'
+        }
+      case 'seo-content':
+        return {
+          title: '📝 SEO Content Generator',
+          placeholder: 'Generate SEO-optimized content, blogs, meta tags...',
+          icon: <TrendingUp className="w-5 h-5" />,
+          color: 'from-green-500 to-emerald-600'
+        }
+      case 'marketing-strategy':
+        return {
+          title: '📈 Marketing Strategy',
+          placeholder: 'Create marketing plans, customer acquisition strategies...',
+          icon: <Sparkles className="w-5 h-5" />,
+          color: 'from-purple-500 to-pink-600'
+        }
+      default:
+        return {
+          title: '🤖 AI Chat',
+          placeholder: 'Ask me anything...',
+          icon: <MessageCircle className="w-5 h-5" />,
+          color: 'from-gray-500 to-gray-600'
+        }
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input.trim(),
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
+    setError(null)
+    setIsFocused(true) // Enter focus mode when sending message
+
+    try {
+      let response
+      
+      switch (mode) {
+        case 'ca-assistant':
+          response = await fetch('/api/chat/ca-assistant-gemini', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              question: userMessage.content,
+              context: messages.length > 0 ? messages.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n') : '',
+              writingVoice: writingVoice
+            })
+          })
+          break
+
+        case 'seo-content':
+          // Parse input for SEO parameters
+          const seoMatch = userMessage.content.match(/topic:\s*([^,]+)(?:,\s*keywords:\s*([^,]+))?(?:,\s*type:\s*([^,]+))?/)
+          if (seoMatch) {
+            const [, topic, keywordsStr, contentType] = seoMatch
+            const keywords = keywordsStr ? keywordsStr.split(/[,;]/).map(k => k.trim()) : []
+            
+            response = await fetch('/api/marketing/seo-content-gemini', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                topic: topic.trim(),
+                keywords,
+                contentType: contentType?.trim() || 'blog'
+              })
+            })
+          } else {
+            // Fallback to general content generation
+            response = await fetch('/api/marketing/seo-content-gemini', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                topic: userMessage.content,
+                keywords: [],
+                contentType: 'blog'
+              })
+            })
+          }
+          break
+
+        case 'marketing-strategy':
+          // Parse input for marketing parameters
+          const marketingMatch = userMessage.content.match(/business:\s*([^,]+)(?:,\s*target:\s*([^,]+))?(?:,\s*budget:\s*([^,]+))?/)
+          if (marketingMatch) {
+            const [, businessType, targetMarket, budget] = marketingMatch
+            
+            response = await fetch('/api/marketing/strategy-gemini', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                businessType: businessType.trim(),
+                targetMarket: targetMarket?.trim() || 'General market',
+                budget: budget?.trim()
+              })
+            })
+          } else {
+            // Fallback to general business consultation
+            response = await fetch('/api/marketing/strategy-gemini', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                businessType: 'General business',
+                targetMarket: userMessage.content
+              })
+            })
+          }
+          break
+
+        default:
+          response = await fetch('/api/chat/general-gemini', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a helpful AI assistant specialized in CA and business topics. Provide accurate, helpful, and detailed responses. When generating comprehensive content, structure it professionally for artifact generation.'
+                },
+                ...messages.slice(-5).map(m => ({
+                  role: m.role,
+                  content: m.content
+                })),
+                {
+                  role: 'user',
+                  content: userMessage.content
+                }
+              ],
+              writingVoice: writingVoice
+            })
+          })
+      }
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Unknown error')
+      }
+
+      const responseMessage = data.data.choices[0].message
+      console.log('🟢 Response message received:', responseMessage)
+      console.log('🟢 Artifacts data:', responseMessage.artifacts)
+      
+      // Check if response is long and should have an artifact box
+      const isLongResponse = responseMessage.content && responseMessage.content.length > 500
+      let artifactsData = responseMessage.artifacts
+      
+      // Auto-generate artifact for long responses if not already present
+      if (isLongResponse && !artifactsData) {
+        try {
+          // Determine document type based on chat mode
+          let documentType = 'summary'
+          if (mode === 'ca-assistant') documentType = 'report'
+          else if (mode === 'seo-content') documentType = 'analysis'
+          else if (mode === 'marketing-strategy') documentType = 'plan'
+          
+          // Create a summary of the response for the artifact
+          const summaryPrompt = `Create a concise summary of the following content. Focus on the key points and main takeaways. Keep it brief but comprehensive:
+
+${responseMessage.content}
+
+Generate a summary that captures the essential information in a clear, structured format.`
+          
+          const artifactResponse = await fetch('/api/chat/generate-artifact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: summaryPrompt,
+              documentType: documentType,
+              context: responseMessage.content
+            })
+          })
+          
+          if (artifactResponse.ok) {
+            const artifactData = await artifactResponse.json()
+            if (artifactData.success && artifactData.artifact) {
+              artifactsData = {
+                title: artifactData.artifact.title,
+                subtitle: artifactData.artifact.subtitle,
+                preview: artifactData.artifact.summary,
+                fullContent: artifactData.artifact.content, // Use the generated summary content, not the full response
+                type: artifactData.artifact.documentType,
+                metadata: artifactData.artifact.metadata,
+                downloadUrl: artifactData.artifact.downloadUrl
+              }
+            }
+          }
+        } catch (artifactError) {
+          console.log('Artifact generation failed, continuing with regular response:', artifactError)
+        }
+      }
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: responseMessage.content,
+        timestamp: new Date(),
+        citations: data.data.citations || [],
+        relatedQuestions: data.data.related_questions || [],
+        documentData: responseMessage.documentData,
+        previewData: responseMessage.previewData,
+        artifacts: artifactsData
+      }
+
+      console.log('🟢 Assistant message with artifacts:', assistantMessage)
+      setMessages(prev => [...prev, assistantMessage])
+
+      // Store the message for document generation
+      try {
+        await fetch(`/api/messages/${assistantMessage.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: assistantMessage.content,
+            role: assistantMessage.role,
+            mode: mode
+          })
+        })
+      } catch (storeError) {
+        console.log('Failed to store message:', storeError)
+      }
+
+    } catch (error: any) {
+      console.error('Chat error:', error)
+      setError(error.message || 'Failed to send message')
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `Sorry, I encountered an error: ${error.message || 'Unknown error'}. Please try again.`,
+        timestamp: new Date()
+      }
+      
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  const clearChat = () => {
+    setMessages([])
+    setError(null)
+  }
+
+  // Generate artifact from current conversation or specific prompt
+  const generateArtifact = async (prompt?: string, documentType?: string) => {
+    setIsGeneratingArtifact(true)
+    setError(null)
+
+    try {
+      // Use the provided prompt or create one from recent conversation
+      const artifactPrompt = prompt || `Generate a comprehensive document based on our conversation. Focus on the key topics discussed and provide actionable insights.`
+      
+      const response = await fetch('/api/chat/generate-artifact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: artifactPrompt,
+          documentType: documentType || 'report',
+          context: messages.slice(-5).map(m => `${m.role}: ${m.content}`).join('\n\n')
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate artifact')
+      }
+
+      const artifact = data.artifact
+      
+      // Create an artifact message
+      const artifactMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `I've generated a ${artifact.documentType} document for you:`,
+        timestamp: new Date(),
+        artifacts: {
+          title: artifact.title,
+          preview: artifact.summary,
+          fullContent: artifact.content,
+          type: artifact.documentType
+        }
+      }
+
+      setMessages(prev => [...prev, artifactMessage])
+
+    } catch (error: any) {
+      console.error('Artifact generation error:', error)
+      setError(error.message || 'Failed to generate artifact')
+    } finally {
+      setIsGeneratingArtifact(false)
+    }
+  }
+
+  // Open floating panel for sharing/refining
+  const openFloatingPanel = (message: Message, platform: 'linkedin' | 'twitter' = 'linkedin') => {
+    setSelectedMessageForShare(message)
+    setInitialPlatform(platform)
+    setShowFloatingPanel(true)
+  }
+  
+  // Open document side panel
+  const openDocumentPanel = (documentData: {title: string, subtitle: string, content: string}) => {
+    setDocumentData({
+      title: documentData.title,
+      content: documentData.content
+    })
+    setShowDocumentPanel(true)
+  }
+  
+  // Open content preview side panel
+  const openContentPanel = (previewData: {title: string, preview: string, fullContent: string}) => {
+    setContentData({
+      title: previewData.title,
+      content: previewData.fullContent
+    })
+    setShowContentPanel(true)
+  }
+  
+  // Open artifacts side panel
+  const openArtifactsPanel = (artifactsData: {title: string, preview: string, fullContent: string, type: string}) => {
+    setArtifactsData({
+      title: artifactsData.title,
+      content: artifactsData.fullContent,
+      type: artifactsData.type
+    })
+    setShowArtifactsPanel(true)
+  }
+
+  const config = getModeConfig()
+
+  // Helper function for button styling based on variant
+  const getButtonStyle = (baseStyle: string = 'p-2 text-white rounded-lg transition-colors border border-gray-600') => {
+    return variant === 'dashboard' 
+      ? `p-3 text-white rounded-lg transition-colors border border-gray-600 bg-gray-800 hover:bg-gray-700 shadow-lg` 
+      : `${baseStyle} bg-gray-700 hover:bg-gray-600`
+  }
+
+  return (
+    <>
+      {/* Blur background when focused */}
+      {isFocused && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-all duration-300"
+          onClick={() => setIsFocused(false)}
+        />
+      )}
+      
+      <div className={`flex flex-col rounded-lg transition-all duration-300 ${
+        variant === 'dashboard' 
+          ? `relative border border-gray-200 shadow-xl ${isFocused ? 'fixed inset-0 z-50 bg-white shadow-2xl h-screen' : 'bg-white h-full'}` 
+          : `border border-gray-700 shadow-sm ${isFocused ? 'fixed inset-2 z-50 bg-gray-100 shadow-2xl h-[calc(100vh-1rem)]' : 'bg-gray-100 h-full'}`
+      }`}>
+      {/* Header */}
+      <div className={`p-4 rounded-t-lg border-b ${
+        variant === 'dashboard' 
+          ? 'bg-white text-black border-gray-200' 
+          : 'bg-gray-900 text-white border-gray-700'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {config.icon}
+            <h2 className="text-lg font-semibold">{config.title}</h2>
+          </div>
+          <div className="flex items-center space-x-2">
+            {onModeChange && (
+              <select
+                value={mode}
+                onChange={(e) => onModeChange(e.target.value)}
+                className={`rounded px-2 py-1 text-sm ${
+                  variant === 'dashboard' 
+                    ? 'bg-gray-100 border border-gray-300 text-black' 
+                    : 'bg-gray-800 border border-gray-600 text-white'
+                }`}
+              >
+                <option value="general">General Chat</option>
+                <option value="ca-assistant">CA Assistant</option>
+                <option value="seo-content">SEO Content</option>
+                <option value="marketing-strategy">Marketing</option>
+              </select>
+            )}
+            {/* Writing Voice Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowVoiceSelector(!showVoiceSelector)}
+                className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                  variant === 'dashboard' 
+                    ? 'bg-gray-100 hover:bg-gray-200 border border-gray-300 text-black' 
+                    : 'bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:block">Voice</span>
+              </button>
+              
+              {showVoiceSelector && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  {writingVoices.map((voice) => (
+                    <button
+                      key={voice.id}
+                      onClick={() => {
+                        setWritingVoice(voice.id)
+                        setShowVoiceSelector(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors ${
+                        writingVoice === voice.id ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                      }`}
+                    >
+                      <span className="mr-2">{voice.icon}</span>
+                      {voice.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Social Automation Button */}
+            <button
+              onClick={() => setShowSocialAutomation(true)}
+              className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-blue-100 hover:bg-blue-200 border border-blue-300 text-blue-700' 
+                  : 'bg-blue-600 hover:bg-blue-700 border border-blue-500 text-white'
+              }`}
+            >
+              <Bot className="w-4 h-4" />
+              <span className="hidden sm:block">Social</span>
+            </button>
+
+            <button
+              onClick={clearChat}
+              className={`px-3 py-1 rounded text-sm transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 border border-gray-300 text-black' 
+                  : 'bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white'
+              }`}
+            >
+              Clear
+            </button>
+            {isFocused && (
+              <button
+                onClick={() => setIsFocused(false)}
+                className="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-colors text-white"
+                title="Exit Focus Mode"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            {!isFocused && (
+              <button
+                onClick={() => setIsFocused(true)}
+                className={`p-2 rounded-lg transition-colors ${
+                  variant === 'dashboard' 
+                    ? 'bg-gray-100 hover:bg-gray-200 text-black' 
+                    : 'bg-gray-700 hover:bg-gray-600 text-white'
+                }`}
+                title="Enter Focus Mode"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white" style={{
+        maxHeight: isFocused ? (variant === 'dashboard' ? 'calc(100vh - 200px)' : 'calc(100vh - 300px)') : '24rem',
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#000000 #f3f4f6'
+      }}>
+        <style jsx>{`
+          div::-webkit-scrollbar {
+            width: 8px;
+          }
+          div::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 4px;
+          }
+          div::-webkit-scrollbar-thumb {
+            background: #000000;
+            border-radius: 4px;
+          }
+          div::-webkit-scrollbar-thumb:hover {
+            background: #333333;
+          }
+        `}</style>
+        {messages.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 border border-gray-300">
+              {config.icon}
+            </div>
+            <p className="text-lg font-medium">Start a conversation</p>
+            <p className="text-sm">{config.placeholder}</p>
+          </div>
+        )}
+
+        {messages.map((message) => (
+        <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-center'}`}>
+          <div className={`${message.role === 'user' ? 'max-w-xs lg:max-w-md' : 'w-full max-w-xl'} ${message.role === 'assistant' ? 'px-5 py-5' : 'px-4 py-2'} rounded-lg ${
+            variant === 'dashboard'
+              ? message.role === 'user'
+                ? 'bg-gray-200 text-black border border-gray-300'
+                : 'bg-gray-200 text-black border border-gray-300'
+              : message.role === 'user'
+                ? 'bg-gray-900 text-white border border-gray-600'
+                : 'bg-gray-50 text-gray-900 border border-gray-200'
+          }`}>
+              <div className="flex items-center space-x-2 mb-1">
+                {message.role === 'user' ? (
+                  <User className="w-4 h-4" />
+                ) : (
+                  <Bot className="w-4 h-4" />
+                )}
+                <span className="text-xs opacity-75">
+                  {message.timestamp.toLocaleTimeString()}
+                </span>
+              </div>
+              
+              {/* Show artifacts box FIRST if present (long responses) */}
+              {message.artifacts && (
+                <div className="mb-4">
+                  <ArtifactsBox
+                    title={message.artifacts.title}
+                    subtitle={message.artifacts.subtitle}
+                    preview={message.artifacts.preview}
+                    fullContent={message.artifacts.fullContent}
+                    type={message.artifacts.type}
+                    onOpenArtifact={() => openArtifactsPanel(message.artifacts!)}
+                    metadata={message.artifacts.metadata}
+                    downloadUrl={message.artifacts.downloadUrl}
+                  />
+                </div>
+              )}
+              
+              {/* Show regular content (shortened if artifact exists) */}
+              {message.artifacts ? (
+                <div className={`${message.role === 'user' ? 'text-sm' : 'text-base'} whitespace-pre-wrap ${message.role === 'assistant' ? 'leading-relaxed' : 'leading-relaxed'} ${
+                  message.role === 'user' ? 'text-white' : 'text-black'
+                }`}>
+                  <p className="mb-4 text-gray-600 italic">
+                    💡 Full response available in the artifact box above. Key points:
+                  </p>
+                  <p className="mb-4">
+                    {message.content.length > 300 
+                      ? message.content.substring(0, 300) + '...' 
+                      : message.content
+                    }
+                  </p>
+                  {message.content.length > 300 && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800 mb-2">
+                        📖 <strong>Complete Document Available:</strong>
+                      </p>
+                      <a
+                        href={`/artifact/${message.artifacts.metadata?.id || `doc_${message.id}`}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        📄 Open Full Document in New Tab
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className={`${message.role === 'user' ? 'text-sm' : 'text-base'} whitespace-pre-wrap ${message.role === 'assistant' ? 'leading-relaxed' : 'leading-relaxed'} ${
+                  message.role === 'user' ? 'text-white' : 'text-black'
+                }`}>
+                  {/* Add document link for long responses without artifacts */}
+                  {message.role === 'assistant' && message.content.length > 1000 && !message.artifacts && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800 mb-2">
+                        📄 <strong>Long Response Detected:</strong>
+                      </p>
+                      <a
+                        href={`/artifact/doc_${message.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      >
+                        📖 View Full Response in New Tab
+                      </a>
+                    </div>
+                  )}
+                  
+                  {message.content.split('\n\n').map((paragraph, index) => {
+                    // Check if this is the document section
+                    if (paragraph.includes('I\'ll create a comprehensive problem statement document')) {
+                      const parts = paragraph.split('\n\n')
+                      const introPart = parts[0]
+                      const documentPart = parts[1]
+                      const conclusionPart = parts.slice(2).join('\n\n')
+                      
+                      return (
+                        <div key={index}>
+                          <p className="mb-4">{introPart}</p>
+                          
+                          {message.documentData && (
+                            <DocumentBox
+                              title={message.documentData.title}
+                              subtitle={message.documentData.subtitle}
+                              content={message.documentData.content}
+                              onOpenSidePanel={() => openDocumentPanel(message.documentData!)}
+                            />
+                          )}
+                          
+                          <p className="mb-4">{conclusionPart}</p>
+                        </div>
+                      )
+                    }
+                    
+                    // Check if this has preview data (long response)
+                    if (message.previewData && paragraph.includes('[Click below to view full detailed response...]')) {
+                      return (
+                        <div key={index}>
+                          <p className="mb-4">{paragraph.replace('[Click below to view full detailed response...]', '')}</p>
+                          
+                          <ContentPreviewBox
+                            title={message.previewData.title}
+                            preview={message.previewData.preview}
+                            fullContent={message.previewData.fullContent}
+                            onOpenSidePanel={() => openContentPanel(message.previewData!)}
+                          />
+                        </div>
+                      )
+                    }
+                    
+                    return <p key={index} className={`${message.role === 'assistant' ? 'mb-8 text-justify' : 'mb-4'}`}>{paragraph}</p>
+                  })}
+                </div>
+              )}
+              
+              {/* Citations */}
+              {message.citations && message.citations.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-300">
+                  <p className="text-xs font-medium mb-1">Sources:</p>
+                  {message.citations.slice(0, 3).map((citation, idx) => (
+                    <p key={idx} className="text-xs opacity-75 truncate">
+                      {idx + 1}. {citation}
+                    </p>
+                  ))}
+                </div>
+              )}
+              
+              {/* Related Questions */}
+              {message.relatedQuestions && message.relatedQuestions.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-300">
+                  <p className="text-xs font-medium mb-1">Related:</p>
+                  {message.relatedQuestions.slice(0, 2).map((question, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setInput(question)}
+                      className="block text-xs opacity-75 hover:opacity-100 text-left mb-1 hover:underline"
+                    >
+                      • {question}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {/* Floating Share Buttons - Only for Assistant Messages */}
+              {message.role !== 'user' && (
+                <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-200">
+                  <button
+                    onClick={() => {
+                      // Get content for sharing with proper length limits
+                      let content = message.content;
+                      if (message.artifacts) {
+                        content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
+                      } else {
+                        content = extractShareableContent(message.content, 200);
+                      }
+                      
+                      // LinkedIn sharing with short content to avoid URL length issues
+                      const shareText = content.length > 200 ? content.substring(0, 197) + '...' : content;
+                      const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
+                      window.open(linkedinUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+                    }}
+                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
+                    title="Share to LinkedIn"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    LinkedIn
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      // Get content for sharing with proper length limits
+                      let content = message.content;
+                      if (message.artifacts) {
+                        content = `📄 ${message.artifacts.title} - ${message.artifacts.preview}`;
+                      } else {
+                        content = extractShareableContent(message.content, 150);
+                      }
+                      
+                      // X (Twitter) sharing with short content to avoid URL length issues
+                      const shareText = content.length > 150 ? content.substring(0, 147) + '...' : content;
+                      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+                      window.open(twitterUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+                    }}
+                    className="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
+                    title="Share to X"
+                  >
+                    <Twitter className="w-4 h-4" />
+                    X
+                  </button>
+                  
+                  <button
+                    onClick={() => openFloatingPanel(message, 'linkedin')}
+                    className="px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 text-sm font-medium"
+                    title="Share & Refine"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share & Refine
+                  </button>
+                </div>
+              )}
+              
+              {/* Inline Share Panel - Opens within the message */}
+              {message.role !== 'user' && selectedMessageForShare?.id === message.id && (
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  <FloatingSharePanel
+                    isOpen={showFloatingPanel}
+                    onClose={() => setShowFloatingPanel(false)}
+                    originalContent={selectedMessageForShare.content}
+                    messageId={selectedMessageForShare.id}
+                    initialPlatform={initialPlatform}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+                <span className="text-sm text-gray-600">Thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className={`p-4 border-t ${
+        variant === 'dashboard' 
+          ? 'border-gray-200 bg-white' 
+          : 'border-gray-700 bg-gray-900'
+      }`}>
+        {error && (
+          <div className="mb-2 p-2 bg-red-900 border border-red-700 rounded text-red-300 text-sm">
+            {error}
+          </div>
+        )}
+        
+        <div className="flex space-x-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            onFocus={() => setIsFocused(true)}
+            placeholder={config.placeholder}
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-0 focus:border-gray-500 resize-none text-gray-900 bg-white placeholder-gray-500"
+            rows={2}
+            disabled={isLoading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || isLoading}
+            className={`p-2 rounded-lg transition-colors ${
+              variant === 'dashboard' 
+                ? 'bg-gray-800 hover:bg-gray-700 disabled:bg-gray-400 text-white border border-gray-600' 
+                : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white border border-gray-600'
+            }`}
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className={variant === 'dashboard' 
+          ? `fixed bottom-4 left-4 flex items-center space-x-2 z-10`
+          : `flex items-center space-x-2 mt-4 pt-4 border-t justify-start border-gray-700`
+        }>
+          <button
+            className={getButtonStyle()}
+            title="Regenerate"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
+          
+          <button
+            className={getButtonStyle()}
+            title="ICAI Compliance Check"
+          >
+            <Shield className="w-5 h-5" />
+          </button>
+          
+            <button
+              onClick={() => {
+                // Get the latest assistant message that comes after a user message (skip initial welcome message)
+                const userMessages = messages.filter(msg => msg.role === 'user');
+                if (userMessages.length > 0) {
+                  const lastUserMessageIndex = messages.findLastIndex(msg => msg.role === 'user');
+                  const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.role === 'assistant');
+                  const rawContent = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
+                  const content = extractShareableContent(rawContent);
+                  
+                  // LinkedIn sharing with proper URL format
+                  const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
+                  window.open(linkedinUrl, '_blank');
+                } else {
+                  // Fallback if no user messages yet
+                  const linkedinUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent('Check out this AI-powered content creation tool for CAs!')}`;
+                  window.open(linkedinUrl, '_blank');
+                }
+              }}
+              className={variant === 'dashboard' 
+                ? "p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg border border-gray-600" 
+                : "p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              }
+              title="Post on LinkedIn"
+            >
+              <Linkedin className="w-5 h-5" />
+            </button>
+          
+          <button
+            onClick={() => {
+              // Get the latest assistant message that comes after a user message (skip initial welcome message)
+              const userMessages = messages.filter(msg => msg.role === 'user');
+              if (userMessages.length > 0) {
+                const lastUserMessageIndex = messages.findLastIndex(msg => msg.role === 'user');
+                const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.role === 'assistant');
+                const rawContent = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
+                const content = extractShareableContent(rawContent);
+                
+                // Twitter sharing with proper URL format
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`;
+                window.open(twitterUrl, '_blank');
+              } else {
+                // Fallback if no user messages yet
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out this AI-powered content creation tool for CAs!')}`;
+                window.open(twitterUrl, '_blank');
+              }
+            }}
+            className={getButtonStyle()}
+            title="Post on X"
+          >
+            <Twitter className="w-5 h-5" />
+          </button>
+          
+          <button
+            className={getButtonStyle()}
+            title="Change Writing Voice"
+          >
+            <PenTool className="w-5 h-5" />
+          </button>
+          
+          <button
+            className={getButtonStyle()}
+            title="Change Target Audience"
+          >
+            <Users className="w-5 h-5" />
+          </button>
+          
+          
+          <button
+            onClick={() => {
+              // Get the latest assistant message and copy to clipboard
+              const userMessages = messages.filter(msg => msg.role === 'user');
+              if (userMessages.length > 0) {
+                const lastUserMessageIndex = messages.findLastIndex(msg => msg.role === 'user');
+                const latestAssistantMessage = messages.slice(lastUserMessageIndex + 1).find(msg => msg.role === 'assistant');
+                const content = latestAssistantMessage ? latestAssistantMessage.content : 'Check out this AI-powered content creation tool for CAs!';
+                
+                navigator.clipboard.writeText(content).then(() => {
+                  // Show a brief success indicator
+                  const button = event.target as HTMLElement;
+                  const originalTitle = button.title;
+                  button.title = 'Copied!';
+                  setTimeout(() => {
+                    button.title = originalTitle;
+                  }, 2000);
+                }).catch(err => {
+                  console.error('Failed to copy content:', err);
+                });
+              }
+            }}
+            className={variant === 'dashboard' 
+              ? "p-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors shadow-lg border border-gray-600" 
+              : "p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            }
+            title="Copy to Clipboard"
+          >
+            <Copy className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Quick Templates */}
+        {mode === 'seo-content' && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            <button
+              onClick={() => setInput('topic: Digital Marketing for Small Business, keywords: digital marketing, small business, online marketing')}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
+            >
+              SEO Blog Template
+            </button>
+            <button
+              onClick={() => setInput('topic: Product Landing Page, type: landing-page')}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
+            >
+              Landing Page
+            </button>
+          </div>
+        )}
+
+
+        {mode === 'marketing-strategy' && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            <button
+              onClick={() => setInput('business: SaaS startup, target: B2B companies, budget: $10k/month')}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
+            >
+              SaaS Marketing
+            </button>
+            <button
+              onClick={() => setInput('business: E-commerce store, target: millennials, budget: $5k/month')}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                variant === 'dashboard' 
+                  ? 'bg-gray-100 hover:bg-gray-200 text-black border border-gray-300' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+              }`}
+            >
+              E-commerce Strategy
+            </button>
+          </div>
+        )}
+      </div>
+      </div>
+      
+      
+      {/* Document Side Panel */}
+      {documentData && (
+        <DocumentSidePanel
+          isOpen={showDocumentPanel}
+          onClose={() => setShowDocumentPanel(false)}
+          title={documentData.title}
+          content={documentData.content}
+        />
+      )}
+      
+      {/* Content Preview Side Panel */}
+      {contentData && (
+        <ContentSidePanel
+          isOpen={showContentPanel}
+          onClose={() => setShowContentPanel(false)}
+          title={contentData.title}
+          content={contentData.content}
+        />
+      )}
+      
+      {/* Artifacts Side Panel */}
+      {artifactsData && (
+        <ArtifactsSidePanel
+          isOpen={showArtifactsPanel}
+          onClose={() => setShowArtifactsPanel(false)}
+          title={artifactsData.title}
+          content={artifactsData.content}
+          type={artifactsData.type}
+        />
+      )}
+      
+      {/* Social Automation Sidebar */}
+      <SocialAutomationSidebar 
+        isOpen={showSocialAutomation} 
+        onClose={() => setShowSocialAutomation(false)} 
+      />
+    </>
+  )
+}
+
+export default ChatInterface

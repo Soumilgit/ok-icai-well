@@ -6,8 +6,9 @@ import { ImageGenerationService, ImageGenerationRequest, GeneratedImage } from '
 const ImageGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState<'professional' | 'modern' | 'minimalist' | 'infographic' | 'social-media'>('professional');
-  const [size, setSize] = useState<'1080x1080' | '1200x630' | '800x600' | '1920x1080'>('1080x1080');
+  const [size, setSize] = useState<'1080x1080' | '1200x630' | '800x600' | '1920x1080' | '1328x1328' | '1664x928' | '928x1664' | '1472x1140' | '1140x1472' | '1584x1056' | '1056x1584'>('1080x1080');
   const [theme, setTheme] = useState('');
+  const [language, setLanguage] = useState<'en' | 'zh'>('en');
   const [branding, setBranding] = useState({
     primaryColor: '#2563eb',
     secondaryColor: '#64748b',
@@ -75,6 +76,7 @@ const ImageGenerator: React.FC = () => {
         style,
         size,
         theme: theme || caThemes[0],
+        language,
         branding
       };
 
@@ -230,10 +232,21 @@ const ImageGenerator: React.FC = () => {
                         onChange={(e) => setSize(e.target.value as any)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                       >
-                        <option value="1080x1080">Square (1080×1080)</option>
-                        <option value="1200x630">Facebook/LinkedIn (1200×630)</option>
-                        <option value="800x600">Standard (800×600)</option>
-                        <option value="1920x1080">Widescreen (1920×1080)</option>
+                        <optgroup label="Standard Sizes">
+                          <option value="1080x1080">Square (1080×1080)</option>
+                          <option value="1200x630">Facebook/LinkedIn (1200×630)</option>
+                          <option value="800x600">Standard (800×600)</option>
+                          <option value="1920x1080">Widescreen (1920×1080)</option>
+                        </optgroup>
+                        <optgroup label="Qwen-Image Optimized">
+                          <option value="1328x1328">Square HD (1328×1328)</option>
+                          <option value="1664x928">Wide HD (1664×928)</option>
+                          <option value="928x1664">Portrait HD (928×1664)</option>
+                          <option value="1472x1140">Landscape Pro (1472×1140)</option>
+                          <option value="1140x1472">Portrait Pro (1140×1472)</option>
+                          <option value="1584x1056">Wide Pro (1584×1056)</option>
+                          <option value="1056x1584">Tall Pro (1056×1584)</option>
+                        </optgroup>
                       </select>
                     </div>
                   </div>
@@ -251,6 +264,20 @@ const ImageGenerator: React.FC = () => {
                       {caThemes.map((themeOption) => (
                         <option key={themeOption} value={themeOption}>{themeOption}</option>
                       ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Language
+                    </label>
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value as 'en' | 'zh')}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="en">English (Better for Qwen-Image)</option>
+                      <option value="zh">中文 (Chinese Text Rendering)</option>
                     </select>
                   </div>
 

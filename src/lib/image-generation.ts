@@ -1,8 +1,9 @@
 export interface ImageGenerationRequest {
   prompt: string;
   style: 'professional' | 'modern' | 'minimalist' | 'infographic' | 'social-media';
-  size: '1080x1080' | '1200x630' | '800x600' | '1920x1080';
+  size: '1080x1080' | '1200x630' | '800x600' | '1920x1080' | '1328x1328' | '1664x928' | '928x1664' | '1472x1140' | '1140x1472' | '1584x1056' | '1056x1584';
   theme: string;
+  language?: 'en' | 'zh';
   branding?: {
     primaryColor: string;
     secondaryColor: string;
@@ -21,16 +22,58 @@ export interface GeneratedImage {
   downloadUrl?: string;
 }
 
+import { qwenImageService, QwenImageService } from './qwen-image-service';
+
 export class ImageGenerationService {
   private apiKey: string | null = null;
+  private qwenService: QwenImageService;
 
   constructor() {
     this.apiKey = process.env.OPENAI_API_KEY || process.env.DALL_E_API_KEY || null;
+    this.qwenService = qwenImageService;
   }
 
   async generateImage(request: ImageGenerationRequest): Promise<GeneratedImage> {
     try {
-      // Enhanced prompt based on CA/accounting context
+      // Try Qwen-Image API first
+      try {
+        console.log('🎨 Attempting Qwen-Image generation...');
+        const response = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: request.prompt,
+            style: request.style,
+            size: request.size,
+            theme: request.theme,
+            language: request.language || 'en',
+            branding: request.branding
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Qwen-Image generation successful:', result.id);
+          return {
+            id: result.id,
+            url: result.url,
+            prompt: result.prompt,
+            style: result.style,
+            size: result.size,
+            createdAt: new Date(result.createdAt),
+            downloadUrl: result.downloadUrl
+          };
+        } else {
+          const errorData = await response.json();
+          console.warn('Qwen-Image API failed:', errorData);
+        }
+      } catch (qwenError) {
+        console.warn('Qwen-Image API failed, falling back to DALL-E:', qwenError);
+      }
+      
+      // Fallback to DALL-E or mock generation
       const enhancedPrompt = this.enhancePromptForCA(request.prompt, request.style, request.theme);
       
       if (this.apiKey) {
@@ -280,6 +323,24 @@ High quality, sharp, suitable for social media and professional use
     }
 
     return results;
+  }
+
+  private getAspectRatioFromSize(size: string): keyof typeof QwenImageService.ASPECT_RATIOS {
+    const sizeToAspectRatio: { [key: string]: keyof typeof QwenImageService.ASPECT_RATIOS } = {
+      '1080x1080': '1:1',
+      '1328x1328': '1:1',
+      '1200x630': '16:9',
+      '1664x928': '16:9',
+      '1920x1080': '16:9',
+      '928x1664': '9:16',
+      '800x600': '4:3',
+      '1472x1140': '4:3',
+      '1140x1472': '3:4',
+      '1584x1056': '3:2',
+      '1056x1584': '2:3'
+    };
+    
+    return sizeToAspectRatio[size] || '1:1';
   }
 
   generateCASpecificPrompts(topic: string, contentType: string): string[] {

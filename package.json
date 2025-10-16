@@ -29,7 +29,7 @@
     "@clerk/nextjs": "^6.33.0",
     "@google-cloud/storage": "^7.17.1",
     "@google/generative-ai": "^0.24.1",
-    "@huggingface/inference": "^4.9.0",
+    "@huggingface/inference": "^4.11.3",
     "@neondatabase/serverless": "^1.0.1",
     "@types/jsdom": "^21.1.7",
     "@types/puppeteer": "^5.4.7",

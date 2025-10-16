@@ -40,6 +40,7 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [researchResult, setResearchResult] = useState<ResearchResult | null>(null);
   const [isResearching, setIsResearching] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   // Perplexity News Modal state
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
@@ -219,114 +220,162 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Navigation Tabs */}
-      <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
-        {[
-          { id: 'discover', label: '🔍 Discover', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
-          { id: 'creator', label: '✍️ Creator Hub', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
-          { id: 'voice-setup', label: '🎯 Voice Setup', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-          { id: 'image-gen', label: '🎨 Image Gen', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-          { id: 'compliance', label: '✅ ICAI Check', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:text-white hover:bg-gray-700'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
-            </svg>
-            <span className="font-medium">{tab.label}</span>
-          </button>
-        ))}
-      </div>
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+       {/* Navigation Tabs */}
+       <div className="flex justify-between items-center">
+         <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
+           {[
+             { id: 'discover', label: 'Discover', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+             { id: 'creator', label: 'Creator Hub', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+             { id: 'voice-setup', label: 'Voice Setup', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+             { id: 'image-gen', label: 'Image Gen', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+             { id: 'compliance', label: 'ICAI Check', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
+           ].map(tab => (
+             <button
+               key={tab.id}
+               onClick={() => setActiveTab(tab.id as any)}
+               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                 activeTab === tab.id
+                   ? 'bg-white text-gray-900 font-semibold shadow-lg border border-gray-200'
+                   : 'text-gray-300 hover:text-white hover:bg-gray-700 hover:shadow-sm'
+               }`}
+             >
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
+               </svg>
+               <span className="font-medium">{tab.label}</span>
+             </button>
+           ))}
+         </div>
+         
+         {/* Theme Toggle */}
+         <button
+           onClick={() => setIsDarkMode(!isDarkMode)}
+           className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+             isDarkMode 
+               ? 'bg-gray-800 text-white hover:bg-gray-700' 
+               : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+           }`}
+         >
+           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isDarkMode ? "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" : "M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"} />
+           </svg>
+           <span className="font-medium">{isDarkMode ? 'Dark' : 'Light'}</span>
+         </button>
+       </div>
 
       {/* Content Sections */}
-      {activeTab === 'discover' && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-2xl font-bold text-white mb-4">📰 Latest CA News 2025</h3>
-            <p className="text-gray-300 mb-6">Discover the latest developments in the CA profession and create engaging posts</p>
-            
-            <div className="grid gap-4">
-              {newsArticles.map(article => (
-                <div 
-                  key={article.id} 
-                  onClick={() => handleNewsClick(article)}
-                  className="bg-gray-800/50 rounded-lg p-4 border border-gray-600 cursor-pointer hover:bg-gray-700/50 hover:border-gray-500 transition-all"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-white mb-2">{article.title}</h4>
-                      <p className="text-gray-300 text-sm mb-3">{article.summary}</p>
-                      
-                      <div className="flex items-center space-x-4 text-xs text-gray-400">
-                        <span>📅 {new Date(article.publishedAt).toLocaleDateString()}</span>
-                        <span>📰 {article.source}</span>
-                        <span className={`px-2 py-1 rounded-full ${
-                          article.caImpact === 'high' ? 'bg-red-900/50 text-red-300' :
-                          article.caImpact === 'medium' ? 'bg-yellow-900/50 text-yellow-300' :
-                          'bg-green-900/50 text-green-300'
-                        }`}>
-                          {article.caImpact.toUpperCase()} Impact
-                        </span>
-                      </div>
-                      
-                      {/* Web Links Component */}
-                      <WebLinksComponent 
-                        headline={article.title}
-                        categories={[article.category]}
-                        maxLinks={2}
-                        className="mt-3"
-                      />
-                    </div>
-                    
-                    <div className="ml-4 flex flex-col space-y-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleNewsClick(article);
-                        }}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
-                      >
-                        🤖 AI Summary
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleResearchNews(article);
-                        }}
-                        disabled={isResearching}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm"
-                      >
-                        {isResearching ? '🔍 Researching...' : '📝 Create Post'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+       {activeTab === 'discover' && (
+         <div className="space-y-6">
+           <div className={`rounded-xl p-6 border transition-colors ${
+             isDarkMode 
+               ? 'bg-gray-800 border-gray-600' 
+               : 'border-gray-200'
+           }`} style={!isDarkMode ? {backgroundColor: '#d7e3fc'} : {}}>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {newsArticles.map(article => (
+                 <div 
+                   key={article.id} 
+                   onClick={() => handleNewsClick(article)}
+                   className={`rounded-lg p-4 border cursor-pointer transition-all shadow-sm ${
+                     isDarkMode 
+                       ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+                       : 'bg-white border-gray-200 hover:bg-gray-50'
+                   }`}
+                 >
+                   <div>
+                     <h4 className={`text-sm font-bold mb-2 overflow-hidden ${
+                       isDarkMode ? 'text-white' : 'text-gray-800'
+                     }`} style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{article.title}</h4>
+                     <p className={`text-xs mb-3 overflow-hidden ${
+                       isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                     }`} style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{article.summary}</p>
+                       
+                     <div className="flex items-center space-x-2 text-xs mb-3">
+                       <span className="text-white px-2 py-1 rounded-full text-xs font-medium" style={{backgroundColor: '#00357a'}}>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                       <span className="text-white px-2 py-1 rounded-full text-xs font-medium" style={{backgroundColor: '#00357a'}}>{article.source}</span>
+                       <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${
+                         article.caImpact === 'high' ? 'bg-red-500' :
+                         article.caImpact === 'medium' ? 'bg-orange-500' :
+                         'bg-green-500'
+                       }`}>
+                         {article.caImpact.toUpperCase()} Impact
+                       </span>
+                     </div>
+                       
+                     {/* Related Links */}
+                     <div className="mb-3">
+                       <div className="flex flex-wrap gap-1">
+                         <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                           isDarkMode 
+                             ? 'bg-gray-600 text-gray-300' 
+                             : 'bg-gray-200 text-gray-700'
+                         }`}>
+                           ICAI Launches N...
+                         </div>
+                         <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                           isDarkMode 
+                             ? 'bg-gray-600 text-gray-300' 
+                             : 'bg-gray-200 text-gray-700'
+                         }`}>
+                           CA Examination ...
+                         </div>
+                         <div className="text-white px-2 py-1 rounded-full text-xs font-medium" style={{backgroundColor: '#00357a'}}>
+                           +2 more
+                         </div>
+                       </div>
+                     </div>
+                     
+                     <div className="flex space-x-2">
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleNewsClick(article);
+                         }}
+                         className={`flex-1 border px-3 py-2 rounded-full font-medium transition-colors text-xs ${
+                           isDarkMode 
+                             ? 'border-gray-500 text-gray-300 hover:bg-gray-600 hover:border-gray-400' 
+                             : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                         }`}
+                       >
+                         AI Summary
+                       </button>
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleResearchNews(article);
+                         }}
+                         disabled={isResearching}
+                         className={`flex-1 border px-3 py-2 rounded-full font-medium transition-colors disabled:opacity-50 text-xs ${
+                           isDarkMode 
+                             ? 'border-gray-500 text-gray-300 hover:bg-gray-600 hover:border-gray-400 disabled:border-gray-600 disabled:text-gray-500' 
+                             : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:border-gray-200 disabled:text-gray-400'
+                         }`}
+                       >
+                         {isResearching ? 'Researching...' : 'Create Post'}
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </div>
+           </div>
+         </div>
+       )}
 
       {activeTab === 'creator' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-green-900/50 to-blue-900/50 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-2xl font-bold text-white mb-4">✍️ AI-Powered Post Creator</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">AI-Powered Post Creator</h3>
             
             {selectedArticle && (
               <div className="bg-gray-800/50 rounded-lg p-4 mb-6 border border-gray-600">
-                <h4 className="text-lg font-semibold text-white mb-2">📰 Based on: {selectedArticle.title}</h4>
+                <h4 className="text-lg font-semibold text-white mb-2">Based on: {selectedArticle.title}</h4>
                 {researchResult && (
                   <div className="space-y-3">
                     <div>
-                      <h5 className="font-medium text-green-400 mb-2">🎯 Key Insights:</h5>
+                      <h5 className="font-medium text-green-400 mb-2">Key Insights:</h5>
                       <ul className="list-disc list-inside text-gray-300 text-sm space-y-1">
                         {researchResult.keyPoints.slice(0, 3).map((point, index) => (
                           <li key={index}>{point}</li>
@@ -368,7 +417,7 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
                   <div className="w-48">
                     <label className="block text-sm font-medium text-gray-300 mb-2">Profile Voice</label>
                     <div className="bg-gray-700 rounded-lg px-3 py-2 text-green-400 text-sm">
-                      ✅ {userProfile.voiceType} (Preferred)
+                      {userProfile.voiceType} (Preferred)
                     </div>
                   </div>
                 )}
@@ -393,7 +442,7 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
                       onClick={handleComplianceCheck}
                       className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm"
                     >
-                      ✅ Check ICAI
+                      Check ICAI
                     </button>
                     <button
                       onClick={handleCreatePost}
@@ -439,7 +488,7 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
       {activeTab === 'voice-setup' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-2xl font-bold text-white mb-4">🎯 Writing Voice Setup</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Writing Voice Setup</h3>
             <p className="text-gray-300 mb-6">Complete the 10-question quiz to personalize your content generation</p>
             <WritingVoiceQuestionnaire />
           </div>
@@ -449,7 +498,7 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
       {activeTab === 'image-gen' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-pink-900/50 to-purple-900/50 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-2xl font-bold text-white mb-4">🎨 AI Image Generation</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">AI Image Generation</h3>
             <p className="text-gray-300 mb-6">Generate professional images for your posts and presentations</p>
             <ImageGenerator />
           </div>
@@ -459,7 +508,7 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
       {activeTab === 'compliance' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-2xl font-bold text-white mb-4">✅ ICAI Compliance Center</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">ICAI Compliance Center</h3>
             <p className="text-gray-300 mb-6">Check compliance and plagiarism for your content and pitch decks</p>
             
             <div className="space-y-4">
@@ -485,10 +534,10 @@ export default function EnhancedContentHub({}: EnhancedContentHubProps) {
               
               <div className="flex space-x-4">
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
-                  🔍 Check Compliance
+                  Check Compliance
                 </button>
                 <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium">
-                  📄 Generate Report
+                  Generate Report
                 </button>
               </div>
             </div>

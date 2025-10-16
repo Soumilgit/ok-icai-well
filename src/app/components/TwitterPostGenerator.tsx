@@ -209,17 +209,18 @@ If issues persist, our fallback system ensures you still get professional Twitte
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div className="flex items-center mb-2 sm:mb-3">
-          <Twitter className="w-6 h-6 sm:w-8 sm:h-8 mr-3 sm:mr-4" />
-          <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Twitter Post Generator</h1>
-            <p className="text-sm sm:text-base lg:text-lg text-sky-100 mt-1">
-              AI-powered Twitter content creation for CA professionals
-            </p>
+      <div className="bg-black rounded-xl sm:rounded-2xl p-8 sm:p-12 text-center">
+        <div className="flex flex-col items-center">
+          <div className="mb-6">
+            <img 
+              src="/twitter.png" 
+              alt="Twitter/X Logo" 
+              className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain"
+            />
           </div>
+          <h1 className="text-white font-bold text-2xl sm:text-3xl lg:text-4xl">POST GENERATOR</h1>
         </div>
       </div>
 
@@ -286,21 +287,21 @@ If issues persist, our fallback system ensures you still get professional Twitte
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleEdit(message.content)}
-                              className="flex items-center space-x-1 px-3 py-1 bg-sky-600 text-white text-sm rounded hover:bg-sky-700"
+                              className="flex items-center space-x-1 px-3 py-1 text-white text-sm rounded-full border border-gray-400 hover:border-gray-300 hover:bg-gray-700/20 transition-all"
                             >
                               <Edit3 className="w-3 h-3" />
                               <span>Edit</span>
                             </button>
                             <button
                               onClick={() => copyToClipboard(message.content)}
-                              className="flex items-center space-x-1 px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
+                              className="flex items-center space-x-1 px-3 py-1 text-white text-sm rounded-full border border-gray-400 hover:border-gray-300 hover:bg-gray-700/20 transition-all"
                             >
                               <Copy className="w-3 h-3" />
                               <span>Copy</span>
                             </button>
                             <button
                               onClick={regeneratePost}
-                              className="flex items-center space-x-1 px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+                              className="flex items-center space-x-1 px-3 py-1 text-white text-sm rounded-full border border-gray-400 hover:border-gray-300 hover:bg-gray-700/20 transition-all"
                             >
                               <RotateCcw className="w-3 h-3" />
                               <span>Regenerate</span>
@@ -369,7 +370,7 @@ If issues persist, our fallback system ensures you still get professional Twitte
           onClick={() => setInputValue("Create a Twitter thread about upcoming income tax deadlines and key compliance reminders for businesses")}
           className="p-4 bg-gray-800 border border-gray-600 rounded-lg text-left text-white hover:bg-gray-700 transition-colors"
         >
-          <h3 className="font-semibold mb-2">⏰ Tax Deadlines</h3>
+          <h3 className="font-semibold mb-2">Tax Deadlines</h3>
           <p className="text-sm text-gray-400">Generate tweets about important tax dates and compliance</p>
         </button>
         
@@ -377,7 +378,7 @@ If issues persist, our fallback system ensures you still get professional Twitte
           onClick={() => setInputValue("Write an engaging Twitter thread about how AI and automation are transforming audit practices for chartered accountants")}
           className="p-4 bg-gray-800 border border-gray-600 rounded-lg text-left text-white hover:bg-gray-700 transition-colors"
         >
-          <h3 className="font-semibold mb-2">🤖 AI in Auditing</h3>
+          <h3 className="font-semibold mb-2">AI in Auditing</h3>
           <p className="text-sm text-gray-400">Create content about technology trends in accounting</p>
         </button>
         
@@ -385,7 +386,7 @@ If issues persist, our fallback system ensures you still get professional Twitte
           onClick={() => setInputValue("Create an informative Twitter post about quick GST compliance tips that every business owner should know")}
           className="p-4 bg-gray-800 border border-gray-600 rounded-lg text-left text-white hover:bg-gray-700 transition-colors"
         >
-          <h3 className="font-semibold mb-2">📊 GST Tips</h3>
+          <h3 className="font-semibold mb-2">GST Tips</h3>
           <p className="text-sm text-gray-400">Share practical GST compliance advice</p>
         </button>
       </div>

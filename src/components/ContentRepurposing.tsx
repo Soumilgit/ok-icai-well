@@ -30,42 +30,42 @@ export default function ContentRepurposing({ userPreferences }: ContentRepurposi
       id: 'social-media-pack',
       name: 'Social Media Pack',
       description: 'Convert to LinkedIn, Twitter, Instagram formats',
-      icon: '📱',
+      icon: '',
       formats: ['linkedin-post', 'twitter-thread', 'instagram-caption']
     },
     {
       id: 'email-marketing',
       name: 'Email Marketing',
       description: 'Create newsletter and email campaign content',
-      icon: '📧',
+      icon: '',
       formats: ['newsletter', 'email-sequence']
     },
     {
       id: 'blog-content',
       name: 'Blog Content',
       description: 'Expand into detailed blog posts and articles',
-      icon: '📝',
+      icon: '',
       formats: ['blog-post', 'article', 'long-form-content']
     },
     {
       id: 'presentation',
       name: 'Presentation Materials',
       description: 'Create slides, talking points, and presentations',
-      icon: '📊',
+      icon: '',
       formats: ['presentation-slides', 'talking-points', 'executive-summary']
     },
     {
       id: 'video-content',
       name: 'Video Scripts',
       description: 'Generate video scripts and captions',
-      icon: '🎥',
+      icon: '',
       formats: ['video-script', 'youtube-description', 'video-captions']
     },
     {
       id: 'case-study',
       name: 'Case Study',
       description: 'Transform into detailed case studies',
-      icon: '📋',
+      icon: '',
       formats: ['case-study', 'success-story', 'client-testimonial']
     }
   ];
@@ -185,11 +185,10 @@ export default function ContentRepurposing({ userPreferences }: ContentRepurposi
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {repurposingOptions.map(option => (
             <div key={option.id} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-2">{option.icon}</span>
-                <h4 className="font-medium">{option.name}</h4>
+              <div className="mb-2">
+                <h4 className="font-semibold text-lg text-gray-900">{option.name}</h4>
               </div>
-              <p className="text-sm text-gray-600 mb-3">{option.description}</p>
+              <p className="text-base text-gray-700 mb-3">{option.description}</p>
               
               <div className="space-y-2">
                 {option.formats.map(format => (
@@ -200,7 +199,7 @@ export default function ContentRepurposing({ userPreferences }: ContentRepurposi
                       onChange={() => handleFormatToggle(format)}
                       className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="text-sm">{formatDisplayNames[format]}</span>
+                    <span className="text-base font-medium text-gray-800">{formatDisplayNames[format]}</span>
                   </label>
                 ))}
               </div>

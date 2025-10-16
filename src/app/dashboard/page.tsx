@@ -939,52 +939,52 @@ export default function Dashboard() {
                 {/* Always visible on mobile, hover on desktop */}
                 {sidebarOpen && (
                   <div className="mt-1 ml-6 space-y-1">
-                    <button 
+                      <button 
                       onClick={() => {
                         setActiveTab('enhanced-hub');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      Content Generator
-                    </button>
-                    <button 
+                      >
+                        Content Generator
+                      </button>
+                      <button 
                       onClick={() => {
                         setActiveTab('twitter');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      Twitter Post Creator
-                    </button>
-                    <button 
+                      >
+                        Twitter Post Creator
+                      </button>
+                      <button 
                       onClick={() => {
                         setActiveTab('linkedin');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      LinkedIn Post Creator
-                    </button>
-                    <button 
+                      >
+                        LinkedIn Post Creator
+                      </button>
+                      <button 
                       onClick={() => {
                         setActiveTab('unified-creator');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      Unified Creator
-                    </button>
-                    <button 
+                      >
+                        Unified Creator
+                      </button>
+                      <button 
                       onClick={() => {
                         setActiveTab('discover');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      Discover Feed
-                    </button>
-                  </div>
+                      >
+                        Discover Feed
+                      </button>
+                    </div>
                 )}
               </div>
               
@@ -1004,25 +1004,25 @@ export default function Dashboard() {
                 {/* Always visible on mobile */}
                 {sidebarOpen && (
                   <div className="mt-1 ml-6 space-y-1">
-                    <button 
+                      <button 
                       onClick={() => {
                         setActiveTab('case-studies');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      Create Case Study
-                    </button>
-                    <button 
+                      >
+                        Create Case Study
+                      </button>
+                      <button 
                       onClick={() => {
                         setActiveTab('repurposing');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      Content Repurposing
-                    </button>
-                  </div>
+                      >
+                        Content Repurposing
+                      </button>
+                    </div>
                 )}
               </div>
               
@@ -1042,25 +1042,25 @@ export default function Dashboard() {
                 {/* Always visible on mobile */}
                 {sidebarOpen && (
                   <div className="mt-1 ml-6 space-y-1">
-                    <button 
+                      <button 
                       onClick={() => {
                         setActiveTab('writing-voice');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      Writing Voice Setup
-                    </button>
-                    <button 
+                      >
+                        Writing Voice Setup
+                      </button>
+                      <button 
                       onClick={() => {
                         setActiveTab('icai-center');
                         setSidebarOpen(false);
                       }}
                       className="w-full text-left p-1.5 text-xs sm:text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded truncate"
-                    >
-                      ICAI Compliance Link
-                    </button>
-                  </div>
+                      >
+                        ICAI Compliance Link
+                      </button>
+                    </div>
                 )}
               </div>
 
@@ -1110,7 +1110,6 @@ export default function Dashboard() {
               >
                 CA Law Portal
               </button>
-              <span className="bg-green-500 text-xs px-2 py-1 rounded-full flex-shrink-0">Live</span>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end">
               {/* Global Search */}
@@ -1205,7 +1204,7 @@ export default function Dashboard() {
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Top News Section */}
-            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-3 sm:p-4 lg:p-6 border border-white/20">
+            <div className="rounded-xl p-3 sm:p-4 lg:p-6 border border-white/20">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
                 <h2 className="text-lg sm:text-xl font-bold text-white flex items-center">
                   Top CA & Finance News
@@ -1230,38 +1229,43 @@ export default function Dashboard() {
                     <div 
                       key={news.id} 
                       onClick={() => handleNewsClick(news)}
-                      className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/10 hover:border-white/30 transition-all cursor-pointer group hover:bg-white/20"
+                      className="rounded-xl p-3 sm:p-4 border-2 border-gray-300 hover:border-blue-400 transition-all cursor-pointer group hover:shadow-xl hover:scale-[1.02] transform"
+                      style={{ backgroundColor: '#B7C9E2' }}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <span className="text-xs text-gray-400 truncate">{news.source}</span>
+                      <div className="flex items-start justify-between mb-3">
+                        <span className={`text-xs font-semibold truncate uppercase tracking-wide ${
+                          ['Economic Times', 'Business Standard', 'Hindu Business Line'].includes(news.source)
+                            ? 'text-red-500'
+                            : 'text-gray-700'
+                        }`}>{news.source}</span>
                       </div>
                       
-                      <h3 className="text-xs sm:text-sm font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
+                      <h3 className="text-xs sm:text-sm font-black text-black mb-2 group-hover:text-blue-700 transition-colors line-clamp-2 leading-tight">
                         {news.title}
                       </h3>
                       
-                      <p className="text-xs text-gray-300 line-clamp-2 sm:line-clamp-3 mb-3">
+                      <p className="text-xs text-black line-clamp-2 sm:line-clamp-3 mb-3 font-semibold leading-relaxed">
                         {news.content}
                       </p>
                       
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center space-x-2">
-                            <span className="text-gray-400">
+                            <span className="text-black/70 font-semibold">
                               {new Date(news.publishedAt).toLocaleTimeString('en-IN', { 
                                 hour: '2-digit', 
                                 minute: '2-digit' 
                               })}
                             </span>
                             {news.relevanceScore > 0.7 && (
-                              <span className="bg-orange-600/20 text-orange-400 px-2 py-0.5 rounded-full text-xs">
+                              <span className="bg-orange-500 text-white px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm">
                                 High Relevance
                               </span>
                             )}
                           </div>
                           <div className="flex items-center space-x-1">
                             {news.categories?.slice(0, 2).map((cat) => (
-                              <span key={cat} className="bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded-full text-xs">
+                              <span key={cat} className="bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm">
                                 {cat}
                               </span>
                             ))}
@@ -1270,8 +1274,8 @@ export default function Dashboard() {
                         
                         {/* Relevant Web Links */}
                         {news.relevantLinks && news.relevantLinks.length > 0 && (
-                          <div className="border-t border-white/10 pt-2">
-                            <p className="text-xs text-gray-400 mb-1">Related Links:</p>
+                          <div className="border-t border-gray-400 pt-2">
+                            <p className="text-xs text-black/70 mb-1 font-semibold">Related Links:</p>
                             <div className="flex flex-wrap gap-1">
                               {news.relevantLinks.slice(0, 2).map((link, linkIndex) => (
                                 <a
@@ -1280,7 +1284,7 @@ export default function Dashboard() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center px-2 py-1 text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-full transition-colors"
+                                  className="inline-flex items-center px-2 py-1 text-xs bg-green-600 text-white hover:bg-green-700 rounded-full transition-all font-semibold shadow-sm hover:shadow-md"
                                   title={link.source}
                                 >
                                   <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -1295,7 +1299,7 @@ export default function Dashboard() {
                                     e.stopPropagation();
                                     alert(`All links:\n${news.relevantLinks.map(l => `• ${l.title}: ${l.url}`).join('\n')}`);
                                   }}
-                                  className="text-xs text-blue-400 hover:text-blue-300 px-2 py-1 rounded-full bg-blue-600/10 hover:bg-blue-600/20 transition-colors"
+                                  className="text-xs text-blue-700 hover:text-blue-800 px-2 py-1 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors"
                                 >
                                   +{news.relevantLinks.length - 2} more
                                 </button>
@@ -1305,7 +1309,7 @@ export default function Dashboard() {
                         )}
                         
                         {/* Hover Actions */}
-                        <div className="md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 mt-3 pt-3 border-t border-white/10">
+                        <div className="md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 mt-3 pt-3 border-t border-gray-400">
                           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:justify-between">
                             <button
                               onClick={(e) => {
@@ -1313,7 +1317,7 @@ export default function Dashboard() {
                                 setActiveTab('enhanced-hub');
                                 // You can add logic here to pre-fill the content generator with this news
                               }}
-                              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-xs transition-colors"
+                              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs transition-all font-semibold shadow-md hover:shadow-lg"
                             >
                               <span className="whitespace-nowrap">Generate Post</span>
                             </button>
@@ -1322,7 +1326,7 @@ export default function Dashboard() {
                                 e.stopPropagation();
                                 setActiveTab('news');
                               }}
-                              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-xs transition-colors"
+                              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs transition-all font-semibold shadow-md hover:shadow-lg"
                             >
                               <span className="whitespace-nowrap">See More</span>
                             </button>
@@ -1336,7 +1340,7 @@ export default function Dashboard() {
             </div>
 
             {/* Gemini Content Generator Section */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 mb-8">
+            <div className="bg-gradient-to-r from-gray-700 to-gray-800 rounded-2xl p-6 border border-gray-600 mb-8">
               <div className="text-center mb-6">
                 <h3 className="text-xl font-semibold text-white mb-2">
                   AI Content Creation Assistant
@@ -1405,60 +1409,53 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* New Features Overview */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 lg:p-6 border border-white/20">
-              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">🆕 Enhanced AI-Powered Features</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                <button
-                  onClick={() => setActiveTab('unified-creator')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
-                >
-                  <div className="font-semibold text-sm sm:text-base">Unified Content Creator</div>
-                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Quiz + AI Research + Images in one place</div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('discover')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
-                >
-                  <div className="font-semibold text-sm sm:text-base">Discover Feed</div>
-                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Latest 2025 news with instant post creation</div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('twitter')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
-                >
-                  <div className="text-xl sm:text-2xl mb-2">𝕏</div>
-                  <div className="font-semibold text-sm sm:text-base">X (Twitter) Automation</div>
-                  <div className="text-xs sm:text-sm text-gray-300 mt-1">ICAI-compliant Twitter posting</div>
-                </button>
-                
-                <button
+            {/* Cluely-Style Features */}
+            <div className="rounded-xl p-3 sm:p-4 lg:p-6">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">Enhanced AI-Powered Features</h2>
+              <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">Get intelligent assistance during every call with advanced AI support.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {/* Feature 1: LinkedIn Image */}
+                <div 
                   onClick={() => setActiveTab('linkedin')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  className="bg-gray-100 rounded-lg p-4 sm:p-6 border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                 >
-                  <div className="text-xl sm:text-2xl mb-2">in</div>
-                  <div className="font-semibold text-sm sm:text-base">LinkedIn Automation</div>
-                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Professional network posting</div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('compliance')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left border border-gray-600"
+                  <img 
+                    src="/linkedin.png" 
+                    alt="LinkedIn Feature" 
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                  <h3 className="text-gray-800 font-semibold text-sm sm:text-base mb-1">LinkedIn Automation</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm">Professional network posting</p>
+                </div>
+
+                {/* Feature 2: Unified Content Creator */}
+                <div 
+                  onClick={() => setActiveTab('unified-creator')}
+                  className="bg-gray-100 rounded-lg p-4 sm:p-6 border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                 >
-                  <div className="text-xl sm:text-2xl mb-2">⚖️</div>
-                  <div className="font-semibold text-sm sm:text-base">ICAI Compliance Center</div>
-                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Guidelines check + plagiarism detection</div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('case-studies')}
-                  className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 sm:p-4 rounded-lg transition-all hover:scale-105 text-left"
+                  <img 
+                    src="/Content.webp" 
+                    alt="Unified Content Creator" 
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                  <h3 className="text-gray-800 font-semibold text-sm sm:text-base mb-1">Unified Content Creator</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm">Quiz + AI Research + Images in one place</p>
+                </div>
+
+                {/* Feature 3: X (Twitter) Automation */}
+                <div 
+                  onClick={() => setActiveTab('twitter')}
+                  className="bg-gray-100 rounded-lg p-4 sm:p-6 border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                 >
-                  <div className="font-semibold text-sm sm:text-base">Case Study Generator</div>
-                  <div className="text-xs sm:text-sm text-gray-300 mt-1">Professional case studies</div>
-                </button>
+                  <img 
+                    src="/X.png" 
+                    alt="X (Twitter) Automation" 
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                  <h3 className="text-gray-800 font-semibold text-sm sm:text-base mb-1">X (Twitter) Automation</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm">ICAI-compliant Twitter posting</p>
+                </div>
               </div>
             </div>
 
@@ -1473,11 +1470,36 @@ export default function Dashboard() {
                 <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
                   <h3 className="text-lg font-semibold mb-3 text-white">Content Creation</h3>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Personalized Writing Voices (5 types)</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>100+ Swipe File Templates</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Content Repurposing (6+ formats)</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Case Study Generator</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>AI Image Generation</li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Personalized Writing Voices (5 types)</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">100+ Swipe File Templates</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Content Repurposing (6+ formats)</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Case Study Generator</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">AI Image Generation</p>
+                    </li>
                   </ul>
                 </div>
 
@@ -1485,11 +1507,36 @@ export default function Dashboard() {
                 <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
                   <h3 className="text-lg font-semibold mb-3 text-white">LinkedIn Automation</h3>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Custom & Full Automation</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Direct Publishing</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Post Scheduling</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Network Analysis</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Engagement Tracking</li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Custom & Full Automation</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Direct Publishing</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Post Scheduling</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Network Analysis</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Engagement Tracking</p>
+                    </li>
                   </ul>
                 </div>
 
@@ -1497,11 +1544,36 @@ export default function Dashboard() {
                 <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
                   <h3 className="text-lg font-semibold mb-3 text-white">Compliance & News</h3>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>ICAI Compliance Checking</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Daily News Scraping (8 sources)</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Regulatory Updates</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Violation Detection</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Improvement Suggestions</li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">ICAI Compliance Checking</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Daily News Scraping (8 sources)</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Regulatory Updates</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Violation Detection</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Improvement Suggestions</p>
+                    </li>
                   </ul>
                 </div>
 
@@ -1509,11 +1581,36 @@ export default function Dashboard() {
                 <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
                   <h3 className="text-lg font-semibold mb-3 text-white">AI & Automation</h3>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Perplexity AI Integration</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Smart Content Analysis</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Automated Workflows</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Real-time Processing</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Intelligent Categorization</li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Perplexity AI Integration</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Smart Content Analysis</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Automated Workflows</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Real-time Processing</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Intelligent Categorization</p>
+                    </li>
                   </ul>
                 </div>
 
@@ -1521,11 +1618,36 @@ export default function Dashboard() {
                 <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
                   <h3 className="text-lg font-semibold mb-3 text-white">Analytics & Insights</h3>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Network Growth Analysis</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Content Performance</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Engagement Metrics</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Opportunity Identification</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Professional Scoring</li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Network Growth Analysis</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Content Performance</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Engagement Metrics</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Opportunity Identification</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Professional Scoring</p>
+                    </li>
                   </ul>
                 </div>
 
@@ -1533,11 +1655,36 @@ export default function Dashboard() {
                 <div className="bg-gradient-to-br from-gray-800 to-gray-600 rounded-lg p-4 border border-gray-600">
                   <h3 className="text-lg font-semibold mb-3 text-white">Education & Learning</h3>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Exam Question Generation</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Topic-based Learning</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Knowledge Base Access</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>CA-specific Guidance</li>
-                    <li className="flex items-center text-white"><span className="text-green-400 mr-2">✓</span>Professional Development</li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Exam Question Generation</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Topic-based Learning</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Knowledge Base Access</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">CA-specific Guidance</p>
+                    </li>
+                    <li className="flex items-start space-x-3">
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-black rounded-full"></div>
+                      </div>
+                      <p className="text-white">Professional Development</p>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -1546,19 +1693,31 @@ export default function Dashboard() {
               <div className="mt-6 bg-black rounded-lg p-6 border border-gray-600">
                 <h3 className="text-lg font-semibold mb-4 text-white">Quick Start Guide</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                  <div 
+                    onClick={() => setActiveTab('writing-voice')}
+                    className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  >
                     <div className="font-semibold text-white mb-1">Setup Your Voice</div>
                     <div className="text-sm text-gray-300">Complete the writing voice questionnaire to personalize your content</div>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                  <div 
+                    onClick={() => setActiveTab('linkedin')}
+                    className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  >
                     <div className="font-semibold text-white mb-1">Connect LinkedIn</div>
                     <div className="text-sm text-gray-300">Authorize LinkedIn integration for automated posting and analytics</div>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                  <div 
+                    onClick={() => setActiveTab('enhanced-hub')}
+                    className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  >
                     <div className="font-semibold text-white mb-1">Create Content</div>
                     <div className="text-sm text-gray-300">Generate personalized content and repurpose across platforms</div>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500">
+                  <div 
+                    onClick={() => setActiveTab('network')}
+                    className="bg-gradient-to-br from-gray-700 to-gray-500 rounded-lg p-4 border border-gray-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  >
                     <div className="font-semibold text-white mb-1">Monitor & Optimize</div>
                     <div className="text-sm text-gray-300">Track performance and optimize your professional network</div>
                   </div>
@@ -2084,7 +2243,7 @@ export default function Dashboard() {
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
                 <h3 className="text-lg font-bold mb-4">Daily Automation</h3>
                 <p className="text-gray-300 mb-4">
-                  Automatically collect news from ANI, Economic Times & ICAI, generate content, 
+                  Automatically collect news from ANI, <span className="text-red-500">Economic Times</span> & ICAI, generate content, 
                   create audit checklists, and send notifications to CEOs and users.
                 </p>
                 <button
@@ -2963,14 +3122,19 @@ export default function Dashboard() {
         <UnifiedContentCreator />
       )}
 
-      {/* Enhanced Content Hub Tab - NEW! */}
+      {/* Enhanced Content Hub Tab - NOW EMPTY */}
       {activeTab === 'enhanced-hub' && (
-        <EnhancedContentHub />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-300 mb-4">Content Generator</h2>
+            <p className="text-gray-500">This section is currently empty.</p>
+          </div>
+        </div>
       )}
 
-      {/* Discover Feed Tab */}
+      {/* Discover Feed Tab - NOW SHOWS CONTENT GENERATOR */}
       {activeTab === 'discover' && (
-        <DiscoverFeed />
+        <EnhancedContentHub />
       )}
 
 
@@ -2992,10 +3156,10 @@ export default function Dashboard() {
 
       {/* Content Repurposing Tab */}
       {activeTab === 'repurposing' && (
-        <div className="space-y-4 sm:space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white">
+        <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
+          <div className="ml-8 sm:ml-12 lg:ml-16">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Content Repurposing</h1>
-            <p className="text-sm sm:text-lg lg:text-xl text-blue-100">
+            <p className="text-sm sm:text-lg lg:text-xl">
               Transform your content into multiple formats for maximum reach and engagement.
             </p>
           </div>
@@ -3005,10 +3169,10 @@ export default function Dashboard() {
 
       {/* Case Study Generator Tab */}
       {activeTab === 'case-studies' && (
-        <div className="space-y-4 sm:space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white">
+        <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
+          <div className="ml-8 sm:ml-12 lg:ml-16">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Case Study Generator</h1>
-            <p className="text-sm sm:text-lg lg:text-xl text-blue-100">
+            <p className="text-sm sm:text-lg lg:text-xl">
               Create professional case studies that showcase your expertise while maintaining client confidentiality.
             </p>
           </div>

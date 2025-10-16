@@ -7,21 +7,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 
 function NavigationContent() {
   const [isOpen, setIsOpen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // Check for welcome parameter
-  useEffect(() => {
-    if (searchParams.get('welcome') === 'true' && isSignedIn) {
-      setShowWelcome(true);
-      // Remove the welcome parameter from URL after showing
-      const url = new URL(window.location.href);
-      url.searchParams.delete('welcome');
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, [searchParams, isSignedIn]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -34,16 +21,16 @@ function NavigationContent() {
   };
 
   const getLinkClass = (path: string) => {
-    const baseClass = "px-2 xl:px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap";
+    const baseClass = "px-2 xl:px-3 py-2 text-sm font-semibold transition-colors whitespace-nowrap";
     const activeClass = "text-white";
-    const inactiveClass = "text-gray-400 hover:text-white";
+    const inactiveClass = "text-gray-300 hover:text-white";
     return `${baseClass} ${isActive(path) ? activeClass : inactiveClass}`;
   };
 
   const getMobileLinkClass = (path: string) => {
-    const baseClass = "block px-3 py-2 text-sm font-medium transition-colors";
+    const baseClass = "block px-3 py-2 text-sm font-semibold transition-colors";
     const activeClass = "text-white bg-gray-800";
-    const inactiveClass = "text-gray-400 hover:text-white";
+    const inactiveClass = "text-gray-300 hover:text-white";
     return `${baseClass} ${isActive(path) ? activeClass : inactiveClass}`;
   };
 
@@ -53,7 +40,7 @@ function NavigationContent() {
         <div className="flex justify-between items-center h-16">
           {/* Logo - Always clickable to home */}
           <div className="flex items-center flex-shrink-0">
-            <Link href="/" className="text-xl font-bold text-white flex items-center hover:text-gray-300 transition-colors">
+            <Link href="/" className="text-2xl font-black text-white flex items-center hover:text-gray-300 transition-colors tracking-wide">
               CaAuthority
               <span className="ml-1 w-0.5 h-6 bg-white animate-blink"></span>
             </Link>
@@ -82,35 +69,27 @@ function NavigationContent() {
             <Link href="/pricing" className={getLinkClass('/pricing')}>
               Pricing
             </Link>
-            <Link href="/success-stories" className={getLinkClass('/success-stories')}>
-              Success Stories
-            </Link>
           </div>
 
           {/* Desktop Right side buttons */}
           <div className="hidden lg:flex items-center space-x-3 flex-shrink-0">
             {isSignedIn ? (
               <div className="flex items-center space-x-3">
-                {showWelcome && (
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse whitespace-nowrap">
-                    Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}! ✨
-                  </div>
-                )}
-                <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap">
+                <Link href="/dashboard" className="bg-transparent border border-white text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-white hover:text-black transition-colors whitespace-nowrap">
                   Go to Dashboard
                 </Link>
                 <SignOutButton>
-                  <button className="text-gray-400 hover:text-white text-sm font-medium transition-colors whitespace-nowrap">
+                  <button className="text-gray-300 hover:text-white text-sm font-semibold transition-colors whitespace-nowrap">
                     Sign Out
                   </button>
                 </SignOutButton>
               </div>
             ) : (
               <>
-                <Link href="/sign-in" className="text-gray-400 hover:text-white text-sm font-medium transition-colors whitespace-nowrap">
+                <Link href="/sign-in" className="text-gray-300 hover:text-white text-sm font-semibold transition-colors whitespace-nowrap">
                   Sign In
                 </Link>
-                <Link href="/sign-up" className="bg-transparent text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-white hover:text-black transition-colors border border-white whitespace-nowrap">
+                <Link href="/sign-up" className="bg-transparent text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-white hover:text-black transition-colors border border-white whitespace-nowrap">
                   Start Free Trial
                 </Link>
               </>
@@ -203,33 +182,21 @@ function NavigationContent() {
               >
                 Pricing
               </Link>
-              <Link
-                href="/success-stories"
-                className={getMobileLinkClass('/success-stories')}
-                onClick={() => setIsOpen(false)}
-              >
-                Success Stories
-              </Link>
               
               {/* Mobile Auth Section */}
               <div className="pt-4 border-t border-gray-700">
                 {isSignedIn ? (
                   <div className="space-y-2">
-                    {showWelcome && (
-                      <div className="bg-green-600 text-white px-3 py-2 rounded-full text-sm font-medium text-center animate-pulse">
-                        Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}! ✨
-                      </div>
-                    )}
                     <Link
                       href="/dashboard"
-                      className="block mx-3 my-2 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-500 transition-colors text-center"
+                      className="block mx-3 my-2 px-4 py-2 bg-transparent border border-white text-white rounded-full text-sm font-bold hover:bg-white hover:text-black transition-colors text-center"
                       onClick={() => setIsOpen(false)}
                     >
                       Go to Dashboard
                     </Link>
                     <SignOutButton>
                       <button 
-                        className="block px-3 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors w-full text-left"
+                        className="block px-3 py-2 text-gray-300 hover:text-white text-sm font-semibold transition-colors w-full text-left"
                         onClick={() => setIsOpen(false)}
                       >
                         Sign Out
@@ -240,14 +207,14 @@ function NavigationContent() {
                   <div className="space-y-2">
                     <Link
                       href="/sign-in"
-                      className="block px-3 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+                      className="block px-3 py-2 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/sign-up"
-                      className="block mx-3 my-2 px-4 py-2 bg-transparent text-white rounded-full text-sm font-medium hover:bg-white hover:text-black transition-colors border border-white text-center"
+                      className="block mx-3 my-2 px-4 py-2 bg-transparent text-white rounded-full text-sm font-bold hover:bg-white hover:text-black transition-colors border border-white text-center"
                       onClick={() => setIsOpen(false)}
                     >
                       Start Free Trial

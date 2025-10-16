@@ -250,22 +250,15 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-8">
-          <h1 className="text-4xl font-bold mb-4">Unified Content Creator</h1>
-          <p className="text-xl text-purple-100">
-            Complete workflow: Voice profiling → AI research → Content generation → Visual creation
-          </p>
-        </div>
 
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-4">
             {[
-              { key: 'quiz', label: 'Voice Quiz', icon: '📋' },
-              { key: 'research', label: 'AI Research', icon: '🔍' },
-              { key: 'create', label: 'Generate', icon: '✨' },
-              { key: 'review', label: 'Review', icon: '👀' }
+              { key: 'quiz', label: 'Voice Quiz' },
+              { key: 'research', label: 'AI Research' },
+              { key: 'create', label: 'Generate' },
+              { key: 'review', label: 'Review' }
             ].map((step, index) => (
               <div key={step.key} className="flex items-center">
                 <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 ${
@@ -273,7 +266,7 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
                   ['quiz', 'research', 'create', 'review'].indexOf(currentStep) > index ? 'bg-green-600 border-green-400' :
                   'bg-gray-700 border-gray-500'
                 }`}>
-                  <span className="text-lg">{step.icon}</span>
+                  <span className="text-lg font-semibold">{index + 1}</span>
                 </div>
                 <span className="ml-2 text-sm font-medium">{step.label}</span>
                 {index < 3 && <div className="w-8 h-0.5 bg-gray-600 mx-4" />}
@@ -326,11 +319,11 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
         {currentStep === 'research' && (
           <div className="max-w-4xl mx-auto">
             <div className="bg-gray-800 rounded-2xl p-8 border border-gray-600">
-              <h2 className="text-2xl font-bold mb-6">🔍 AI-Powered Research</h2>
+              <h2 className="text-2xl font-bold mb-6">AI-Powered Research</h2>
               
               {userProfile && (
-                <div className="bg-purple-900/30 rounded-lg p-4 mb-6 border border-purple-700">
-                  <h3 className="font-semibold text-purple-300 mb-2">Your Content Voice Profile:</h3>
+                <div className="mb-6">
+                  <h3 className="font-semibold text-white mb-2">Your Content Voice Profile:</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-400">Primary Voice:</span>
@@ -360,7 +353,7 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
                   disabled={loadingResearch || !researchQuery.trim()}
                   className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-6 py-3 rounded-lg transition-colors font-semibold"
                 >
-                  {loadingResearch ? 'Researching...' : '🔍 Start AI Research'}
+                  {loadingResearch ? 'Researching...' : 'Start AI Research'}
                 </button>
               </div>
 
@@ -394,7 +387,7 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
         {currentStep === 'create' && (
           <div className="max-w-4xl mx-auto">
             <div className="bg-gray-800 rounded-2xl p-8 border border-gray-600">
-              <h2 className="text-2xl font-bold mb-6">✨ Content Generation</h2>
+              <h2 className="text-2xl font-bold mb-6">Content Generation</h2>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div>
@@ -425,9 +418,9 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
                 <label className="block text-sm font-medium mb-2">Target Platform</label>
                 <div className="flex space-x-4">
                   {[
-                    { key: 'linkedin', label: 'LinkedIn', icon: '💼' },
-                    { key: 'twitter', label: 'Twitter/X', icon: '𝕏' },
-                    { key: 'both', label: 'Both', icon: '📱' }
+                    { key: 'linkedin', label: 'LinkedIn' },
+                    { key: 'twitter', label: 'Twitter/X' },
+                    { key: 'both', label: 'Both' }
                   ].map(platform => (
                     <button
                       key={platform.key}
@@ -438,7 +431,6 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
                           : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                       }`}
                     >
-                      <span className="mr-2">{platform.icon}</span>
                       {platform.label}
                     </button>
                   ))}
@@ -451,14 +443,14 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
                   disabled={loadingContent || !contentTopic.trim()}
                   className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-6 py-3 rounded-lg transition-colors font-semibold flex items-center"
                 >
-                  {loadingContent ? 'Generating...' : '✨ Generate Content'}
+                  {loadingContent ? 'Generating...' : 'Generate Content'}
                 </button>
                 <button
                   onClick={generateImage}
                   disabled={loadingImage}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-3 rounded-lg transition-colors font-semibold flex items-center"
                 >
-                  {loadingImage ? 'Creating...' : '🎨 Generate Image'}
+                  {loadingImage ? 'Creating...' : 'Generate Image'}
                 </button>
               </div>
 
@@ -478,7 +470,7 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
         {currentStep === 'review' && generatedContent && (
           <div className="max-w-4xl mx-auto">
             <div className="bg-gray-800 rounded-2xl p-8 border border-gray-600">
-              <h2 className="text-2xl font-bold mb-6">👀 Review & Compliance Check</h2>
+              <h2 className="text-2xl font-bold mb-6">Review & Compliance Check</h2>
               
               {/* Compliance Status */}
               {complianceCheck && (
@@ -492,7 +484,7 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
                     <span className={`px-3 py-1 rounded-full text-sm ${
                       complianceCheck.isCompliant ? 'bg-green-600' : 'bg-red-600'
                     }`}>
-                      {complianceCheck.isCompliant ? '✅ Compliant' : '⚠️ Issues Found'}
+                      {complianceCheck.isCompliant ? 'Compliant' : 'Issues Found'}
                     </span>
                   </div>
                   <div className="text-sm">
@@ -530,19 +522,19 @@ export default function UnifiedContentCreator({}: UnifiedContentCreatorProps) {
                     alert('Content would be posted to selected platforms');
                   }}
                 >
-                  📤 Post to Platforms
+                  Post to Platforms
                 </button>
                 <button
                   className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors font-semibold"
                   onClick={() => setCurrentStep('create')}
                 >
-                  ✏️ Edit Content
+                  Edit Content
                 </button>
                 <button
                   className="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg transition-colors font-semibold"
                   onClick={resetProcess}
                 >
-                  🔄 Start Over
+                  Start Over
                 </button>
               </div>
             </div>
